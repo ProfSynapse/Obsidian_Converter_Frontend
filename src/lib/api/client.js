@@ -161,30 +161,47 @@ _validateAndNormalizeItem(item) {
     try {
       const item = items[0];
       
+      if (!item?.file || !(item.file instanceof File)) {
+        throw new ConversionError('Valid file is required for conversion', 400);
+      }
+
       // Validate file size
-      if (item.file?.size > CONFIG.API.MAX_FILE_SIZE) {
+      if (item.file.size > CONFIG.API.MAX_FILE_SIZE) {
         throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
       }
 
       // Get endpoint from ENDPOINTS
       const endpoint = ENDPOINTS.CONVERT_FILE;
 
-      // Simplified FormData construction
+      // Create FormData with proper structure
       const formData = new FormData();
-      formData.append('file', item.file);  // Keep original file name
       
-      if (options) {
-        formData.append('options', JSON.stringify({
-          includeImages: true,
-          includeMeta: true,
-          convertLinks: true,
-          ...options
-        }));
-      }
+      // Append file with original filename
+      formData.append('file', item.file, item.file.name);
 
-      // Add timeout handling
+      // Prepare options
+      const conversionOptions = {
+        includeImages: true,
+        includeMeta: true,
+        convertLinks: true,
+        ...options,
+        filename: item.file.name // Include filename in options
+      };
+
+      // Append options as string
+      formData.append('options', JSON.stringify(conversionOptions));
+
+      console.log('Uploading file:', {
+        name: item.file.name,
+        size: item.file.size,
+        type: item.file.type,
+        endpoint,
+        options: conversionOptions
+      });
+
+      // Add request timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+      const timeoutId = setTimeout(() => controller.abort(), CONFIG.API.TIMEOUT);
 
       try {
         const response = await fetch(endpoint, {
@@ -192,6 +209,7 @@ _validateAndNormalizeItem(item) {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Accept': 'application/json, application/zip, application/octet-stream'
+            // Let browser set Content-Type with boundary
           },
           body: formData,
           signal: controller.signal,
@@ -199,7 +217,6 @@ _validateAndNormalizeItem(item) {
           mode: 'cors'
         });
 
-        // Handle response
         if (!response.ok) {
           const errorMessage = await this._getErrorMessage(response);
           throw new ConversionError(errorMessage, response.status);
@@ -214,8 +231,9 @@ _validateAndNormalizeItem(item) {
     } catch (error) {
       console.error('Upload failed:', {
         error,
-        itemName: items[0]?.name,
-        endpoint: ENDPOINTS.CONVERT_FILE
+        itemName: items[0]?.file?.name,
+        endpoint: ENDPOINTS.CONVERT_FILE,
+        size: items[0]?.file?.size
       });
       throw error;
     }

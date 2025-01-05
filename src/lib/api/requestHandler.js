@@ -88,21 +88,11 @@ export class RequestHandler {
     // Ensure endpoint has /api/v1 prefix
     const apiEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
     
-    console.log('API Request:', {
-        originalEndpoint: endpoint,
-        finalEndpoint: apiEndpoint,
-        isRailway: import.meta.env.PROD,
-        headers: options.headers
-    });
-
-    if (!apiEndpoint) {
-        throw new Error('Endpoint is undefined.');
-    }
-
     try {
-        // If FormData is being sent, don't set Content-Type
+        // Remove Content-Type for FormData
         if (options.body instanceof FormData) {
-            delete options.headers['Content-Type'];
+            const { 'Content-Type': removed, ...headers } = options.headers || {};
+            options.headers = headers;
         }
 
         const response = await fetch(apiEndpoint, {
@@ -114,11 +104,12 @@ export class RequestHandler {
             }
         });
 
-        // Log Railway-specific response details
+        // Log response details
         console.log('API Response:', {
             status: response.status,
-            isRailway: import.meta.env.PROD,
-            headers: Object.fromEntries(response.headers.entries())
+            statusText: response.statusText,
+            contentType: response.headers.get('content-type'),
+            contentLength: response.headers.get('content-length')
         });
 
         // Get content type once and reuse it
