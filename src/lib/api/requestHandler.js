@@ -83,12 +83,32 @@ export class RequestHandler {
    * @public
    */
   static async makeRequest(endpoint, options) {
+    // Add debug logging for Railway
+    console.log('API Request:', {
+      endpoint,
+      isRailway: import.meta.env.PROD,
+      headers: options.headers
+    });
+
     if (!endpoint) {
       throw new Error('Endpoint is undefined.');
     }
 
     try {
       const response = await fetch(endpoint, options);
+      
+      // Log Railway-specific response details
+      console.log('API Response:', {
+        status: response.status,
+        isRailway: import.meta.env.PROD,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      // Check for HTML error pages
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('text/html')) {
+        throw new Error('Invalid API response: Received HTML instead of expected data');
+      }
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({
@@ -125,7 +145,15 @@ export class RequestHandler {
         throw new Error(`Unsupported response type: ${contentType}`);
       }
     } catch (error) {
+      console.error('API Error:', {
+        error,
+        isRailway: import.meta.env.PROD,
+        endpoint
+      });
       console.error('🔥 Request failed:', error);
+      if (error.message.includes('<!DOCTYPE html>')) {
+        throw new Error('API endpoint not found or server error occurred');
+      }
       throw error;
     }
   }

@@ -6,7 +6,9 @@ export const CONFIG = {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
         TIMEOUT: 300000,
-        BASE_URL: API_BASE_URL,
+        BASE_URL: import.meta.env.PROD ? 
+            'https://frontend-production-2748.internal/api/v1' :
+            'http://localhost:8080/api/v1',
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream',
             'Content-Type': 'application/json'

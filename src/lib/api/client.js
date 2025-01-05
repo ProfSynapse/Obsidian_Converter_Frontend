@@ -14,6 +14,7 @@ class ConversionClient {
     this.activeRequests = new Map();
     this.config = CONFIG;
     this.baseUrl = baseUrl;
+    this.isRailway = import.meta.env.PROD;
     // Get supported types from FILES.TYPES instead of ITEM_TYPES
     this.supportedTypes = Object.values(CONFIG.FILES.TYPES || {});
   }
@@ -156,46 +157,26 @@ _validateAndNormalizeItem(item) {
       onItemComplete
     } = options;
 
-    if (useBatch) {
-        const endpoint = '/batch'; // Your batch endpoint
-        const formData = new FormData();
-        
-        // Add items metadata
-        formData.append('items', JSON.stringify(
-            items.map(item => ({
-                id: item.id,
-                type: item.type,
-                name: item.name,
-                url: item.url,
-                options: item.options
-            }))
-        ));
-
-        // Add files to FormData if they exist
-        items.forEach(item => {
-            if (item.file) {
-                formData.append('files', item.file, item.name);
-            }
-        });
-
-        const response = await fetch(`${this.baseUrl}${endpoint}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: formData
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new ConversionError(error.message || 'Batch conversion failed');
-        }
-
-        // Return blob for ZIP file
-        return response.blob();
-    }
-
     try {
+      // Add Railway-specific headers in production
+      const headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/json, application/zip, application/octet-stream'
+      };
+
+      if (this.isRailway) {
+        headers['X-Railway-Internal'] = 'true';
+      }
+
+      const endpoint = options.useBatch ? '/batch' : this.getDefaultEndpoint(items[0]);
+      const url = `${this.baseUrl}${endpoint}`;
+
+      console.log('Making API request:', {
+        url,
+        isRailway: this.isRailway,
+        method: 'POST'
+      });
+
       // Only use batch processing for multiple items
       if (items.length > 1) {
         return this.processBatch(items, apiKey, options);
@@ -222,12 +203,9 @@ _validateAndNormalizeItem(item) {
         formData.append('options', JSON.stringify(item.options));
       }
 
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      const response = await fetch(url, {
         method: 'POST',
-        headers: apiKey ? {
-          'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'application/json, application/zip'
-        } : {},
+        headers,
         body: formData
       });
 
@@ -271,8 +249,11 @@ _validateAndNormalizeItem(item) {
       return result;
 
     } catch (error) {
-      console.error('API Error:', error);
-      onItemComplete?.(items[0].id, false, error);
+      console.error('API Request failed:', {
+        error,
+        isRailway: this.isRailway,
+        baseUrl: this.baseUrl
+      });
       throw error;
     }
   }
@@ -360,61 +341,7 @@ _validateAndNormalizeItem(item) {
   isVideoType(ext) {
     return this.config.FILES.CATEGORIES.video.includes(ext);
   }
-
-  /**
-   * Cancels all active conversion requests
-   * @public
-   */
-  cancelAllRequests() {
-    this.activeRequests.forEach((request, id) => {
-      if (request.controller) {
-        request.controller.abort();
-        console.log(`Cancelled request: ${id}`);
-      }
-      this.activeRequests.delete(id);
-    });
-
-    conversionStatus.reset();
-  }
-
-  /**
-   * Returns the count of active requests
-   * @public
-   */
-  getActiveRequestsCount() {
-    return this.activeRequests.size;
-  }
-
-  /**
-   * Cleans up resources and resets state
-   * @public
-   */
-  cleanup() {
-    this.cancelAllRequests();
-    this.activeRequests.clear();
-    conversionStatus.reset();
-  }
-
-  /**
-   * Makes a conversion request with enhanced error handling
-   * @private
-   */
-  static async _makeConversionRequest(endpoint, options, type) {
-    if (!endpoint) {
-        throw new ConversionError(`No endpoint defined for ${type} conversion`, 'VALIDATION_ERROR');
-    }
-    
-    try {
-        console.log(`🔄 Making ${type} conversion request to ${endpoint}`);
-        const response = await RequestHandler.makeRequest(endpoint, options);
-        
-        if (!response.ok) {
-            throw new Error(`Server responded with status ${response.status}`);
-        }
-
-        return await response.blob();
-    } catch (error) {
-        console.error(`❌ ${type} conversion error:`, error);
+  /**   * Cancels all active conversion requests   * @public   */  cancelAllRequests() {    this.activeRequests.forEach((request, id) => {      if (request.controller) {        request.controller.abort();        console.log(`Cancelled request: ${id}`);      }      this.activeRequests.delete(id);    });    conversionStatus.reset();  }  /**   * Returns the count of active requests   * @public   */  getActiveRequestsCount() {    return this.activeRequests.size;  }  /**   * Cleans up resources and resets state   * @public   */  cleanup() {    this.cancelAllRequests();    this.activeRequests.clear();    conversionStatus.reset();  }  /**   * Makes a conversion request with enhanced error handling   * @private   */  static async _makeConversionRequest(endpoint, options, type) {    if (!endpoint) {        throw new ConversionError(`No endpoint defined for ${type} conversion`, 'VALIDATION_ERROR');    }        try {        console.log(`🔄 Making ${type} conversion request to ${endpoint}`);        const response = await RequestHandler.makeRequest(endpoint, options);                if (!response.ok) {            throw new Error(`Server responded with status ${response.status}`);        }        return await response.blob();    } catch (error) {        console.error(`❌ ${type} conversion error:`, error);
         throw ErrorUtils.wrap(error);
     }
   }
