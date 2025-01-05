@@ -18,10 +18,12 @@ const ResponseTypes = {
  */
 const DEFAULT_CONFIG = {
   credentials: 'include',
+  mode: 'cors',
   headers: {
     'Accept': 'application/json, application/zip, application/octet-stream',
     'Content-Type': 'application/json'
-  }
+  },
+  keepalive: true
 };
 
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
@@ -95,7 +97,14 @@ export class RequestHandler {
     }
 
     try {
-      const response = await fetch(endpoint, options);
+      const response = await fetch(endpoint, {
+        ...DEFAULT_CONFIG,
+        ...options,
+        headers: {
+          ...DEFAULT_CONFIG.headers,
+          ...options.headers
+        }
+      });
       
       // Log Railway-specific response details
       console.log('API Response:', {

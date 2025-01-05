@@ -158,42 +158,27 @@ _validateAndNormalizeItem(item) {
    * @public
    */
   async processItems(items, apiKey, options = {}) {
-    const {
-      useBatch = false,
-      getEndpoint,
-      onProgress,
-      onItemComplete
-    } = options;
-
     try {
-      // Add Railway-specific headers in production
       const headers = {
         'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json, application/zip, application/octet-stream'
+        'Accept': 'application/json, application/zip, application/octet-stream',
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey // Add API key header to match backend expectation
       };
-
-      if (this.isRailway) {
-        headers['X-Railway-Internal'] = 'true';
-      }
 
       // Process single item
       const item = items[0];
-      const endpoint = useBatch ? '/batch' : (getEndpoint?.(item) || this.getDefaultEndpoint(item));
+      const endpoint = options.useBatch ? '/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
       
-      // Ensure we have a complete URL
+      // Ensure proper URL construction
       const url = new URL(endpoint, this.baseUrl).toString();
 
       console.log('Making API request:', {
         url,
         isRailway: this.isRailway,
         method: 'POST',
-        headers
+        headers: { ...headers, Authorization: '[REDACTED]' }
       });
-
-      // Only use batch processing for multiple items
-      if (items.length > 1) {
-        return this.processBatch(items, apiKey, options);
-      }
 
       const formData = new FormData();
       
@@ -212,8 +197,11 @@ _validateAndNormalizeItem(item) {
 
       const response = await fetch(url, {
         method: 'POST',
-        headers,
-        body: formData
+        headers: headers,
+        body: formData,
+        mode: 'cors',
+        credentials: 'include',
+        keepalive: true // Add keepalive for better connection handling
       });
 
       if (!response.ok) {

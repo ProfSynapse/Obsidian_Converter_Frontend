@@ -7,11 +7,14 @@ export const CONFIG = {
         RETRY_DELAY: 1000,
         TIMEOUT: 300000,
         BASE_URL: import.meta.env.PROD ? 
-            'https://backend-production-6e08.up.railway.app/api/v1' : // Add https:// protocol
+            import.meta.env.API_BASE_URL || 'https://backend-production-6e08.up.railway.app/api/v1' :
             'http://localhost:8080/api/v1',
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Origin': import.meta.env.PROD ? 
+                'https://frontend-production-2748.up.railway.app' : 
+                'http://localhost:5173'
         }
     },
 
