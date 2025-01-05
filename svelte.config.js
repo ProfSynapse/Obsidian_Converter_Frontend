@@ -8,7 +8,7 @@ const config = {
     adapter: adapter({
       out: 'build',
       precompress: true,
-      envPrefix: 'VITE_'
+      envPrefix: 'APP_' // Changed from VITE_ to APP_
     }),
     alias: {
       '$lib': './src/lib',
