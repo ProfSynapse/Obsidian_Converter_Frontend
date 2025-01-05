@@ -173,9 +173,10 @@ _validateAndNormalizeItem(item) {
       const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
       
-      // Use 'document' as the field name to match backend expectation
-      formData.append('document', item.file, item.file.name);
+      // Important: Use 'file' as the field name, not 'document'
+      formData.append('file', item.file);
 
+      // Add options as a separate field
       const conversionOptions = {
         includeImages: true,
         includeMeta: true,
@@ -190,39 +191,28 @@ _validateAndNormalizeItem(item) {
         name: item.file.name,
         size: item.file.size,
         type: item.file.type,
-        endpoint
+        endpoint,
+        options: conversionOptions
       });
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.API.TIMEOUT || 30000);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json, application/zip, application/octet-stream'
+          // Don't set Content-Type - let browser handle it for FormData
+        },
+        body: formData,
+        credentials: 'include',
+        mode: 'cors'
+      });
 
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Accept': 'application/json, application/zip, application/octet-stream'
-            // Don't set Content-Type - let browser handle it for FormData
-          },
-          body: formData,
-          signal: controller.signal,
-          credentials: 'include',
-          mode: 'cors',
-          keepalive: true
-        });
-
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          const errorMessage = await this._getErrorMessage(response);
-          throw new ConversionError(errorMessage, response.status);
-        }
-
-        return this._handleSuccessResponse(response, item);
-
-      } finally {
-        clearTimeout(timeoutId);
+      if (!response.ok) {
+        const errorMessage = await this._getErrorMessage(response);
+        throw new ConversionError(errorMessage, response.status);
       }
+
+      return this._handleSuccessResponse(response, item);
 
     } catch (error) {
       console.error('Upload failed:', {

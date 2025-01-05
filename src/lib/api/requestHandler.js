@@ -86,12 +86,25 @@ export class RequestHandler {
    */
   static async makeRequest(endpoint, options) {
     try {
-      // Remove Content-Type header if body is FormData
+      // Special handling for FormData
       if (options.body instanceof FormData) {
-        const { 'Content-Type': removed, ...headers } = options.headers || {};
-        options.headers = headers;
+        // Remove any existing Content-Type header
+        const headers = { ...options.headers };
+        delete headers['Content-Type'];
+        
+        const response = await fetch(endpoint, {
+          ...DEFAULT_CONFIG,
+          ...options,
+          headers: {
+            ...headers,
+            'Accept': 'application/json, application/zip, application/octet-stream'
+          }
+        });
+
+        return response;
       }
 
+      // Regular request handling
       const response = await fetch(endpoint, {
         ...DEFAULT_CONFIG,
         ...options,
@@ -101,15 +114,7 @@ export class RequestHandler {
         }
       });
 
-      // Log response details
-      console.log('API Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        contentType: response.headers.get('content-type')
-      });
-
       return response;
-
     } catch (error) {
       console.error('Request failed:', error);
       throw error;
