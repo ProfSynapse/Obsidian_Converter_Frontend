@@ -104,8 +104,10 @@ export class RequestHandler {
         headers: Object.fromEntries(response.headers.entries())
       });
 
-      // Check for HTML error pages
+      // Get content type once and reuse it
       const contentType = response.headers.get('content-type');
+
+      // Check for HTML error pages
       if (contentType && contentType.includes('text/html')) {
         throw new Error('Invalid API response: Received HTML instead of expected data');
       }
@@ -117,7 +119,7 @@ export class RequestHandler {
         throw new Error(errorData.message || `Request failed with status ${response.status}`);
       }
 
-      const contentType = response.headers.get('Content-Type');
+      // Use the already retrieved content type
       if (contentType?.includes('application/zip')) {
         const blob = await response.blob();
         if (blob.size === 0) {
