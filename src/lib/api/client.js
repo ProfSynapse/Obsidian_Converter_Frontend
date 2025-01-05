@@ -160,53 +160,52 @@ _validateAndNormalizeItem(item) {
   async processItems(items, apiKey, options = {}) {
     try {
       const item = items[0];
-      const endpoint = options.useBatch ? '/api/v1/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
-      const url = new URL(endpoint, this.baseUrl).toString();
+      
+      // Construct the correct API endpoint
+      const endpoint = '/api/v1/document/file';
+      
+      // Ensure complete URL with protocol
+      const url = this.baseUrl.includes('http') ? 
+        new URL(endpoint, this.baseUrl).toString() :
+        `https://${this.baseUrl}${endpoint}`;
 
-      console.log('Processing item:', {
-        name: item.file?.name,
-        type: item.file?.type,
-        size: item.file?.size
+      console.log('Making API request:', {
+        endpoint,
+        fullUrl: url,
+        fileName: item.file?.name,
+        fileType: item.file?.type,
+        fileSize: item.file?.size
       });
 
-      // Create FormData
+      // Create FormData properly
       const formData = new FormData();
       
       if (item.file instanceof File) {
-        // Ensure proper field name 'file' for multer
-        formData.append('file', item.file, item.file.name);
+        // Set file first
+        formData.append('file', item.file);
         
-        // Convert options to a proper string
-        const optionsString = JSON.stringify({
+        // Set options as JSON string
+        const options = JSON.stringify({
           includeImages: true,
           includeMeta: true,
-          convertLinks: true,
-          ...item.options
+          convertLinks: true
         });
-        
-        formData.append('options', new Blob([optionsString], {
-          type: 'application/json'
-        }));
+        formData.append('options', options);
 
-        console.log('FormData contents:', {
-          fileName: item.file.name,
-          fileType: item.file.type,
-          fileSize: item.file.size,
-          options: optionsString
+        console.log('FormData:', {
+          hasFile: formData.has('file'),
+          hasOptions: formData.has('options'),
+          fileName: item.file.name
         });
       }
 
-      // Only set Authorization header, let browser handle multipart boundary
-      const headers = {
-        'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json, application/zip, application/octet-stream'
-      };
-
       const response = await fetch(url, {
         method: 'POST',
-        headers,
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json, application/zip, application/octet-stream'
+        },
         body: formData,
-        // Ensure credentials and mode are set
         credentials: 'include',
         mode: 'cors'
       });
