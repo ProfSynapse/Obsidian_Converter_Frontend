@@ -5,6 +5,7 @@ import { ConversionError, ErrorUtils } from './errors.js';
 import { Converters } from './converters.js';
 import { conversionStatus } from '../stores/conversionStatus.js';
 import { FileStatus } from '../stores/files.js';
+import { ENDPOINTS, getEndpointUrl } from './endpoints.js';  // Add this import
 
 /**
  * Manages file conversion operations and tracks their status
@@ -168,7 +169,9 @@ _validateAndNormalizeItem(item) {
         headers['X-Railway-Internal'] = 'true';
       }
 
-      const endpoint = options.useBatch ? '/batch' : this.getDefaultEndpoint(items[0]);
+      // Process single item
+      const item = items[0];
+      const endpoint = useBatch ? '/batch' : (getEndpoint?.(item) || this.getDefaultEndpoint(item));
       const url = `${this.baseUrl}${endpoint}`;
 
       console.log('Making API request:', {
@@ -182,12 +185,6 @@ _validateAndNormalizeItem(item) {
         return this.processBatch(items, apiKey, options);
       }
 
-      // Process single item
-      const item = items[0];
-      const endpoint = getEndpoint?.(item) || this.getDefaultEndpoint(item);
-      
-      console.log('Processing item:', { type: item.type, endpoint });
-      
       const formData = new FormData();
       
       // Handle file uploads based on type
@@ -259,7 +256,9 @@ _validateAndNormalizeItem(item) {
   }
 
   async processBatch(items, apiKey, { onProgress, onItemComplete }) {
-    console.log('[CLIENT] Processing batch:', items);
+    // Use the batch endpoint from ENDPOINTS
+    const batchEndpoint = ENDPOINTS.CONVERT_BATCH;
+    console.log('[CLIENT] Processing batch:', { items, endpoint: batchEndpoint });
 
     const formData = new FormData();
     const urlItems = [];
@@ -312,26 +311,21 @@ _validateAndNormalizeItem(item) {
   }
 
   getDefaultEndpoint(item) {
+    // Use the endpoint utility instead of hardcoding paths
+    const type = this.getItemType(item);
+    return getEndpointUrl(type);
+  }
+
+  getItemType(item) {
+    if (!item) return 'file';
+    
     const fileType = item.file?.name.split('.').pop().toLowerCase();
-    
-    // Determine endpoint based on file type and item type
-    if (item.type === 'audio' || this.isAudioType(fileType)) {
-      return '/multimedia/audio';
-    }
-    if (item.type === 'video' || this.isVideoType(fileType)) {
-      return '/multimedia/video';
-    }
-    if (item.type === 'url') {
-      return '/web/url';
-    }
-    if (item.type === 'parent') {
-      return '/web/parent-url';
-    }
-    if (item.type === 'youtube') {
-      return '/web/youtube';
-    }
-    
-    return '/document/file';
+    if (item.type === 'audio' || this.isAudioType(fileType)) return 'audio';
+    if (item.type === 'video' || this.isVideoType(fileType)) return 'video';
+    if (item.type === 'url') return 'url';
+    if (item.type === 'parent') return 'parent';
+    if (item.type === 'youtube') return 'youtube';
+    return 'file';
   }
 
   isAudioType(ext) {
