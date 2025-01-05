@@ -265,7 +265,7 @@
     background-color: var(--color-success-light);
     color: var(--color-success);
     padding: 4px 8px;
-    border-radius: var(--rounded-full);
+    border-radius: var(--rounded-lg); /* Changed from var(--rounded-full) */
     display: flex;
     align-items: center;
     gap: var(--spacing-2xs);
@@ -289,14 +289,14 @@
   }
   .progress-info small {
     margin-left: var(--spacing-2xs);
-    color: var(--color-text-secondary);
+    color: var (--color-text-secondary);
     font-size: calc(var(--font-size-sm) * 0.9);
   }
 
   .cancel-button {
     padding: var(--spacing-sm) var(--spacing-xl);
     border: none;
-    border-radius: var(--rounded-md);
+    border-radius: var(--rounded-lg); /* Changed from var(--rounded-md) */
     font-size: var(--font-size-base);
     font-weight: 600;
     color: white;
@@ -344,7 +344,7 @@
     color: #fff;
     background: none;
     border: none;
-    border-radius: var (--rounded-md);
+    border-radius: var(--rounded-lg); /* Changed from var(--rounded-md) */
     cursor: pointer;
     overflow: hidden;
     text-align: center;
