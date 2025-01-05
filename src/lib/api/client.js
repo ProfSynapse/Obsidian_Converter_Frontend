@@ -160,42 +160,38 @@ _validateAndNormalizeItem(item) {
   async processItems(items, apiKey, options = {}) {
     try {
       const item = items[0];
-      const endpoint = options.useBatch ? '/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
-      const url = new URL(endpoint, this.baseUrl).toString();
+      const endpoint = options.useBatch ? '/api/v1/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
+      
+      // Ensure proper URL handling
+      const url = new URL(
+        endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`,
+        this.baseUrl
+      ).toString();
 
       // Create FormData
       const formData = new FormData();
       
-      // Don't set Content-Type header when using FormData
-      const headers = {
-        'Authorization': `Bearer ${apiKey}`,
-        'Accept': 'application/json, application/zip, application/octet-stream',
-        'x-api-key': apiKey
-      };
-
       // Handle file uploads based on type
       if (item.file instanceof File) {
         formData.append('file', item.file);
-        formData.append('name', item.file.name);
-        formData.append('type', item.type);
+        formData.append('options', JSON.stringify({
+          includeImages: true,
+          includeMeta: true,
+          convertLinks: true,
+          ...item.options
+        }));
       } else if (item.type === 'url') {
         formData.append('url', item.content);
-      }
-
-      if (item.options) {
         formData.append('options', JSON.stringify(item.options));
       }
 
-      console.log('Making API request:', {
-        url,
-        isRailway: this.isRailway,
-        method: 'POST',
-        headers: { ...headers, Authorization: '[REDACTED]' }
-      });
-
       const response = await fetch(url, {
         method: 'POST',
-        headers,
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json, application/zip, application/octet-stream',
+          'x-api-key': apiKey
+        },
         body: formData,
         mode: 'cors',
         credentials: 'include'
@@ -307,9 +303,23 @@ _validateAndNormalizeItem(item) {
   }
 
   getDefaultEndpoint(item) {
-    // Use the endpoint utility instead of hardcoding paths
     const type = this.getItemType(item);
-    return getEndpointUrl(type);
+    const basePath = '/api/v1';
+    
+    switch(type) {
+        case 'audio':
+            return `${basePath}/multimedia/audio`;
+        case 'video':
+            return `${basePath}/multimedia/video`;
+        case 'url':
+            return `${basePath}/web/url`;
+        case 'parent':
+            return `${basePath}/web/parent-url`;
+        case 'youtube':
+            return `${basePath}/web/youtube`;
+        default:
+            return `${basePath}/document/file`;
+    }
   }
 
   getItemType(item) {

@@ -89,7 +89,11 @@ export class RequestHandler {
     console.log('API Request:', {
       endpoint,
       isRailway: import.meta.env.PROD,
-      headers: options.headers
+      headers: options.headers,
+      fullUrl: new URL(
+        endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`,
+        CONFIG.API.BASE_URL
+      ).toString()
     });
 
     if (!endpoint) {

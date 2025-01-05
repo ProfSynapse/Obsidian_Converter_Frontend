@@ -8,18 +8,26 @@ import { CONFIG } from '../config';
  * @returns {Object} Object containing all endpoint URLs
  */
 function generateEndpoints(baseUrl) {
-    // Remove apiVersion prefix as it's already in the backend routes
     const endpoints = {
-        CONVERT_FILE: `${baseUrl}/document/file`,
-        CONVERT_URL: `${baseUrl}/web/url`,
-        CONVERT_PARENT_URL: `${baseUrl}/web/parent-url`,
-        CONVERT_YOUTUBE: `${baseUrl}/web/youtube`,
-        CONVERT_BATCH: `${baseUrl}/batch`,
-        CONVERT_AUDIO: `${baseUrl}/multimedia/audio`,
-        CONVERT_VIDEO: `${baseUrl}/multimedia/video`
+        CONVERT_FILE: `/api/v1/document/file`,  // Add /api/v1 prefix
+        CONVERT_URL: `/api/v1/web/url`,
+        CONVERT_PARENT_URL: `/api/v1/web/parent-url`,
+        CONVERT_YOUTUBE: `/api/v1/web/youtube`,
+        CONVERT_BATCH: `/api/v1/batch`,
+        CONVERT_AUDIO: `/api/v1/multimedia/audio`,
+        CONVERT_VIDEO: `/api/v1/multimedia/video`
     };
 
-    // Freeze endpoints to prevent modifications
+    // Return full URLs when baseUrl is provided
+    if (baseUrl) {
+        return Object.fromEntries(
+            Object.entries(endpoints).map(([key, path]) => [
+                key,
+                new URL(path, baseUrl).toString()
+            ])
+        );
+    }
+
     return Object.freeze(endpoints);
 }
 
