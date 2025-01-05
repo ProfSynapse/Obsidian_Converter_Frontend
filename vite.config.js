@@ -16,7 +16,7 @@ export default defineConfig({
 		strictPort: true,
 		proxy: {
 			'/api': {
-				target: process.env.APP_API_BASE_URL || 'http://localhost:3000',
+				target: process.env.RAILWAY_API_BASE_URL || 'http://localhost:3000',
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, '')
 			}

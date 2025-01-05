@@ -26,7 +26,7 @@
  * ```
  */
 declare module '$env/static/private' {
-	export const VITE_API_BASE_URL: string;
+	export const RAILWAY_API_BASE_URL: string;
 	export const PORT: string;
 	export const ACSetupSvcPort: string;
 	export const ACSvcPort: string;
@@ -161,7 +161,7 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
-		VITE_API_BASE_URL: string;
+		RAILWAY_API_BASE_URL: string;
 		PORT: string;
 		ACSetupSvcPort: string;
 		ACSvcPort: string;
