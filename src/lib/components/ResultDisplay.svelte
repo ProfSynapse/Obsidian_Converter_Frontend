@@ -9,6 +9,7 @@
   import Container from './common/Container.svelte';
   import ApiKeyInput from './ApiKeyInput.svelte';
   import ProgressBar from './common/ProgressBar.svelte';
+  import Button from './common/Button.svelte';
 
   import { files } from '$lib/stores/files.js';
   import { apiKey } from '$lib/stores/apiKey.js';
@@ -135,12 +136,14 @@
 
       <!-- Replace Convert More button with Refresh button -->
       <div class="start-button-container">
-        <button
-          class="start-button breathing-gradient"
+        <Button 
+          variant="primary"
+          size="large"
+          fullWidth
           on:click={handleRefresh}
         >
           Refresh Page
-        </button>
+        </Button>
       </div>
     {:else}
       <!-- Removed the conversion-controls class to eliminate the divider -->
@@ -165,24 +168,26 @@
               <small>({currentFile})</small>
             {/if}
           </p>
-          <button
-            class="cancel-button breathing-gradient-red"
+          <Button
+            variant="danger"
             on:click={handleCancelConversion}
           >
             Stop Conversion
-          </button>
+          </Button>
         </div>
 
       {:else}
         <!-- Modify this section to check conversion status -->
         {#if $conversionStatus.status === 'completed'}
           <div class="start-button-container">
-            <button
-              class="start-button breathing-gradient"
+            <Button 
+              variant="primary"
+              size="large"
+              fullWidth
               on:click={handleRefresh}
             >
               Refresh Page
-            </button>
+            </Button>
           </div>
         {:else if !isConverting}
           <!-- Optional error/stopped messages -->
@@ -197,14 +202,15 @@
           {/if}
 
           <div class="start-button-container">
-            <button
-              class="start-button breathing-gradient"
+            <Button
+              variant="primary"
+              size="large"
+              fullWidth
               disabled={!canConvert}
               on:click={handleStartConversion}
-              in:fly={{ y: 20, duration: 300 }}
             >
               Start Conversion {canConvert ? '✓' : '✗'}
-            </button>
+            </Button>
           </div>
         {/if}
       {/if}
@@ -293,28 +299,6 @@
     font-size: calc(var(--font-size-sm) * 0.9);
   }
 
-  .cancel-button {
-    padding: var(--spacing-sm) var(--spacing-xl);
-    border: none;
-    border-radius: var(--rounded-lg); /* Changed from var(--rounded-md) */
-    font-size: var(--font-size-base);
-    font-weight: 600;
-    color: white;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .breathing-gradient-red {
-    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
-    background-size: 200% 200%;
-    animation: breathe 3s ease-in-out infinite;
-  }
-
-  .cancel-button:hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2);
-  }
-
   .error-message {
     margin: 0;
     color: var(--color-error);
@@ -333,48 +317,6 @@
     display: flex;
     justify-content: center;
     padding: var(--spacing-md) 0;
-  }
-
-  .start-button {
-    width: 80%;
-    max-width: 400px;
-    padding: var(--spacing-md) var(--spacing-lg);
-    font-size: var(--font-size-lg);
-    font-weight: 600;
-    color: #fff;
-    background: none;
-    border: none;
-    border-radius: var(--rounded-lg); /* Changed from var(--rounded-md) */
-    cursor: pointer;
-    overflow: hidden;
-    text-align: center;
-  }
-  .start-button:disabled {
-    background: var(--color-disabled);
-    cursor: not-allowed;
-  }
-
-  .breathing-gradient {
-    background: linear-gradient(90deg, #3B82F6 0%, #9333EA 100%);
-    background-size: 200% 200%;
-    animation: breathe 3s ease-in-out infinite;
-  }
-
-  @keyframes breathe {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  .start-button:not(:disabled):hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
   }
 
   /* Responsive design */
