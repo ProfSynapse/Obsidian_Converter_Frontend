@@ -18,6 +18,13 @@ class ConversionClient {
     this.isRailway = import.meta.env.PROD;
     // Get supported types from FILES.TYPES instead of ITEM_TYPES
     this.supportedTypes = Object.values(CONFIG.FILES.TYPES || {});
+    
+    // Log the API configuration
+    console.log('API Configuration:', {
+      baseUrl: this.baseUrl,
+      isRailway: this.isRailway,
+      isProd: import.meta.env.PROD
+    });
   }
 
   /**
@@ -172,12 +179,15 @@ _validateAndNormalizeItem(item) {
       // Process single item
       const item = items[0];
       const endpoint = useBatch ? '/batch' : (getEndpoint?.(item) || this.getDefaultEndpoint(item));
-      const url = `${this.baseUrl}${endpoint}`;
+      
+      // Ensure we have a complete URL
+      const url = new URL(endpoint, this.baseUrl).toString();
 
       console.log('Making API request:', {
         url,
         isRailway: this.isRailway,
-        method: 'POST'
+        method: 'POST',
+        headers
       });
 
       // Only use batch processing for multiple items
@@ -249,7 +259,8 @@ _validateAndNormalizeItem(item) {
       console.error('API Request failed:', {
         error,
         isRailway: this.isRailway,
-        baseUrl: this.baseUrl
+        baseUrl: this.baseUrl,
+        stack: error.stack
       });
       throw error;
     }
