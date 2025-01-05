@@ -165,11 +165,17 @@ _validateAndNormalizeItem(item) {
         throw new ConversionError('Valid file is required for conversion', 400);
       }
 
+      // Add file size validation (50MB limit)
+      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+      if (item.file.size > MAX_FILE_SIZE) {
+        throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
+      }
+
       const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
       
-      // Use 'document' as the field name instead of 'file'
-      formData.append('document', item.file);
+      // Use 'uploadedFile' as the field name - this should match your server's multer config
+      formData.append('uploadedFile', item.file);
 
       // Add options as a separate field
       const conversionOptions = {
@@ -194,17 +200,24 @@ _validateAndNormalizeItem(item) {
         headers: {
           'Authorization': `Bearer ${apiKey}`
         },
-        body: formData,
-        credentials: 'include',
-        mode: 'cors'
+        body: formData
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        
+        // Handle specific error cases
         if (response.status === 413) {
           throw new ConversionError('File size exceeds server limit', 413);
         }
-        const errorData = await response.json();
-        throw new ConversionError(errorData.message || 'Conversion failed', response.status);
+        if (errorData.message?.includes('Unexpected field')) {
+          throw new ConversionError('Server configuration error - please contact support', 500);
+        }
+        
+        throw new ConversionError(
+          errorData.message || 'Conversion failed', 
+          response.status
+        );
       }
 
       const contentType = response.headers.get('content-type');
