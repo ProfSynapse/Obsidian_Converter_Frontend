@@ -159,29 +159,20 @@ _validateAndNormalizeItem(item) {
    */
   async processItems(items, apiKey, options = {}) {
     try {
+      const item = items[0];
+      const endpoint = options.useBatch ? '/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
+      const url = new URL(endpoint, this.baseUrl).toString();
+
+      // Create FormData
+      const formData = new FormData();
+      
+      // Don't set Content-Type header when using FormData
       const headers = {
         'Authorization': `Bearer ${apiKey}`,
         'Accept': 'application/json, application/zip, application/octet-stream',
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey // Add API key header to match backend expectation
+        'x-api-key': apiKey
       };
 
-      // Process single item
-      const item = items[0];
-      const endpoint = options.useBatch ? '/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
-      
-      // Ensure proper URL construction
-      const url = new URL(endpoint, this.baseUrl).toString();
-
-      console.log('Making API request:', {
-        url,
-        isRailway: this.isRailway,
-        method: 'POST',
-        headers: { ...headers, Authorization: '[REDACTED]' }
-      });
-
-      const formData = new FormData();
-      
       // Handle file uploads based on type
       if (item.file instanceof File) {
         formData.append('file', item.file);
@@ -195,13 +186,19 @@ _validateAndNormalizeItem(item) {
         formData.append('options', JSON.stringify(item.options));
       }
 
+      console.log('Making API request:', {
+        url,
+        isRailway: this.isRailway,
+        method: 'POST',
+        headers: { ...headers, Authorization: '[REDACTED]' }
+      });
+
       const response = await fetch(url, {
         method: 'POST',
-        headers: headers,
+        headers,
         body: formData,
         mode: 'cors',
-        credentials: 'include',
-        keepalive: true // Add keepalive for better connection handling
+        credentials: 'include'
       });
 
       if (!response.ok) {
