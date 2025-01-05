@@ -2,7 +2,7 @@
 const ENV = {
     API_BASE_URL: import.meta.env.PROD ? 
         'https://backend-production-6e08.up.railway.app/api/v1' : 
-        'http://localhost:8080/api/v1',
+        'http://localhost:3000/api/v1',
     MAX_PAYLOAD_SIZE: 50 * 1024 * 1024, // 50MB
     CORS_ORIGIN: import.meta.env.VITE_CORS_ORIGIN || '*'
 };

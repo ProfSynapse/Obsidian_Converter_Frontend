@@ -175,6 +175,22 @@ export async function startConversion() {
 }
 
 /**
+ * Cancels the ongoing conversion process
+ */
+export function cancelConversion() {
+  console.log('Cancelling conversion');
+  conversionStatus.setStatus('cancelled');
+  client.cancelRequests(); // Assuming client has a method to cancel pending requests
+  files.update(items => 
+    items.map(item => 
+      item.status === 'converting' 
+        ? { ...item, status: 'cancelled' } 
+        : item
+    )
+  );
+}
+
+/**
  * Shows feedback message
  */
 function showFeedback(message, type = 'info') {

@@ -112,7 +112,7 @@
 
 <div class="file-uploader" in:fade={{ duration: 200 }}>
   <!-- Single Container for all upload options -->
-  <Container title="Add Files" subtitle="Upload files or convert from URL">
+  <Container title="Add Convertables!" subtitle="Upload files or convert from URL">
     <!-- URL Input Section -->
     <div class="section url-section">
       <TabNavigation />

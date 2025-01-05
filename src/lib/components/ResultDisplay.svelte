@@ -89,6 +89,13 @@
 
   function handleCancelConversion() {
     dispatch('cancelConversion');
+    // Reset conversion status to idle
+    conversionStatus.update(s => ({
+      ...s,
+      status: 'idle',
+      progress: 0,
+      currentFile: null
+    }));
   }
 
   function handleApiKeySet(event) {
@@ -97,8 +104,8 @@
     console.log('API Key Set event:', event.detail);
   }
 
-  function handleConvertMore() {
-    dispatch('convertMore');
+  function handleRefresh() {
+    window.location.reload();
   }
 </script>
 
@@ -126,13 +133,13 @@
         {/each}
       </ul>
 
-      <!-- Add Convert More button -->
+      <!-- Replace Convert More button with Refresh button -->
       <div class="start-button-container">
         <button
           class="start-button breathing-gradient"
-          on:click={handleConvertMore}
+          on:click={handleRefresh}
         >
-          Convert More Files
+          Refresh Page
         </button>
       </div>
     {:else}
@@ -159,10 +166,10 @@
             {/if}
           </p>
           <button
-            class="cancel-button"
+            class="cancel-button breathing-gradient-red"
             on:click={handleCancelConversion}
           >
-            Cancel
+            Stop Conversion
           </button>
         </div>
 
@@ -275,12 +282,25 @@
   }
 
   .cancel-button {
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--color-background-hover);
+    padding: var(--spacing-sm) var(--spacing-xl);
     border: none;
     border-radius: var(--rounded-md);
     font-size: var(--font-size-base);
+    font-weight: 600;
+    color: white;
     cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .breathing-gradient-red {
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    background-size: 200% 200%;
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  .cancel-button:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 10px rgba(220, 38, 38, 0.2);
   }
 
   .error-message {

@@ -7,7 +7,7 @@
   import { apiKey } from '$lib/stores/apiKey.js';
   import { conversionStatus } from '$lib/stores/conversionStatus.js';
   import { files } from '$lib/stores/files.js';
-  import { startConversion } from '$lib/utils/conversionManager.js';
+  import { startConversion, cancelConversion } from '$lib/utils/conversionManager.js';
   import { slide } from 'svelte/transition';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
 
@@ -92,6 +92,11 @@
       conversionStatus.setStatus('error');
     }
   }
+
+  function handleCancelConversion() {
+    console.log('ObsidianNoteConverter: Cancelling conversion');
+    cancelConversion();
+  }
 </script>
 
 <main class="converter-app">
@@ -119,6 +124,7 @@
       >
         <ResultDisplay 
           on:startConversion={handleStartConversion}
+          on:cancelConversion={handleCancelConversion}
           on:convertMore={() => window.location.reload()}
         />
       </section>

@@ -374,6 +374,15 @@ _validateAndNormalizeItem(item) {
         throw ErrorUtils.wrap(error);
     }
   }
+
+  cancelRequests() {
+    // Implementation depends on your HTTP client
+    // If using fetch with AbortController:
+    if (this.controller) {
+      this.controller.abort();
+      this.controller = null;
+    }
+  }
 }
 
 // Export singleton instance and related types
