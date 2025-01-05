@@ -7,7 +7,7 @@ export const CONFIG = {
         RETRY_DELAY: 1000,
         TIMEOUT: 300000,
         BASE_URL: import.meta.env.PROD ? 
-            'https://backend-production-6e08.up.railway.app' : // Remove /api/v1 from base URL
+            'https://backend-production-6e08.up.railway.app/api/v1' : // Remove /api/v1 from base URL
             'http://localhost:8080',
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream',
