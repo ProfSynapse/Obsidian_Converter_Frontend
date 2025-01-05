@@ -168,8 +168,8 @@ _validateAndNormalizeItem(item) {
       const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
       
-      // Append file directly without creating new Blob
-      formData.append('file', item.file);
+      // Use 'document' as the field name instead of 'file'
+      formData.append('document', item.file);
 
       // Add options as a separate field
       const conversionOptions = {
@@ -200,6 +200,9 @@ _validateAndNormalizeItem(item) {
       });
 
       if (!response.ok) {
+        if (response.status === 413) {
+          throw new ConversionError('File size exceeds server limit', 413);
+        }
         const errorData = await response.json();
         throw new ConversionError(errorData.message || 'Conversion failed', response.status);
       }
