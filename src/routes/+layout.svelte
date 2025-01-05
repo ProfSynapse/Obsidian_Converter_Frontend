@@ -25,10 +25,10 @@
 <div class="app-shell">
   <!-- Header -->
   <header class="header animate-slide-in">
-    <div class="flex items-center justify-center">
+    <div class="flex items-center justify-center text-center w-full">
       <h1 class="header-title">
         <span class="icon">📝</span>
-        <span>Obsidian Note Converter</span>
+        <span>Markdown Note Converter</span>
       </h1>
     </div>
   </header>
@@ -56,10 +56,10 @@
     min-height: 100vh;
     width: 100%;
     background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    padding: var(--spacing-xl);
+    padding: var(--spacing-md);
     box-sizing: border-box;
     align-items: center;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-md);
   }
 
   /* Header Styles */
@@ -73,23 +73,24 @@
   }
 
   .header-title {
-    font-size: var(--font-size-2xl);
+    font-size: var(--font-size-4xl);
     font-weight: var(--font-weight-bold);
     color: var(--color-text-on-dark);
-    margin: 0;
+    margin: 0 auto;
     display: flex;
     align-items: center;
-    gap: var(--spacing-xs);
+    justify-content: center;
+    gap: var(--spacing-sm);
   }
 
   .header-title .icon {
-    font-size: 1.2em;
+    font-size: 1.5em;
   }
 
   /* Main Content Area */
   .main {
     flex: 1;
-    padding: var(--spacing-xl) 0;
+    padding: var(--spacing-md) 0;
     position: relative;
     display: flex;
     justify-content: center;
@@ -142,7 +143,7 @@
     }
 
     .header-title {
-      font-size: var(--font-size-xl);
+      font-size: var(--font-size-2xl);
     }
 
     .main {

@@ -114,10 +114,6 @@
 
       <ul class="result-list">
         {#each $convertedFiles as file (file.id)}
-          {#if file.type}
-            {@const icon = getFileIcon(file.type)}
-            {@const debug = console.log('File type and icon:', { name: file.name, type: file.type, icon })}
-          {/if}
           <li class="result-item" in:fade out:fade>
             <div class="file-info">
               <span class="icon">{getFileIcon(file.type)}</span>
