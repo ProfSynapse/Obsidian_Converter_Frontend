@@ -100,6 +100,11 @@ export class RequestHandler {
     }
 
     try {
+        // If FormData is being sent, don't set Content-Type
+        if (options.body instanceof FormData) {
+            delete options.headers['Content-Type'];
+        }
+
         const response = await fetch(apiEndpoint, {
             ...DEFAULT_CONFIG,
             ...options,

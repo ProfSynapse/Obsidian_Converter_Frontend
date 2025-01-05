@@ -160,47 +160,43 @@ _validateAndNormalizeItem(item) {
   async processItems(items, apiKey, options = {}) {
     try {
       const item = items[0];
-      
-      // Ensure endpoint always starts with /api/v1
-      const baseEndpoint = options.useBatch ? '/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
-      const endpoint = baseEndpoint.startsWith('/api/v1') ? baseEndpoint : `/api/v1${baseEndpoint}`;
-      
-      // Ensure proper URL construction with new URL API
+      const endpoint = options.useBatch ? '/api/v1/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
       const url = new URL(endpoint, this.baseUrl).toString();
 
-      console.log('Making API request:', {
-        url,
-        endpoint,
-        baseUrl: this.baseUrl,
-        isRailway: this.isRailway,
-        method: 'POST'
+      console.log('Processing item:', {
+        name: item.file?.name,
+        type: item.file?.type,
+        size: item.file?.size
       });
 
-      // Create FormData properly
+      // Create FormData
       const formData = new FormData();
       
       if (item.file instanceof File) {
-        // Just append the file first
-        formData.append('file', item.file);
-
-        // Then append options as a single JSON string
-        const itemOptions = {
+        // Ensure proper field name 'file' for multer
+        formData.append('file', item.file, item.file.name);
+        
+        // Convert options to a proper string
+        const optionsString = JSON.stringify({
           includeImages: true,
           includeMeta: true,
           convertLinks: true,
           ...item.options
-        };
-        formData.append('options', JSON.stringify(itemOptions));
+        });
+        
+        formData.append('options', new Blob([optionsString], {
+          type: 'application/json'
+        }));
 
-        console.log('Uploading with FormData:', {
+        console.log('FormData contents:', {
           fileName: item.file.name,
           fileType: item.file.type,
           fileSize: item.file.size,
-          options: itemOptions
+          options: optionsString
         });
       }
 
-      // Only set necessary headers, let browser handle Content-Type
+      // Only set Authorization header, let browser handle multipart boundary
       const headers = {
         'Authorization': `Bearer ${apiKey}`,
         'Accept': 'application/json, application/zip, application/octet-stream'
@@ -210,15 +206,17 @@ _validateAndNormalizeItem(item) {
         method: 'POST',
         headers,
         body: formData,
-        credentials: 'include'
+        // Ensure credentials and mode are set
+        credentials: 'include',
+        mode: 'cors'
       });
 
-      if (!response.ok) {
-        throw new ConversionError(
-          await response.text() || 'Conversion failed',
-          response.status
-        );
-      }
+      // Log response headers for debugging
+      console.log('Response headers:', {
+        contentType: response.headers.get('content-type'),
+        contentLength: response.headers.get('content-length'),
+        status: response.status
+      });
 
       // Check content type for proper handling
       const contentType = response.headers.get('content-type');
