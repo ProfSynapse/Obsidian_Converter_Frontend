@@ -12,6 +12,12 @@ export async function POST({ request }) {
     return json({ error: 'No files specified for download' }, { status: 400 });
   }
 
+  // Set proper headers for multipart form data
+  const headers = {
+    'Content-Type': 'multipart/form-data',
+    'Accept': 'application/json, application/zip'
+  };
+
   const zipFileName = `obsidian-notes-${Date.now()}.zip`;
   const zipFilePath = path.join(process.cwd(), 'temp', zipFileName);
 

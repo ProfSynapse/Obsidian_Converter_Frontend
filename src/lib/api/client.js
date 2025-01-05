@@ -161,39 +161,42 @@ _validateAndNormalizeItem(item) {
     try {
       const item = items[0];
       const endpoint = options.useBatch ? '/api/v1/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
-      
-      // Ensure proper URL handling
-      const url = new URL(
-        endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`,
-        this.baseUrl
-      ).toString();
+      const url = new URL(endpoint, this.baseUrl).toString();
 
-      // Create FormData
+      // Create FormData properly
       const formData = new FormData();
       
-      // Handle file uploads based on type
       if (item.file instanceof File) {
+        // Just append the file first
         formData.append('file', item.file);
-        formData.append('options', JSON.stringify({
+
+        // Then append options as a single JSON string
+        const itemOptions = {
           includeImages: true,
           includeMeta: true,
           convertLinks: true,
           ...item.options
-        }));
-      } else if (item.type === 'url') {
-        formData.append('url', item.content);
-        formData.append('options', JSON.stringify(item.options));
+        };
+        formData.append('options', JSON.stringify(itemOptions));
+
+        console.log('Uploading with FormData:', {
+          fileName: item.file.name,
+          fileType: item.file.type,
+          fileSize: item.file.size,
+          options: itemOptions
+        });
       }
+
+      // Only set necessary headers, let browser handle Content-Type
+      const headers = {
+        'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'application/json, application/zip, application/octet-stream'
+      };
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'application/json, application/zip, application/octet-stream',
-          'x-api-key': apiKey
-        },
+        headers,
         body: formData,
-        mode: 'cors',
         credentials: 'include'
       });
 
