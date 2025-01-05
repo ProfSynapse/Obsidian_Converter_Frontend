@@ -168,9 +168,8 @@ _validateAndNormalizeItem(item) {
       const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
       
-      // Ensure proper file field name and file data
-      const file = new Blob([item.file], { type: item.file.type });
-      formData.append('file', file, item.file.name);
+      // Append file directly without creating new Blob
+      formData.append('file', item.file);
 
       // Add options as a separate field
       const conversionOptions = {
@@ -190,12 +189,10 @@ _validateAndNormalizeItem(item) {
         options: conversionOptions
       });
 
-      // Use the RequestHandler for consistent handling
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`
-          // Let browser set content-type for FormData
         },
         body: formData,
         credentials: 'include',
