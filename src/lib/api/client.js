@@ -161,106 +161,106 @@ _validateAndNormalizeItem(item) {
     try {
       const item = items[0];
       
-      // Use the full API path including /api/v1
-      const endpoint = '/api/v1/document/file';
-      
-      // Ensure base URL doesn't end with a slash
-      const baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
-      
-      // Construct the full URL properly
-      const url = baseUrl + endpoint;
+      // Validate file size
+      if (item.file?.size > CONFIG.API.MAX_FILE_SIZE) {
+        throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
+      }
 
-      console.log('Making API request:', {
-        endpoint,
-        fullUrl: url,
-        fileName: item.file?.name,
-        fileType: item.file?.type,
-        fileSize: item.file?.size
-      });
-
-      // Create FormData properly
+      // Get endpoint from ENDPOINTS (already includes /api/v1 from base URL)
+      const endpoint = ENDPOINTS.CONVERT_FILE;
+      
+      // Create FormData with standardized structure
       const formData = new FormData();
-      
       if (item.file instanceof File) {
-        // Set file first
         formData.append('file', item.file);
-        
-        // Set options as JSON string
-        const options = JSON.stringify({
+        formData.append('options', JSON.stringify({
           includeImages: true,
           includeMeta: true,
-          convertLinks: true
+          convertLinks: true,
+          ...options
+        }));
+      }
+
+      // Make request with proper timeout and error handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), CONFIG.API.TIMEOUT);
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Accept': 'application/json, application/zip, application/octet-stream'
+          },
+          body: formData,
+          signal: controller.signal,
+          credentials: 'include',
+          mode: 'cors'
         });
-        formData.append('options', options);
 
-        console.log('FormData:', {
-          hasFile: formData.has('file'),
-          hasOptions: formData.has('options'),
-          fileName: item.file.name
-        });
+        clearTimeout(timeoutId);
+
+        // Handle specific error codes
+        if (!response.ok) {
+          const errorMessage = await this._getErrorMessage(response);
+          throw new ConversionError(errorMessage, response.status);
+        }
+
+        // Handle successful response
+        return this._handleSuccessResponse(response, item);
+
+      } catch (error) {
+        if (error.name === 'AbortError') {
+          throw new ConversionError('Request timed out after 5 minutes', 408);
+        }
+        throw error;
       }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'application/json, application/zip, application/octet-stream'
-        },
-        body: formData,
-        credentials: 'include',
-        mode: 'cors'
-      });
-
-      // Log response headers for debugging
-      console.log('Response headers:', {
-        contentType: response.headers.get('content-type'),
-        contentLength: response.headers.get('content-length'),
-        status: response.status
-      });
-
-      // Check content type for proper handling
-      const contentType = response.headers.get('content-type');
-      if (contentType?.includes('application/zip') || contentType?.includes('application/octet-stream')) {
-        const blob = await response.blob();
-        // Get filename from Content-Disposition header or generate one
-        const disposition = response.headers.get('content-disposition');
-        const filename = disposition ? 
-          disposition.split('filename=')[1].replace(/"/g, '') : 
-          `obsidian_conversion_${new Date().getTime()}.zip`;
-
-        // Trigger download
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        onItemComplete?.(item.id, true);
-        return { success: true };
-      }
-
-      // Handle JSON response for other cases
-      const result = await response.json();
-      if (!result.success) {
-        throw new ConversionError(result.error || 'Conversion failed');
-      }
-
-      return result;
 
     } catch (error) {
-      console.error('API Request failed:', {
-        error,
-        isRailway: this.isRailway,
-        baseUrl: this.baseUrl,
-        stack: error.stack
-      });
+      console.error('API Request failed:', error);
       throw error;
     }
   }
 
+  async _getErrorMessage(response) {
+    try {
+      const data = await response.json();
+      switch (response.status) {
+        case 400:
+          return data.message || 'Invalid file or upload interrupted';
+        case 404:
+          return 'Invalid API endpoint';
+        case 413:
+          return 'File size exceeds maximum limit of 50MB';
+        case 500:
+          return 'Server error during file processing';
+        default:
+          return data.message || 'Unknown error occurred';
+      }
+    } catch {
+      return 'Error processing server response';
+    }
+  }
+
+  async _handleSuccessResponse(response, item) {
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType?.includes('application/zip') || 
+        contentType?.includes('application/octet-stream')) {
+      return this._handleFileDownload(response, item);
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new ConversionError(result.error || 'Conversion failed');
+    }
+    return result;
+  }
+
+  /**
+   * Processes batch items
+   * @public
+   */
   async processBatch(items, apiKey, { onProgress, onItemComplete }) {
     // Use the batch endpoint from ENDPOINTS
     const batchEndpoint = ENDPOINTS.CONVERT_BATCH;

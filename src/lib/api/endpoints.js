@@ -8,18 +8,9 @@ import { CONFIG } from '../config';
  * @returns {Object} Object containing all endpoint URLs
  */
 function generateEndpoints(baseUrl) {
-    const basePath = '/api/v1';
-    const endpoints = {
-        CONVERT_FILE: `${basePath}/document/file`,
-        CONVERT_URL: `${basePath}/web/url`,
-        CONVERT_PARENT_URL: `${basePath}/web/parent-url`,
-        CONVERT_YOUTUBE: `${basePath}/web/youtube`,
-        CONVERT_BATCH: `${basePath}/batch`,
-        CONVERT_AUDIO: `${basePath}/multimedia/audio`,
-        CONVERT_VIDEO: `${basePath}/multimedia/video`
-    };
+    // Use endpoints from config
+    const endpoints = CONFIG.API.ENDPOINTS;
 
-    // Ensure baseUrl doesn't end with a slash when combining
     if (baseUrl) {
         const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         return Object.fromEntries(

@@ -6,15 +6,22 @@ export const CONFIG = {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
         TIMEOUT: 300000,
-        BASE_URL: import.meta.env.PROD ? 
-            'https://backend-production-6e08.up.railway.app/api/v1' : // Remove /api/v1 from base URL
-            'http://localhost:8080',
+        BASE_URL: import.meta.env.API_BASE_URL || 'https://backend-production-6e08.up.railway.app/api/v1',
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream',
             'Content-Type': 'application/json',
             'Origin': import.meta.env.PROD ? 
                 'https://frontend-production-2748.up.railway.app' : 
                 'http://localhost:5173'
+        },
+        ENDPOINTS: {
+            FILE: '/document/file',
+            URL: '/web/url',
+            PARENT_URL: '/web/parent-url',
+            YOUTUBE: '/web/youtube',
+            BATCH: '/batch',
+            AUDIO: '/multimedia/audio',
+            VIDEO: '/multimedia/video'
         }
     },
 
