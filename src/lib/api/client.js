@@ -165,17 +165,14 @@ _validateAndNormalizeItem(item) {
         throw new ConversionError('Valid file is required for conversion', 400);
       }
 
-      // Validate file size
-      const maxSize = CONFIG.API.MAX_FILE_SIZE;
-      if (item.file.size > maxSize) {
-        throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
-      }
-
-      // Use ENDPOINTS for proper URL construction
       const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
-      formData.append('file', item.file);
+      
+      // Ensure proper file field name and file data
+      const file = new Blob([item.file], { type: item.file.type });
+      formData.append('file', file, item.file.name);
 
+      // Add options as a separate field
       const conversionOptions = {
         includeImages: true,
         includeMeta: true,
@@ -183,19 +180,22 @@ _validateAndNormalizeItem(item) {
         ...options,
         filename: item.file.name
       };
-      
+
       formData.append('options', JSON.stringify(conversionOptions));
 
       console.log('Making request to:', endpoint, {
         name: item.file.name,
         size: item.file.size,
-        type: item.file.type
+        type: item.file.type,
+        options: conversionOptions
       });
 
+      // Use the RequestHandler for consistent handling
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${apiKey}`
+          // Let browser set content-type for FormData
         },
         body: formData,
         credentials: 'include',

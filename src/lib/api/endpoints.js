@@ -21,11 +21,16 @@ function generateEndpoints(baseUrl) {
 
     // Ensure proper URL construction
     if (baseUrl) {
+        // Remove trailing slashes and normalize
         const normalizedBase = baseUrl.replace(/\/+$/, '');
+        const apiBase = normalizedBase.includes('/api/v1') ? 
+            normalizedBase : 
+            `${normalizedBase}/api/v1`;
+
         return Object.fromEntries(
             Object.entries(endpoints).map(([key, path]) => [
                 key,
-                `${normalizedBase}${path}`
+                `${apiBase}${path}`
             ])
         );
     }

@@ -86,23 +86,28 @@ export class RequestHandler {
    */
   static async makeRequest(endpoint, options) {
     try {
-      // Special handling for FormData requests
       if (options.body instanceof FormData) {
+        // Clone headers to avoid mutation
         const headers = { ...options.headers };
         delete headers['Content-Type']; // Remove Content-Type for FormData
-        
-        const response = await fetch(endpoint, {
-          method: 'POST',
+
+        const requestOptions = {
+          method: options.method || 'POST',
           credentials: 'include',
           mode: 'cors',
           headers,
-          body: options.body
-        });
+          body: options.body,
+          signal: options.signal,
+          keepalive: true
+        };
 
-        return response;
+        // Log request details
+        this._logRequest(endpoint, requestOptions);
+
+        return await fetch(endpoint, requestOptions);
       }
 
-      // Regular request handling
+      // Handle non-FormData requests
       const response = await fetch(endpoint, {
         ...DEFAULT_CONFIG,
         ...options,
