@@ -173,7 +173,7 @@ _validateAndNormalizeItem(item) {
       const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
       
-      // Ensure proper file field name matches backend expectation
+      // Use 'document' as the field name to match backend expectation
       formData.append('document', item.file, item.file.name);
 
       const conversionOptions = {
@@ -201,15 +201,14 @@ _validateAndNormalizeItem(item) {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
-            // Remove Content-Type header to let browser set it with boundary
+            'Accept': 'application/json, application/zip, application/octet-stream'
+            // Don't set Content-Type - let browser handle it for FormData
           },
           body: formData,
           signal: controller.signal,
           credentials: 'include',
           mode: 'cors',
-          // Add these to ensure proper upload
-          keepalive: true,
-          timeout: CONFIG.API.TIMEOUT || 30000
+          keepalive: true
         });
 
         clearTimeout(timeoutId);
