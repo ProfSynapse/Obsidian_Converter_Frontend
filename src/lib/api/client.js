@@ -165,18 +165,16 @@ _validateAndNormalizeItem(item) {
         throw new ConversionError('Valid file is required for conversion', 400);
       }
 
-      // Validate file size
-      if (item.file.size > CONFIG.API.MAX_FILE_SIZE) {
+      // Add file size validation matching Railway config
+      const maxSize = 50 * 1024 * 1024; // 50MB
+      if (item.file.size > maxSize) {
         throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
       }
 
-      const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
-      
-      // Important: Use 'file' as the field name, not 'document'
-      formData.append('file', item.file);
+      formData.append('file', item.file); // Important: Use 'file' field name
 
-      // Add options as a separate field
+      // Add conversion options as separate field
       const conversionOptions = {
         includeImages: true,
         includeMeta: true,
@@ -184,23 +182,14 @@ _validateAndNormalizeItem(item) {
         ...options,
         filename: item.file.name
       };
-
+      
       formData.append('options', JSON.stringify(conversionOptions));
 
-      console.log('Uploading file:', {
-        name: item.file.name,
-        size: item.file.size,
-        type: item.file.type,
-        endpoint,
-        options: conversionOptions
-      });
-
-      const response = await fetch(endpoint, {
+      const response = await fetch(`${this.baseUrl}/api/v1/document/file`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'application/json, application/zip, application/octet-stream'
-          // Don't set Content-Type - let browser handle it for FormData
+          // Don't set Content-Type - browser will set it for FormData
         },
         body: formData,
         credentials: 'include',
@@ -208,17 +197,21 @@ _validateAndNormalizeItem(item) {
       });
 
       if (!response.ok) {
-        const errorMessage = await this._getErrorMessage(response);
-        throw new ConversionError(errorMessage, response.status);
+        const errorData = await response.json();
+        throw new ConversionError(errorData.message || 'Conversion failed', response.status);
       }
 
-      return this._handleSuccessResponse(response, item);
+      const contentType = response.headers.get('content-type');
+      if (contentType?.includes('application/zip') || contentType?.includes('application/octet-stream')) {
+        return response.blob();
+      }
+
+      return response.json();
 
     } catch (error) {
       console.error('Upload failed:', {
         error,
         itemName: items[0]?.file?.name,
-        endpoint: ENDPOINTS.CONVERT_FILE,
         size: items[0]?.file?.size
       });
       throw error;

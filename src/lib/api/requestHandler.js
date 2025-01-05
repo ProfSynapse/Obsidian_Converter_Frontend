@@ -86,19 +86,17 @@ export class RequestHandler {
    */
   static async makeRequest(endpoint, options) {
     try {
-      // Special handling for FormData
+      // Special handling for FormData requests
       if (options.body instanceof FormData) {
-        // Remove any existing Content-Type header
         const headers = { ...options.headers };
-        delete headers['Content-Type'];
+        delete headers['Content-Type']; // Remove Content-Type for FormData
         
         const response = await fetch(endpoint, {
-          ...DEFAULT_CONFIG,
-          ...options,
-          headers: {
-            ...headers,
-            'Accept': 'application/json, application/zip, application/octet-stream'
-          }
+          method: 'POST',
+          credentials: 'include',
+          mode: 'cors',
+          headers,
+          body: options.body
         });
 
         return response;

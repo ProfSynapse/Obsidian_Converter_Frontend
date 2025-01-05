@@ -1,3 +1,10 @@
+// Environment variables with fallbacks
+const ENV = {
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1',
+    MAX_PAYLOAD_SIZE: 50 * 1024 * 1024, // 50MB
+    CORS_ORIGIN: import.meta.env.VITE_CORS_ORIGIN || '*'
+};
+
 // Use Railway's URL in production
 export const API_BASE_URL = import.meta.env.RAILWAY_API_BASE_URL;
 
@@ -6,13 +13,10 @@ export const CONFIG = {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
         TIMEOUT: 120000, // 2 minutes
-        BASE_URL: import.meta.env.API_BASE_URL || 'https://backend-production-6e08.up.railway.app/api/v1',
+        BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
-            'Accept': 'application/json, application/zip, application/octet-stream',
-            'Content-Type': 'application/json',
-            'Origin': import.meta.env.PROD ? 
-                'https://frontend-production-2748.up.railway.app' : 
-                'http://localhost:5173'
+            'Accept': 'application/json, application/zip, application/octet-stream'
+            // Don't set Content-Type here - let it be handled per request
         },
         ENDPOINTS: {
             FILE: '/document/file',
@@ -23,7 +27,13 @@ export const CONFIG = {
             AUDIO: '/multimedia/audio',
             VIDEO: '/multimedia/video'
         },
-        MAX_FILE_SIZE: 52428800 // 50MB in bytes
+        MAX_FILE_SIZE: ENV.MAX_PAYLOAD_SIZE
+    },
+
+    CORS: {
+        ORIGIN: ENV.CORS_ORIGIN,
+        METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'Accept']
     },
 
     FILES: {
@@ -132,6 +142,15 @@ export const CONFIG = {
     }
 };
 
+// Add CORS configuration check
+if (import.meta.env.DEV) {
+    console.log('API Configuration:', {
+        baseUrl: CONFIG.API.BASE_URL,
+        maxFileSize: CONFIG.API.MAX_FILE_SIZE,
+        corsOrigin: CONFIG.CORS.ORIGIN
+    });
+}
+
 // Error messages
 export const ERRORS = {
     UNSUPPORTED_FILE_TYPE: 'Unsupported file type',
@@ -158,3 +177,5 @@ export const requiresApiKey = (file) => {
 // Freeze configurations to prevent modifications
 Object.freeze(CONFIG);
 Object.freeze(ERRORS);
+
+export default CONFIG;
