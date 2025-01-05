@@ -19,12 +19,9 @@ function generateEndpoints(baseUrl) {
         CONVERT_VIDEO: '/multimedia/video'
     };
 
-    // If we have a base URL, prepend it to all endpoints
+    // Ensure proper URL construction
     if (baseUrl) {
-        // Ensure proper API base URL construction
-        const apiBase = baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
-        const normalizedBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
-        
+        const normalizedBase = baseUrl.replace(/\/+$/, '');
         return Object.fromEntries(
             Object.entries(endpoints).map(([key, path]) => [
                 key,
@@ -33,7 +30,7 @@ function generateEndpoints(baseUrl) {
         );
     }
 
-    return Object.freeze(endpoints);
+    return endpoints;
 }
 
 const API_BASE_URL = CONFIG.API.BASE_URL;

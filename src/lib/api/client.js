@@ -165,16 +165,17 @@ _validateAndNormalizeItem(item) {
         throw new ConversionError('Valid file is required for conversion', 400);
       }
 
-      // Add file size validation matching Railway config
-      const maxSize = 50 * 1024 * 1024; // 50MB
+      // Validate file size
+      const maxSize = CONFIG.API.MAX_FILE_SIZE;
       if (item.file.size > maxSize) {
         throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
       }
 
+      // Use ENDPOINTS for proper URL construction
+      const endpoint = ENDPOINTS.CONVERT_FILE;
       const formData = new FormData();
-      formData.append('file', item.file); // Important: Use 'file' field name
+      formData.append('file', item.file);
 
-      // Add conversion options as separate field
       const conversionOptions = {
         includeImages: true,
         includeMeta: true,
@@ -185,11 +186,16 @@ _validateAndNormalizeItem(item) {
       
       formData.append('options', JSON.stringify(conversionOptions));
 
-      const response = await fetch(`${this.baseUrl}/api/v1/document/file`, {
+      console.log('Making request to:', endpoint, {
+        name: item.file.name,
+        size: item.file.size,
+        type: item.file.type
+      });
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
-          // Don't set Content-Type - browser will set it for FormData
         },
         body: formData,
         credentials: 'include',
