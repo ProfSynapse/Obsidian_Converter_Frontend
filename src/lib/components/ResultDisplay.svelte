@@ -174,27 +174,39 @@
         </div>
 
       {:else}
-        <!-- Optional error/stopped messages -->
-        {#if status === 'error'}
-          <p class="error-message">
-            {error}
-          </p>
-        {:else if status === 'stopped'}
-          <p class="stopped-message">
-            Conversion stopped at {processedCount}/{totalCount} files.
-          </p>
-        {/if}
+        <!-- Modify this section to check conversion status -->
+        {#if $conversionStatus.status === 'completed'}
+          <div class="start-button-container">
+            <button
+              class="start-button breathing-gradient"
+              on:click={handleRefresh}
+            >
+              Refresh Page
+            </button>
+          </div>
+        {:else if !isConverting}
+          <!-- Optional error/stopped messages -->
+          {#if status === 'error'}
+            <p class="error-message">
+              {error}
+            </p>
+          {:else if status === 'stopped'}
+            <p class="stopped-message">
+              Conversion stopped at {processedCount}/{totalCount} files.
+            </p>
+          {/if}
 
-        <div class="start-button-container">
-          <button
-            class="start-button breathing-gradient"
-            disabled={!canConvert}
-            on:click={handleStartConversion}
-            in:fly={{ y: 20, duration: 300 }}
-          >
-            Start Conversion {canConvert ? '✓' : '✗'}
-          </button>
-        </div>
+          <div class="start-button-container">
+            <button
+              class="start-button breathing-gradient"
+              disabled={!canConvert}
+              on:click={handleStartConversion}
+              in:fly={{ y: 20, duration: 300 }}
+            >
+              Start Conversion {canConvert ? '✓' : '✗'}
+            </button>
+          </div>
+        {/if}
       {/if}
     {/if}
   </div>
@@ -332,7 +344,7 @@
     color: #fff;
     background: none;
     border: none;
-    border-radius: var(--rounded-md);
+    border-radius: var (--rounded-md);
     cursor: pointer;
     overflow: hidden;
     text-align: center;
