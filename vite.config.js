@@ -26,7 +26,7 @@ export default defineConfig({
 		target: 'esnext',
 		sourcemap: true,
 		rollupOptions: {
-			external: [/^@sveltejs\/kit/]
+			external: [/^@sveltejs\/kit/, 'archiver']
 		}
 	},
 	optimizeDeps: {
