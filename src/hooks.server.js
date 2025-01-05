@@ -6,7 +6,7 @@ export async function handle({ event, resolve }) {
   if (import.meta.env.PROD) {
     response.headers.set('X-Railway-Service', 'frontend');
     // Allow Railway internal routing
-    response.headers.set('Access-Control-Allow-Origin', 'https://frontend-production-2748.internal');
+    response.headers.set('Access-Control-Allow-Origin', 'backend-production-6e08.up.railway.app');
   }
 
   return response;
