@@ -8,9 +8,18 @@ import { CONFIG } from '../config';
  * @returns {Object} Object containing all endpoint URLs
  */
 function generateEndpoints(baseUrl) {
-    // Use endpoints from config
-    const endpoints = CONFIG.API.ENDPOINTS;
+    // Define all endpoints with proper paths
+    const endpoints = {
+        CONVERT_FILE: '/document/file',
+        CONVERT_URL: '/web/url',
+        CONVERT_PARENT_URL: '/web/parent-url',
+        CONVERT_YOUTUBE: '/web/youtube',
+        CONVERT_BATCH: '/batch',
+        CONVERT_AUDIO: '/multimedia/audio',
+        CONVERT_VIDEO: '/multimedia/video'
+    };
 
+    // If we have a base URL, prepend it to all endpoints
     if (baseUrl) {
         const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         return Object.fromEntries(

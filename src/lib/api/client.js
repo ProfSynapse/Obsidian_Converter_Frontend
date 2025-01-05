@@ -166,11 +166,32 @@ _validateAndNormalizeItem(item) {
         throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
       }
 
-      // Get endpoint from ENDPOINTS (already includes /api/v1 from base URL)
-      const endpoint = ENDPOINTS.CONVERT_FILE;
-      
-      // Create FormData with standardized structure
+      // Get correct endpoint based on file type
+      const fileType = item.file?.name.split('.').pop().toLowerCase();
+      let endpoint;
+
+      // Determine correct endpoint based on file type
+      if (fileType) {
+        if (CONFIG.FILES.CATEGORIES.audio.includes(fileType)) {
+          endpoint = ENDPOINTS.CONVERT_AUDIO;
+        } else if (CONFIG.FILES.CATEGORIES.video.includes(fileType)) {
+          endpoint = ENDPOINTS.CONVERT_VIDEO;
+        } else {
+          endpoint = ENDPOINTS.CONVERT_FILE;
+        }
+      } else {
+        endpoint = ENDPOINTS.CONVERT_FILE;
+      }
+
+      console.log('Making API request:', {
+        fileType,
+        endpoint,
+        fileName: item.file?.name
+      });
+
+      // Create FormData
       const formData = new FormData();
+      
       if (item.file instanceof File) {
         formData.append('file', item.file);
         formData.append('options', JSON.stringify({

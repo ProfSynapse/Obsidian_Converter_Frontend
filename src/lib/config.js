@@ -27,10 +27,10 @@ export const CONFIG = {
 
     FILES: {
         CATEGORIES: {
-            documents: ['txt', 'pdf', 'docx', 'pptx'],
-            audio: ['mp3', 'wav', 'm4a'],
-            video: ['mp4', 'webm', 'avi'],
-            data: ['csv', 'xlsx']
+            documents: ['txt', 'rtf', 'pdf', 'docx', 'doc', 'odt', 'epub'],
+            audio: ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'wma'],
+            video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
+            data: ['csv', 'json', 'yaml', 'yml', 'xlsx', 'pptx']
         },
         TYPES: {
             // Document types
