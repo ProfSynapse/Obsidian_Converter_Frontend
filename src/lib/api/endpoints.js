@@ -21,11 +21,14 @@ function generateEndpoints(baseUrl) {
 
     // If we have a base URL, prepend it to all endpoints
     if (baseUrl) {
-        const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+        // Ensure proper API base URL construction
+        const apiBase = baseUrl.endsWith('/api/v1') ? baseUrl : `${baseUrl}/api/v1`;
+        const normalizedBase = apiBase.endsWith('/') ? apiBase.slice(0, -1) : apiBase;
+        
         return Object.fromEntries(
             Object.entries(endpoints).map(([key, path]) => [
                 key,
-                `${normalizedBaseUrl}${path}`
+                `${normalizedBase}${path}`
             ])
         );
     }

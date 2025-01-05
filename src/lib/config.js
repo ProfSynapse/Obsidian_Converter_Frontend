@@ -5,7 +5,7 @@ export const CONFIG = {
     API: {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
-        TIMEOUT: 300000,
+        TIMEOUT: 300000, // 5 minutes
         BASE_URL: import.meta.env.API_BASE_URL || 'https://backend-production-6e08.up.railway.app/api/v1',
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream',

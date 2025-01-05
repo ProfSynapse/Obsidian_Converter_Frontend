@@ -169,58 +169,47 @@ _validateAndNormalizeItem(item) {
       // Get endpoint from ENDPOINTS
       const endpoint = ENDPOINTS.CONVERT_FILE;
 
-      // Create FormData with proper structure
+      // Simplified FormData construction
       const formData = new FormData();
+      formData.append('file', item.file);  // Keep original file name
       
-      if (item.file instanceof File) {
-        // Set file with proper field name
-        formData.append('file', item.file, item.file.name);
-        
-        // Set options as JSON string
-        const formattedOptions = {
+      if (options) {
+        formData.append('options', JSON.stringify({
           includeImages: true,
           includeMeta: true,
           convertLinks: true,
           ...options
-        };
-        formData.append('options', JSON.stringify(formattedOptions));
+        }));
+      }
 
-        console.log('Uploading file:', {
-          name: item.file.name,
-          size: item.file.size,
-          type: item.file.type,
-          options: formattedOptions
+      // Add timeout handling
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Accept': 'application/json, application/zip, application/octet-stream'
+          },
+          body: formData,
+          signal: controller.signal,
+          credentials: 'include',
+          mode: 'cors'
         });
+
+        // Handle response
+        if (!response.ok) {
+          const errorMessage = await this._getErrorMessage(response);
+          throw new ConversionError(errorMessage, response.status);
+        }
+
+        return this._handleSuccessResponse(response, item);
+
+      } finally {
+        clearTimeout(timeoutId);
       }
-
-      // Make request with proper configuration
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'application/json, application/zip, application/octet-stream'
-          // Let browser set Content-Type with boundary
-        },
-        body: formData,
-        credentials: 'include',
-        mode: 'cors',
-        signal: AbortSignal.timeout(CONFIG.API.TIMEOUT) // Use built-in timeout
-      });
-
-      // Log response details for debugging
-      console.log('Upload response:', {
-        status: response.status,
-        statusText: response.statusText,
-        contentType: response.headers.get('content-type')
-      });
-
-      // Handle response
-      if (!response.ok) {
-        const errorMessage = await this._getErrorMessage(response);
-        throw new ConversionError(errorMessage, response.status);
-      }
-
-      return this._handleSuccessResponse(response, item);
 
     } catch (error) {
       console.error('Upload failed:', {
