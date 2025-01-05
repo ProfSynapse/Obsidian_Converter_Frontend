@@ -8,14 +8,15 @@ import { CONFIG } from '../config';
  * @returns {Object} Object containing all endpoint URLs
  */
 function generateEndpoints(baseUrl) {
+    const basePath = '/api/v1';
     const endpoints = {
-        CONVERT_FILE: `/api/v1/document/file`,  // Add /api/v1 prefix
-        CONVERT_URL: `/api/v1/web/url`,
-        CONVERT_PARENT_URL: `/api/v1/web/parent-url`,
-        CONVERT_YOUTUBE: `/api/v1/web/youtube`,
-        CONVERT_BATCH: `/api/v1/batch`,
-        CONVERT_AUDIO: `/api/v1/multimedia/audio`,
-        CONVERT_VIDEO: `/api/v1/multimedia/video`
+        CONVERT_FILE: `${basePath}/document/file`,
+        CONVERT_URL: `${basePath}/web/url`,
+        CONVERT_PARENT_URL: `${basePath}/web/parent-url`,
+        CONVERT_YOUTUBE: `${basePath}/web/youtube`,
+        CONVERT_BATCH: `${basePath}/batch`,
+        CONVERT_AUDIO: `${basePath}/multimedia/audio`,
+        CONVERT_VIDEO: `${basePath}/multimedia/video`
     };
 
     // Return full URLs when baseUrl is provided

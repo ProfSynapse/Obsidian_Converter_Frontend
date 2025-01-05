@@ -160,8 +160,21 @@ _validateAndNormalizeItem(item) {
   async processItems(items, apiKey, options = {}) {
     try {
       const item = items[0];
-      const endpoint = options.useBatch ? '/api/v1/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
+      
+      // Ensure endpoint always starts with /api/v1
+      const baseEndpoint = options.useBatch ? '/batch' : (options.getEndpoint?.(item) || this.getDefaultEndpoint(item));
+      const endpoint = baseEndpoint.startsWith('/api/v1') ? baseEndpoint : `/api/v1${baseEndpoint}`;
+      
+      // Ensure proper URL construction with new URL API
       const url = new URL(endpoint, this.baseUrl).toString();
+
+      console.log('Making API request:', {
+        url,
+        endpoint,
+        baseUrl: this.baseUrl,
+        isRailway: this.isRailway,
+        method: 'POST'
+      });
 
       // Create FormData properly
       const formData = new FormData();

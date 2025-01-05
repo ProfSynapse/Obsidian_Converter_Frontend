@@ -85,91 +85,90 @@ export class RequestHandler {
    * @public
    */
   static async makeRequest(endpoint, options) {
-    // Add debug logging for Railway
+    // Ensure endpoint has /api/v1 prefix
+    const apiEndpoint = endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`;
+    
     console.log('API Request:', {
-      endpoint,
-      isRailway: import.meta.env.PROD,
-      headers: options.headers,
-      fullUrl: new URL(
-        endpoint.startsWith('/api/v1') ? endpoint : `/api/v1${endpoint}`,
-        CONFIG.API.BASE_URL
-      ).toString()
+        originalEndpoint: endpoint,
+        finalEndpoint: apiEndpoint,
+        isRailway: import.meta.env.PROD,
+        headers: options.headers
     });
 
-    if (!endpoint) {
-      throw new Error('Endpoint is undefined.');
+    if (!apiEndpoint) {
+        throw new Error('Endpoint is undefined.');
     }
 
     try {
-      const response = await fetch(endpoint, {
-        ...DEFAULT_CONFIG,
-        ...options,
-        headers: {
-          ...DEFAULT_CONFIG.headers,
-          ...options.headers
+        const response = await fetch(apiEndpoint, {
+            ...DEFAULT_CONFIG,
+            ...options,
+            headers: {
+                ...DEFAULT_CONFIG.headers,
+                ...options.headers
+            }
+        });
+
+        // Log Railway-specific response details
+        console.log('API Response:', {
+            status: response.status,
+            isRailway: import.meta.env.PROD,
+            headers: Object.fromEntries(response.headers.entries())
+        });
+
+        // Get content type once and reuse it
+        const contentType = response.headers.get('content-type');
+
+        // Check for HTML error pages
+        if (contentType && contentType.includes('text/html')) {
+            throw new Error('Invalid API response: Received HTML instead of expected data');
         }
-      });
-      
-      // Log Railway-specific response details
-      console.log('API Response:', {
-        status: response.status,
-        isRailway: import.meta.env.PROD,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
-      // Get content type once and reuse it
-      const contentType = response.headers.get('content-type');
-
-      // Check for HTML error pages
-      if (contentType && contentType.includes('text/html')) {
-        throw new Error('Invalid API response: Received HTML instead of expected data');
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({
-            message: `Request failed with status ${response.status}`
-        }));
-        throw new Error(errorData.message || `Request failed with status ${response.status}`);
-      }
-
-      // Use the already retrieved content type
-      if (contentType?.includes('application/zip')) {
-        const blob = await response.blob();
-        if (blob.size === 0) {
-          throw new Error('Received empty blob from server');
-        }
-
-        // Get filename from Content-Disposition header
-        const disposition = response.headers.get('Content-Disposition');
-        const filename = disposition ? 
-          disposition.split('filename=')[1].replace(/"/g, '') : 
-          'conversion.zip';
         
-        // Create download
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        window.URL.revokeObjectURL(url);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({
+                message: `Request failed with status ${response.status}`
+            }));
+            throw new Error(errorData.message || `Request failed with status ${response.status}`);
+        }
 
-        return blob;
-      } else if (contentType?.includes('application/json')) {
-        return await response.json();
-      } else {
-        throw new Error(`Unsupported response type: ${contentType}`);
-      }
+        // Use the already retrieved content type
+        if (contentType?.includes('application/zip')) {
+            const blob = await response.blob();
+            if (blob.size === 0) {
+                throw new Error('Received empty blob from server');
+            }
+
+            // Get filename from Content-Disposition header
+            const disposition = response.headers.get('Content-Disposition');
+            const filename = disposition ? 
+                disposition.split('filename=')[1].replace(/"/g, '') : 
+                'conversion.zip';
+            
+            // Create download
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            return blob;
+        } else if (contentType?.includes('application/json')) {
+            return await response.json();
+        } else {
+            throw new Error(`Unsupported response type: ${contentType}`);
+        }
     } catch (error) {
-      console.error('API Error:', {
-        error,
-        isRailway: import.meta.env.PROD,
-        endpoint
-      });
-      console.error('🔥 Request failed:', error);
-      if (error.message.includes('<!DOCTYPE html>')) {
-        throw new Error('API endpoint not found or server error occurred');
-      }
-      throw error;
+        console.error('API Error:', {
+            error,
+            isRailway: import.meta.env.PROD,
+            endpoint
+        });
+        console.error('🔥 Request failed:', error);
+        if (error.message.includes('<!DOCTYPE html>')) {
+            throw new Error('API endpoint not found or server error occurred');
+        }
+        throw error;
     }
   }
 
