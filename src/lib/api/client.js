@@ -166,79 +166,68 @@ _validateAndNormalizeItem(item) {
         throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
       }
 
-      // Get correct endpoint based on file type
-      const fileType = item.file?.name.split('.').pop().toLowerCase();
-      let endpoint;
+      // Get endpoint from ENDPOINTS
+      const endpoint = ENDPOINTS.CONVERT_FILE;
 
-      // Determine correct endpoint based on file type
-      if (fileType) {
-        if (CONFIG.FILES.CATEGORIES.audio.includes(fileType)) {
-          endpoint = ENDPOINTS.CONVERT_AUDIO;
-        } else if (CONFIG.FILES.CATEGORIES.video.includes(fileType)) {
-          endpoint = ENDPOINTS.CONVERT_VIDEO;
-        } else {
-          endpoint = ENDPOINTS.CONVERT_FILE;
-        }
-      } else {
-        endpoint = ENDPOINTS.CONVERT_FILE;
-      }
-
-      console.log('Making API request:', {
-        fileType,
-        endpoint,
-        fileName: item.file?.name
-      });
-
-      // Create FormData
+      // Create FormData with proper structure
       const formData = new FormData();
       
       if (item.file instanceof File) {
-        formData.append('file', item.file);
-        formData.append('options', JSON.stringify({
+        // Set file with proper field name
+        formData.append('file', item.file, item.file.name);
+        
+        // Set options as JSON string
+        const formattedOptions = {
           includeImages: true,
           includeMeta: true,
           convertLinks: true,
           ...options
-        }));
-      }
+        };
+        formData.append('options', JSON.stringify(formattedOptions));
 
-      // Make request with proper timeout and error handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.API.TIMEOUT);
-
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Accept': 'application/json, application/zip, application/octet-stream'
-          },
-          body: formData,
-          signal: controller.signal,
-          credentials: 'include',
-          mode: 'cors'
+        console.log('Uploading file:', {
+          name: item.file.name,
+          size: item.file.size,
+          type: item.file.type,
+          options: formattedOptions
         });
-
-        clearTimeout(timeoutId);
-
-        // Handle specific error codes
-        if (!response.ok) {
-          const errorMessage = await this._getErrorMessage(response);
-          throw new ConversionError(errorMessage, response.status);
-        }
-
-        // Handle successful response
-        return this._handleSuccessResponse(response, item);
-
-      } catch (error) {
-        if (error.name === 'AbortError') {
-          throw new ConversionError('Request timed out after 5 minutes', 408);
-        }
-        throw error;
       }
+
+      // Make request with proper configuration
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json, application/zip, application/octet-stream'
+          // Let browser set Content-Type with boundary
+        },
+        body: formData,
+        credentials: 'include',
+        mode: 'cors',
+        signal: AbortSignal.timeout(CONFIG.API.TIMEOUT) // Use built-in timeout
+      });
+
+      // Log response details for debugging
+      console.log('Upload response:', {
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers.get('content-type')
+      });
+
+      // Handle response
+      if (!response.ok) {
+        const errorMessage = await this._getErrorMessage(response);
+        throw new ConversionError(errorMessage, response.status);
+      }
+
+      return this._handleSuccessResponse(response, item);
 
     } catch (error) {
-      console.error('API Request failed:', error);
+      console.error('Upload failed:', {
+        error,
+        itemName: items[0]?.name,
+        endpoint: ENDPOINTS.CONVERT_FILE
+      });
       throw error;
     }
   }
