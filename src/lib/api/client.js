@@ -161,13 +161,14 @@ _validateAndNormalizeItem(item) {
     try {
       const item = items[0];
       
-      // Construct the correct API endpoint
+      // Use the full API path including /api/v1
       const endpoint = '/api/v1/document/file';
       
-      // Ensure complete URL with protocol
-      const url = this.baseUrl.includes('http') ? 
-        new URL(endpoint, this.baseUrl).toString() :
-        `https://${this.baseUrl}${endpoint}`;
+      // Ensure base URL doesn't end with a slash
+      const baseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.slice(0, -1) : this.baseUrl;
+      
+      // Construct the full URL properly
+      const url = baseUrl + endpoint;
 
       console.log('Making API request:', {
         endpoint,

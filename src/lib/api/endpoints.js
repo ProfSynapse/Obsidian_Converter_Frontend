@@ -19,12 +19,13 @@ function generateEndpoints(baseUrl) {
         CONVERT_VIDEO: `${basePath}/multimedia/video`
     };
 
-    // Return full URLs when baseUrl is provided
+    // Ensure baseUrl doesn't end with a slash when combining
     if (baseUrl) {
+        const normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         return Object.fromEntries(
             Object.entries(endpoints).map(([key, path]) => [
                 key,
-                new URL(path, baseUrl).toString()
+                `${normalizedBaseUrl}${path}`
             ])
         );
     }
