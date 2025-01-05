@@ -170,52 +170,49 @@ _validateAndNormalizeItem(item) {
         throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
       }
 
-      // Get endpoint from ENDPOINTS
       const endpoint = ENDPOINTS.CONVERT_FILE;
-
-      // Create FormData with proper structure
       const formData = new FormData();
       
-      // Append file with original filename
-      formData.append('file', item.file, item.file.name);
+      // Ensure proper file field name matches backend expectation
+      formData.append('document', item.file, item.file.name);
 
-      // Prepare options
       const conversionOptions = {
         includeImages: true,
         includeMeta: true,
         convertLinks: true,
         ...options,
-        filename: item.file.name // Include filename in options
+        filename: item.file.name
       };
 
-      // Append options as string
       formData.append('options', JSON.stringify(conversionOptions));
 
       console.log('Uploading file:', {
         name: item.file.name,
         size: item.file.size,
         type: item.file.type,
-        endpoint,
-        options: conversionOptions
+        endpoint
       });
 
-      // Add request timeout
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), CONFIG.API.TIMEOUT);
+      const timeoutId = setTimeout(() => controller.abort(), CONFIG.API.TIMEOUT || 30000);
 
       try {
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
-            'Accept': 'application/json, application/zip, application/octet-stream'
-            // Let browser set Content-Type with boundary
+            // Remove Content-Type header to let browser set it with boundary
           },
           body: formData,
           signal: controller.signal,
           credentials: 'include',
-          mode: 'cors'
+          mode: 'cors',
+          // Add these to ensure proper upload
+          keepalive: true,
+          timeout: CONFIG.API.TIMEOUT || 30000
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           const errorMessage = await this._getErrorMessage(response);
