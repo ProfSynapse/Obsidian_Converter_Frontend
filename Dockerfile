@@ -8,7 +8,7 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-ENV PORT=8080
-EXPOSE 8080
+# Remove hardcoded PORT
+EXPOSE ${PORT}
 
 CMD ["npm", "start"]

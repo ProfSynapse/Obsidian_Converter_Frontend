@@ -2,11 +2,10 @@ import { handler } from './build/handler.js';
 import express from 'express';
 
 const app = express();
-const PORT = Number(process.env.PORT) || 8080;
+const port = process.env.PORT || 3000; // Railway will provide PORT
 
-// Let SvelteKit handle everything else
 app.use(handler);
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server listening on port ${port}`);
 });

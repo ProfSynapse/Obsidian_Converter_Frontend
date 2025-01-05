@@ -12,12 +12,13 @@ export default defineConfig({
 		}
 	},
 	server: {
-		port: Number(process.env.PORT) || 8080, // Changed to explicitly use Number()
+		port: process.env.PORT || 5173,  // Railway will provide PORT
 		strictPort: true,
 		proxy: {
 			'/api': {
 				target: process.env.APP_API_BASE_URL || 'http://localhost:3000',
-				changeOrigin: true
+				changeOrigin: true,
+				rewrite: (path) => path.replace(/^\/api/, '')
 			}
 		}
 	},
