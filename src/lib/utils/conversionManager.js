@@ -25,7 +25,6 @@ function readFileAsBase64(file) {
  */
 async function prepareItem(item) {
   try {
-    // Validate required properties
     if (!item.id || !item.name) {
       throw ConversionError.validation(`Item ${item.name} is missing required properties`);
     }
@@ -40,18 +39,23 @@ async function prepareItem(item) {
       }
     };
 
-    // Handle URL types
-    if (item.url || item.name.startsWith('http')) {
-      const url = item.url || item.name;
+    // Handle URL types (including parent URLs)
+    if (item.type === 'url' || item.type === 'parent' || item.url || item.name.startsWith('http')) {
+      const url = item.url || item.content || item.name;
       return {
         ...baseItem,
         type: item.type === 'parent' ? 'parent' : 'url',
-        url: url,
-        content: url
+        url: url, // Set the url property explicitly
+        content: url, // Keep content for backward compatibility
+        options: {
+          ...baseItem.options,
+          ...(item.type === 'parent' ? { depth: 1, maxPages: 10 } : {}),
+          ...item.options // Preserve any custom options passed
+        }
       };
     }
 
-    // Handle File type with proper type detection
+    // Handle File type
     if (item.file instanceof File) {
       const fileExt = item.name.split('.').pop().toLowerCase();
       const type = determineFileType(fileExt);

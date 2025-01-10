@@ -92,7 +92,35 @@
 
   async function handleUrlSubmit(event) {
     const { url, type = 'url' } = event.detail;
-    // ...
+    
+    if (!url) {
+      showFeedback('Please enter a valid URL', 'error');
+      return;
+    }
+
+    try {
+      const newUrl = new URL(url); // Validate URL format
+      const newFile = {
+        id: crypto.randomUUID(),
+        name: newUrl.hostname,
+        url: newUrl.href,
+        type: type,
+        status: 'Ready',
+        progress: 0,
+        selected: false,
+        requiresApiKey: type !== 'youtube'
+      };
+
+      const result = files.addFile(newFile);
+      if (result.success) {
+        showFeedback(`Added URL: ${newUrl.hostname}`, 'success');
+        dispatch('filesAdded', { files: [newFile] });
+      } else {
+        showFeedback(result.message, 'error');
+      }
+    } catch (error) {
+      showFeedback('Invalid URL format', 'error');
+    }
   }
 
   async function handleFileUpload(event) {

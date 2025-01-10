@@ -10,7 +10,7 @@
     "start": "node server.js"
   },
   "devDependencies": {
-    "@sveltejs/adapter-node": "5.2.11",
+    "@sveltejs/adapter-node": "^5.2.11",
     "@sveltejs/kit": "^2.15.1",
     "@sveltejs/vite-plugin-svelte": "^3.0.0",
     "@types/node": "^22.10.5",

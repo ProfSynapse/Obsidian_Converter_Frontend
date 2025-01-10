@@ -158,84 +158,102 @@ _validateAndNormalizeItem(item) {
    * @public
    */
   async processItems(items, apiKey, options = {}) {
+    if (!items?.length) {
+      throw new ConversionError('No items provided for processing');
+    }
+  
+    const { useBatch = false, onProgress, onItemComplete, getEndpoint } = options;
+  
     try {
-      const item = items[0];
-      
-      if (!item?.file || !(item.file instanceof File)) {
-        throw new ConversionError('Valid file is required for conversion', 400);
+      if (useBatch) {
+        return this.processBatch(items, apiKey, onProgress);
       }
-
-      // Add file size validation (50MB limit)
-      const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
-      if (item.file.size > MAX_FILE_SIZE) {
-        throw new ConversionError('File size exceeds maximum limit of 50MB', 413);
-      }
-
-      const endpoint = ENDPOINTS.CONVERT_FILE;
-      const formData = new FormData();
-      
-      // Use 'uploadedFile' as the field name - this should match your server's multer config
-      formData.append('uploadedFile', item.file);
-
-      // Add options as a separate field
-      const conversionOptions = {
-        includeImages: true,
-        includeMeta: true,
-        convertLinks: true,
-        ...options,
-        filename: item.file.name
-      };
-
-      formData.append('options', JSON.stringify(conversionOptions));
-
-      console.log('Making request to:', endpoint, {
-        name: item.file.name,
-        size: item.file.size,
-        type: item.file.type,
-        options: conversionOptions
-      });
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        // Handle specific error cases
-        if (response.status === 413) {
-          throw new ConversionError('File size exceeds server limit', 413);
+  
+      let progress = 0;
+      const progressStep = 100 / items.length;
+  
+      const results = await Promise.all(items.map(async (item) => {
+        try {
+          const endpoint = getEndpoint?.(item) || this.getDefaultEndpoint(item);
+          let result;
+  
+          if (item.type === 'url') {
+            // Handle URL conversions
+            const urlData = {
+              url: item.url || item.content,
+              name: item.name || 'url-conversion',
+              options: item.options || {}
+            };
+            
+            result = await this.makeRequest(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
+              },
+              body: JSON.stringify(urlData)
+            });
+          } else if (item.type === 'parent') {
+            // Handle parent URL conversions
+            result = await this.makeRequest(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
+              },
+              body: JSON.stringify({
+                url: item.content,
+                name: item.name,
+                options: item.options
+              })
+            });
+          } else if (item.file) {
+            // Handle file uploads
+            const formData = new FormData();
+            formData.append('file', item.file);
+            formData.append('options', JSON.stringify(item.options || {}));
+  
+            result = await this.makeRequest(endpoint, {
+              method: 'POST',
+              headers: {
+                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
+              },
+              body: formData
+            });
+          } else {
+            throw new ConversionError('Invalid item format - must provide either a URL or file');
+          }
+  
+          progress += progressStep;
+          onProgress?.(Math.min(Math.round(progress), 100));
+          onItemComplete?.(item.id, true);
+          return result;
+        } catch (error) {
+          onItemComplete?.(item.id, false, error);
+          throw error;
         }
-        if (errorData.message?.includes('Unexpected field')) {
-          throw new ConversionError('Server configuration error - please contact support', 500);
-        }
-        
-        throw new ConversionError(
-          errorData.message || 'Conversion failed', 
-          response.status
-        );
-      }
-
-      const contentType = response.headers.get('content-type');
-      if (contentType?.includes('application/zip') || contentType?.includes('application/octet-stream')) {
-        return response.blob();
-      }
-
-      return response.json();
-
+      }));
+  
+      return this.createZipResponse(results);
     } catch (error) {
-      console.error('Upload failed:', {
-        error,
-        itemName: items[0]?.file?.name,
-        size: items[0]?.file?.size
-      });
-      throw error;
+      console.error('Upload failed:', error);
+      throw error instanceof ConversionError ? error : new ConversionError(error.message);
     }
   }
+  
+  // Helper method to get default endpoint based on item type
+  getDefaultEndpoint(item) {
+    const typeMap = {
+      url: '/web/url',
+      parent: '/web/parent-url',
+      youtube: '/web/youtube',
+      audio: '/multimedia/audio',
+      video: '/multimedia/video',
+      file: '/document/file'
+    };
+    return typeMap[item.type] || '/document/file';
+  }
+  
 
   async _getErrorMessage(response) {
     try {
