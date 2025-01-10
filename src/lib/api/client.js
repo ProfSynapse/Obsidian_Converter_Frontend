@@ -5,7 +5,8 @@ import { ConversionError, ErrorUtils } from './errors.js';
 import { Converters } from './converters.js';
 import { conversionStatus } from '../stores/conversionStatus.js';
 import { FileStatus } from '../stores/files.js';
-import { ENDPOINTS, getEndpointUrl } from './endpoints.js';  // Add this import
+import { ENDPOINTS, getEndpointUrl } from './endpoints.js';
+import { makeRequest } from './requestHandler.js';
 
 /**
  * Manages file conversion operations and tracks their status
@@ -163,7 +164,7 @@ _validateAndNormalizeItem(item) {
    */
   async makeRequest(endpoint, options) {
     const fullEndpoint = `${this.baseUrl}${endpoint}`;
-    return RequestHandler.makeRequest(fullEndpoint, options);
+    return makeRequest(fullEndpoint, options);
   }
 
   /**
@@ -402,8 +403,20 @@ _validateAndNormalizeItem(item) {
   isVideoType(ext) {
     return this.config.FILES.CATEGORIES.video.includes(ext);
   }
-  /**   * Cancels all active conversion requests   * @public   */  cancelAllRequests() {    this.activeRequests.forEach((request, id) => {      if (request.controller) {        request.controller.abort();        console.log(`Cancelled request: ${id}`);      }      this.activeRequests.delete(id);    });    conversionStatus.reset();  }  /**   * Returns the count of active requests   * @public   */  getActiveRequestsCount() {    return this.activeRequests.size;  }  /**   * Cleans up resources and resets state   * @public   */  cleanup() {    this.cancelAllRequests();    this.activeRequests.clear();    conversionStatus.reset();  }  /**   * Makes a conversion request with enhanced error handling   * @private   */  static async _makeConversionRequest(endpoint, options, type) {    if (!endpoint) {        throw new ConversionError(`No endpoint defined for ${type} conversion`, 'VALIDATION_ERROR');    }        try {        console.log(`🔄 Making ${type} conversion request to ${endpoint}`);        const response = await RequestHandler.makeRequest(endpoint, options);                if (!response.ok) {            throw new Error(`Server responded with status ${response.status}`);        }        return await response.blob();    } catch (error) {        console.error(`❌ ${type} conversion error:`, error);
-        throw ErrorUtils.wrap(error);
+  /**   * Cancels all active conversion requests   * @public   */  cancelAllRequests() {    this.activeRequests.forEach((request, id) => {      if (request.controller) {        request.controller.abort();        console.log(`Cancelled request: ${id}`);      }      this.activeRequests.delete(id);    });    conversionStatus.reset();  }  /**   * Returns the count of active requests   * @public   */  getActiveRequestsCount() {    return this.activeRequests.size;  }  /**   * Cleans up resources and resets state   * @public   */  cleanup() {    this.cancelAllRequests();    this.activeRequests.clear();    conversionStatus.reset();  }  /**   * Makes a conversion request with enhanced error handling   * @private   */  static async _makeConversionRequest(endpoint, options, type) {    
+    if (!endpoint) {        
+      throw new ConversionError(`No endpoint defined for ${type} conversion`, 'VALIDATION_ERROR');    
+    }        
+    try {        
+      console.log(`🔄 Making ${type} conversion request to ${endpoint}`);        
+      const response = await makeRequest(endpoint, options);                
+      if (!response.ok) {            
+        throw new Error(`Server responded with status ${response.status}`);        
+      }        
+      return await response.blob();    
+    } catch (error) {        
+      console.error(`❌ ${type} conversion error:`, error);
+      throw ErrorUtils.wrap(error);
     }
   }
 
