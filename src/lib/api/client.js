@@ -157,6 +157,19 @@ _validateAndNormalizeItem(item) {
    * Process multiple items for conversion
    * @public
    */
+  /**
+   * Makes a request to the API
+   * @private
+   */
+  async makeRequest(endpoint, options) {
+    const fullEndpoint = `${this.baseUrl}${endpoint}`;
+    return RequestHandler.makeRequest(fullEndpoint, options);
+  }
+
+  /**
+   * Process multiple items for conversion
+   * @public
+   */
   async processItems(items, apiKey, options = {}) {
     if (!items?.length) {
       throw new ConversionError('No items provided for processing');
@@ -234,7 +247,8 @@ _validateAndNormalizeItem(item) {
         }
       }));
   
-      return this.createZipResponse(results);
+      // Return the results directly since they're already processed
+      return results;
     } catch (error) {
       console.error('Upload failed:', error);
       throw error instanceof ConversionError ? error : new ConversionError(error.message);
@@ -323,7 +337,7 @@ _validateAndNormalizeItem(item) {
     }
 
     try {
-        const response = await fetch(`${this.baseUrl}/batch`, {
+        const response = await this.makeRequest('/batch', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`
