@@ -248,7 +248,13 @@ _validateAndNormalizeItem(item) {
         }
       }));
   
-      // Return the results directly since they're already processed
+      // Check if any result is a blob and return it directly for download
+      const blobResult = results.find(result => result instanceof Blob);
+      if (blobResult) {
+        return blobResult;
+      }
+      
+      // Otherwise return the processed results
       return results;
     } catch (error) {
       console.error('Upload failed:', error);
@@ -355,7 +361,12 @@ _validateAndNormalizeItem(item) {
         onProgress?.(100);
         items.forEach(item => onItemComplete?.(item.id, true));
 
-        return await response.blob();
+        const blob = await response.blob();
+        console.log('🎁 Batch conversion successful:', {
+          blobSize: blob.size,
+          blobType: blob.type
+        });
+        return blob;
 
     } catch (error) {
         console.error('[CLIENT] Batch error:', error);

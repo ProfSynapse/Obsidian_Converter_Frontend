@@ -104,10 +104,12 @@ export class RequestHandler {
         // Log request details
         this._logRequest(endpoint, requestOptions);
 
-        return await fetch(endpoint, requestOptions);
+        const response = await fetch(endpoint, requestOptions);
+        return await RequestHandler._handleResponse(response);
       }
 
       // Handle non-FormData requests
+      console.log('🚀 Making non-FormData request to:', endpoint);
       const response = await fetch(endpoint, {
         ...DEFAULT_CONFIG,
         ...options,
@@ -116,8 +118,11 @@ export class RequestHandler {
           ...options.headers
         }
       });
-
-      return response;
+      console.log('📦 Response received:', {
+        status: response.status,
+        contentType: response.headers.get('Content-Type')
+      });
+      return await RequestHandler._handleResponse(response);
     } catch (error) {
       console.error('Request failed:', error);
       throw error;
@@ -145,18 +150,37 @@ export class RequestHandler {
     }
 
     let data;
+    console.log('🔍 Processing response of type:', responseType);
+    
     switch (responseType) {
       case ResponseTypes.BLOB:
+        console.log('📦 Converting response to blob...');
         data = await response.blob();
+        console.log('📦 Blob created:', {
+          size: data.size,
+          type: data.type
+        });
         break;
       case ResponseTypes.JSON:
+        console.log('📋 Processing JSON response...');
         data = await response.json();
-        if (!data.success) {
+        if (!data.success && !response.headers.get('Content-Type')?.includes('application/zip')) {
           throw ConversionError.fromResponse(data);
         }
         break;
       default:
+        console.log('📝 Processing text response...');
         data = await response.text();
+    }
+
+    // Special handling for zip files that might be marked as JSON
+    if (data instanceof Blob || 
+        response.headers.get('Content-Disposition')?.includes('attachment') ||
+        response.headers.get('Content-Type')?.includes('application/zip')) {
+      console.log('🎁 Detected downloadable content, ensuring blob format');
+      if (!(data instanceof Blob)) {
+        data = await response.blob();
+      }
     }
 
     this._logResponse(response, data);
