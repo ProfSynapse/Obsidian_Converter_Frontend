@@ -50,7 +50,7 @@ _validateAndNormalizeItem(item) {
 
     // Normalize the item's properties
     return {
-      id: item.id || crypto.randomUUID(),
+      id: item.id || this._generateId(),
       type,
       name: item.name?.trim() || 'Untitled',
       url: item.url?.trim() || null,
@@ -67,7 +67,19 @@ _validateAndNormalizeItem(item) {
       }
     };
   }
-  
+
+  /**
+   * Generates a unique ID for items
+   * @private
+   */
+  _generateId() {
+    // Use crypto.randomUUID() if available, otherwise fallback to timestamp + random
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+  }
 
   /**
    * Converts a single item
@@ -344,6 +356,8 @@ _validateAndNormalizeItem(item) {
     }
 
     try {
+        console.log('🚀 Starting batch conversion with items:', items.length);
+        
         const response = await this.makeRequest('/batch', {
             method: 'POST',
             headers: {
@@ -352,26 +366,40 @@ _validateAndNormalizeItem(item) {
             body: formData
         });
 
-        if (!response.ok) {
-            const err = await response.json();
-            throw new ConversionError(err.message || 'Batch conversion failed', response.status);
-        }
-
+        // Response handling is now done by RequestHandler._handleResponse
+        const result = await response;
+        
+        console.log('✅ Batch conversion completed successfully');
+        
         // Update progress and completion status
         onProgress?.(100);
         items.forEach(item => onItemComplete?.(item.id, true));
 
-        const blob = await response.blob();
-        console.log('🎁 Batch conversion successful:', {
-          blobSize: blob.size,
-          blobType: blob.type
-        });
-        return blob;
+        // Ensure we have a blob for download
+        if (!(result instanceof Blob)) {
+            console.log('🔄 Converting response to blob...');
+            const blob = new Blob([result], { type: 'application/zip' });
+            return blob;
+        }
+        
+        return result;
 
     } catch (error) {
-        console.error('[CLIENT] Batch error:', error);
-        items.forEach(item => onItemComplete?.(item.id, false, error));
-        throw error;
+        console.error('❌ Batch conversion failed:', error);
+        
+        // Ensure consistent error handling
+        const wrappedError = error instanceof ConversionError ? 
+            error : 
+            new ConversionError(
+                error.message || 'Batch conversion failed',
+                error.code || 'BATCH_ERROR',
+                error.details || null
+            );
+
+        // Update item statuses
+        items.forEach(item => onItemComplete?.(item.id, false, wrappedError));
+        
+        throw wrappedError;
     }
   }
 

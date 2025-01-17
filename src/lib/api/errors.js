@@ -18,6 +18,27 @@ export class ConversionError extends Error {
     static validation(message, details = null) {
         return new ConversionError(message, 'VALIDATION_ERROR', details);
     }
+
+    /**
+     * Creates an error instance from API response
+     */
+    static fromResponse(response) {
+        // Handle structured error responses
+        if (response.error) {
+            return new ConversionError(
+                response.error.message || 'Unknown error',
+                response.error.code || 'API_ERROR',
+                response.error.details
+            );
+        }
+        
+        // Handle plain error messages
+        return new ConversionError(
+            response.message || 'Unknown error',
+            response.code || 'API_ERROR',
+            response.details || null
+        );
+    }
 }
 
 /**

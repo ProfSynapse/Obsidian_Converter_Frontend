@@ -59,6 +59,18 @@
     return 'unknown';
   }
 
+  /**
+   * Generates a unique ID for items
+   * @private
+   */
+  function generateId() {
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+  }
+
   function handleFilesAdded(newFiles) {
     newFiles.forEach(file => {
       if (!validateFile(file)) {
@@ -70,7 +82,7 @@
       const requiresKey = requiresApiKey(file);
 
       const newFile = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: file.name,
         file: file,
         type: extension,  // Changed: Use the extension directly instead of category
@@ -101,7 +113,7 @@
     try {
       const newUrl = new URL(url); // Validate URL format
       const newFile = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: newUrl.hostname,
         url: newUrl.href,
         type: type,

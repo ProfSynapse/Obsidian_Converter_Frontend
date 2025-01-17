@@ -146,7 +146,30 @@ export class RequestHandler {
       });
 
       const errorData = this._parseErrorResponse(errorText, response.status);
-      throw ConversionError.fromResponse(errorData);
+      
+      // Enhanced error logging with structured data
+      console.error('🚨 API Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: errorData,
+        endpoint: response.url
+      });
+
+      // Handle structured API errors
+      if (errorData.status === 'error' && errorData.error) {
+        throw new ConversionError(
+          errorData.error.message || 'Unknown server error',
+          errorData.error.code || 'API_ERROR',
+          errorData.error.details
+        );
+      }
+
+      // Fallback for unstructured errors
+      throw new ConversionError(
+        errorData.message || `Request failed with status ${response.status}`,
+        'API_ERROR',
+        errorData
+      );
     }
 
     let data;
