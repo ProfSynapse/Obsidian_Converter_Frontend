@@ -328,78 +328,78 @@ _validateAndNormalizeItem(item) {
    * @public
    */
   async processBatch(items, apiKey, { onProgress, onItemComplete }) {
-    // Use the batch endpoint from ENDPOINTS
-    const batchEndpoint = ENDPOINTS.CONVERT_BATCH;
-    console.log('[CLIENT] Processing batch:', { items, endpoint: batchEndpoint });
+    if (!items?.length) {
+      throw new ConversionError('No items provided for batch processing');
+    }
+
+    console.log('🚀 Starting batch conversion with items:', items.length);
 
     const formData = new FormData();
     const urlItems = [];
 
     // Separate files and URLs
     items.forEach(item => {
-        if (item.file instanceof File) {
-            formData.append('files', item.file);
-        } else if (item.url || item.type === 'url') {
-            urlItems.push({
-                id: item.id,
-                type: item.type,
-                url: item.url || item.content,
-                name: item.name,
-                options: item.options
-            });
-        }
+      if (item.file instanceof File) {
+        formData.append('files', item.file);
+      } else if (item.url || item.type === 'url') {
+        urlItems.push({
+          id: item.id,
+          type: item.type,
+          url: item.url || item.content,
+          name: item.name,
+          options: item.options
+        });
+      }
     });
 
     // Add URL items as JSON
     if (urlItems.length > 0) {
-        formData.append('items', JSON.stringify(urlItems));
+      formData.append('items', JSON.stringify(urlItems));
     }
 
     try {
-        console.log('🚀 Starting batch conversion with items:', items.length);
-        
-        const response = await this.makeRequest('/batch', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: formData
-        });
+      // makeRequest already processes the response into the appropriate format
+      const result = await this.makeRequest('/batch', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/zip, application/octet-stream'
+        },
+        body: formData
+      });
 
-        // Response handling is now done by RequestHandler._handleResponse
-        const result = await response;
-        
-        console.log('✅ Batch conversion completed successfully');
-        
-        // Update progress and completion status
-        onProgress?.(100);
-        items.forEach(item => onItemComplete?.(item.id, true));
+      // Validate response type
+      if (!(result instanceof Blob)) {
+        throw new ConversionError(
+          'Invalid response format - expected ZIP file',
+          'RESPONSE_ERROR',
+          { received: typeof result }
+        );
+      }
 
-        // Ensure we have a blob for download
-        if (!(result instanceof Blob)) {
-            console.log('🔄 Converting response to blob...');
-            const blob = new Blob([result], { type: 'application/zip' });
-            return blob;
-        }
-        
-        return result;
+      console.log('✅ Batch conversion completed successfully');
+      
+      // Update progress and completion status
+      onProgress?.(100);
+      items.forEach(item => onItemComplete?.(item.id, true));
+      
+      return result;
 
     } catch (error) {
-        console.error('❌ Batch conversion failed:', error);
-        
-        // Ensure consistent error handling
-        const wrappedError = error instanceof ConversionError ? 
-            error : 
-            new ConversionError(
-                error.message || 'Batch conversion failed',
-                error.code || 'BATCH_ERROR',
-                error.details || null
-            );
+      console.error('❌ Batch conversion failed:', error);
+      
+      const wrappedError = error instanceof ConversionError ? 
+        error : 
+        new ConversionError(
+          error.message || 'Batch conversion failed',
+          error.code || 'BATCH_ERROR',
+          error.details || null
+        );
 
-        // Update item statuses
-        items.forEach(item => onItemComplete?.(item.id, false, wrappedError));
-        
-        throw wrappedError;
+      // Update item statuses
+      items.forEach(item => onItemComplete?.(item.id, false, wrappedError));
+      
+      throw wrappedError;
     }
   }
 
