@@ -10,15 +10,20 @@ class PaymentService {
 
   async init() {
     try {
-      this.stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+      if (!import.meta.env.STRIPE_PUBLIC_KEY) {
+        throw new Error('Stripe public key not found in environment');
+      }
+
+      this.stripe = await loadStripe(import.meta.env.STRIPE_PUBLIC_KEY);
       if (this.stripe) {
         this.elements = this.stripe.elements();
         console.log('✨ Stripe initialized successfully');
       } else {
-        console.error('🚫 Failed to initialize Stripe');
+        throw new Error('Failed to initialize Stripe');
       }
     } catch (error) {
       console.error('🚫 Error initializing Stripe:', error);
+      throw error; // Re-throw to handle in component
     }
   }
 
@@ -47,7 +52,7 @@ class PaymentService {
       paymentStore.startProcessing();
       
       // Send amount in cents to backend
-      const response = await fetch('/api/payment/create-intent', {
+      const response = await fetch('https://backend-production-6e08.up.railway.app/api/payment/create-intent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: Math.round(amount * 100) })

@@ -23,15 +23,24 @@
     { value: 20, label: '20 Gold 🥇' }
   ];
 
+  let initializationError = false;
+
   onMount(async () => {
     if (showPayment) {
       try {
+        // Wait for initialization to complete
+        await paymentService.init();
+        
         cardElement = paymentService.createCardElement();
         cardElement.mount('#card-element');
         cardElement.on('change', handleCardChange);
+        
+        error = null;
+        initializationError = false;
       } catch (err) {
-        console.error('Failed to create card element:', err);
-        error = 'Failed to initialize payment form';
+        console.error('Failed to initialize payment:', err);
+        error = 'Payment system initialization failed. Please try again later.';
+        initializationError = true;
       }
     }
   });
@@ -164,7 +173,10 @@
         </div>
 
         <div class="support-button">
-          <Button on:click={handleContinue} disabled={isProcessing}>
+          <Button 
+            on:click={handleContinue} 
+            disabled={isProcessing || initializationError || !cardElement}
+          >
             {#if isProcessing}
               Processing...
             {:else}
@@ -190,6 +202,10 @@
     background: rgba(255, 255, 255, 0.03);
   }
 
+  .card-element-container:has(#card-element:not(:empty)) {
+    min-height: 100px;
+  }
+
   #card-element {
     padding: 0.5rem;
   }
@@ -198,6 +214,9 @@
     color: #ff4444;
     font-size: 0.9rem;
     margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: rgba(255, 68, 68, 0.1);
+    border-radius: 4px;
   }
 
   .magical-border {
