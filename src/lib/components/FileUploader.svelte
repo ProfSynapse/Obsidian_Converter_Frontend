@@ -102,6 +102,25 @@
     });
   }
 
+  /**
+   * Normalizes a URL to prevent duplicates by:
+   * - Removing trailing slashes
+   * - Converting to lowercase
+   * - Standardizing protocol
+   */
+  function normalizeUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      // Remove trailing slashes and convert to lowercase
+      const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
+      urlObj.pathname = normalizedPath;
+      return urlObj.href.toLowerCase();
+    } catch (error) {
+      console.error('URL normalization error:', error);
+      return url.toLowerCase();
+    }
+  }
+
   async function handleUrlSubmit(event) {
     const { url, type = 'url' } = event.detail;
     
@@ -111,11 +130,24 @@
     }
 
     try {
-      const newUrl = new URL(url); // Validate URL format
+      const normalizedUrl = normalizeUrl(url);
+      const newUrl = new URL(normalizedUrl);
+      
+      // Check if URL already exists (case-insensitive and ignoring trailing slashes)
+      const isDuplicate = $files.some(file => {
+        if (!file.url) return false;
+        return normalizeUrl(file.url) === normalizedUrl;
+      });
+
+      if (isDuplicate) {
+        showFeedback('This URL has already been added', 'error');
+        return;
+      }
+
       const newFile = {
         id: generateId(),
         name: newUrl.hostname,
-        url: newUrl.href,
+        url: normalizedUrl,
         type: type,
         status: 'Ready',
         progress: 0,

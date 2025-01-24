@@ -39,14 +39,31 @@ async function prepareItem(item) {
       }
     };
 
-    // Handle URL types (including parent URLs)
+    /**
+ * Normalizes a URL to ensure consistent format
+ * @private
+ */
+function normalizeUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
+    urlObj.pathname = normalizedPath;
+    return urlObj.href.toLowerCase();
+  } catch (error) {
+    console.error('URL normalization error:', error);
+    return url.toLowerCase();
+  }
+}
+
+// Handle URL types (including parent URLs)
     if (item.type === 'url' || item.type === 'parent' || item.url || item.name.startsWith('http')) {
-      const url = item.url || item.content || item.name;
+      const rawUrl = item.url || item.content || item.name;
+      const normalizedUrl = normalizeUrl(rawUrl);
       return {
         ...baseItem,
         type: item.type === 'parent' ? 'parent' : 'url',
-        url: url, // Set the url property explicitly
-        content: url, // Keep content for backward compatibility
+        url: normalizedUrl, // Use normalized URL
+        content: normalizedUrl, // Keep normalized URL for backward compatibility
         options: {
           ...baseItem.options,
           ...(item.type === 'parent' ? { depth: 1, maxPages: 10 } : {}),

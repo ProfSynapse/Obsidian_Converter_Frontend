@@ -70,8 +70,7 @@
       <!-- Default State -->
       {#if !$uploadStore.dragOver}
         <div class="icon-container">
-          <span class="icon primary">📂</span>
-          <span class="icon secondary">📄</span>
+          <span class="icon">📂</span>
         </div>
         <div class="text-content">
           <p class="primary-text">Drag and drop files here</p>
@@ -81,7 +80,7 @@
       <!-- Drag Over State -->
       {:else}
         <div class="icon-container" in:scale={{ duration: 200 }}>
-          <span class="icon primary">📥</span>
+          <span class="icon">📥</span>
         </div>
         <p class="primary-text">Drop files to convert!</p>
       {/if}
@@ -132,23 +131,11 @@
   
     .icon {
       position: absolute;
-      font-size: var(--font-size-3xl);
-      transition: all var(--transition-duration-normal);
-    }
-  
-    .icon.primary {
       left: 50%;
       top: 50%;
       transform: translate(-50%, -50%);
-      z-index: 2;
-    }
-  
-    .icon.secondary {
-      left: 60%;
-      top: 60%;
-      transform: translate(-50%, -50%) scale(0.6);
-      opacity: 0.6;
-      z-index: 1;
+      font-size: var(--font-size-3xl);
+      transition: all var(--transition-duration-normal);
     }
   
     .text-content {
@@ -181,13 +168,8 @@
     }
   
     /* Hover Effects */
-    .drop-zone:hover .icon.primary {
+    .drop-zone:hover .icon {
       transform: translate(-50%, -50%) scale(1.1);
-    }
-  
-    .drop-zone:hover .icon.secondary {
-      transform: translate(-50%, -50%) scale(0.7);
-      opacity: 0.8;
     }
   
     /* Dark Mode */

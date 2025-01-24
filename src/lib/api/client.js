@@ -32,7 +32,23 @@ class ConversionClient {
  * Validates and normalizes item before conversion
  * @private
  */
-_validateAndNormalizeItem(item) {
+  /**
+   * Normalizes a URL to ensure consistent format
+   * @private
+   */
+  _normalizeUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
+      urlObj.pathname = normalizedPath;
+      return urlObj.href.toLowerCase();
+    } catch (error) {
+      console.error('URL normalization error:', error);
+      return url.toLowerCase();
+    }
+  }
+
+  _validateAndNormalizeItem(item) {
     if (!item?.type) {
       throw ConversionError.validation('Invalid item: missing type');
     }
@@ -48,13 +64,18 @@ _validateAndNormalizeItem(item) {
       throw ConversionError.validation('Parent URL is required');
     }
 
+    // Normalize URLs if present
+    const normalizedUrl = item.url ? this._normalizeUrl(item.url) : null;
+    const normalizedContent = item.content && typeof item.content === 'string' ? 
+      this._normalizeUrl(item.content) : item.content;
+
     // Normalize the item's properties
     return {
       id: item.id || this._generateId(),
       type,
       name: item.name?.trim() || 'Untitled',
-      url: item.url?.trim() || null,
-      content: item.content || null,
+      url: normalizedUrl,
+      content: normalizedContent,
       options: {
         includeImages: true,
         includeMeta: true,
