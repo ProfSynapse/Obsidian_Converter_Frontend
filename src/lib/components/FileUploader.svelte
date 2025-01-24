@@ -1,9 +1,10 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-  import { files } from '$lib/stores/files.js';
-  import { uploadStore } from '$lib/stores/uploadStore.js';
-  import { fade } from 'svelte/transition';
-  import { apiKey } from '$lib/stores/apiKey.js';
+import { files } from '$lib/stores/files.js';
+import { uploadStore } from '$lib/stores/uploadStore.js';
+import { paymentStore } from '$lib/stores/payment.js';
+import { fade } from 'svelte/transition';
+import { apiKey } from '$lib/stores/apiKey.js';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
   import Container from './common/Container.svelte';
   import TabNavigation from './common/TabNavigation.svelte';
@@ -11,6 +12,7 @@
   import DropZone from './common/DropZone.svelte';
   import ErrorMessage from './common/ErrorMessage.svelte';
   import FileList from './file/FileList.svelte';
+  import PaymentInput from './common/PaymentInput.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -32,9 +34,26 @@
   $: showFileList = $files.length > 0;
   $: needsApiKey = $files.some(file => requiresApiKey(file));
 
+  $: showPaymentPrompt = $paymentStore.showPaymentPrompt;
+
   function showFeedback(message, type = 'info') {
     uploadStore.setMessage(message, type);
     return setTimeout(() => uploadStore.clearMessage(), 5000);
+  }
+
+  function handlePayment(event) {
+    const { amount } = event.detail;
+    paymentStore.setAmount(amount);
+    paymentStore.setStatus('completed');
+    paymentStore.hidePrompt();
+    showFeedback(`✨ Thank you for your magical contribution of $${amount}!`, 'success');
+    dispatch('startConversion');
+  }
+
+  function handlePaymentSkip() {
+    paymentStore.setStatus('skipped');
+    paymentStore.hidePrompt();
+    dispatch('startConversion');
   }
 
   function validateFile(file) {
@@ -178,6 +197,9 @@
         const apiKeySection = document.querySelector('.api-key-input-section');
         apiKeySection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 300);
+    } else if (uploadedFiles.length > 0) {
+      // Show payment prompt after files are added
+      paymentStore.showPrompt();
     }
   }
 </script>
@@ -216,6 +238,13 @@
         <FileList />
       </div>
     {/if}
+
+    <!-- Payment Input -->
+    <PaymentInput 
+      showPayment={showPaymentPrompt}
+      on:payment={handlePayment}
+      on:skip={handlePaymentSkip}
+    />
   </Container>
 </div>
 

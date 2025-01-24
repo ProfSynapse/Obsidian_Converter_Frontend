@@ -1,205 +1,134 @@
-<!-- src/lib/components/ObsidianNoteConverter.svelte -->
 <script>
   import FileUploader from './FileUploader.svelte';
   import ResultDisplay from './ResultDisplay.svelte';
   import ApiKeyInput from './ApiKeyInput.svelte';
   import Instructions from './Instructions.svelte';
+  import PaymentInput from './common/PaymentInput.svelte';
   import { apiKey } from '$lib/stores/apiKey.js';
   import { conversionStatus } from '$lib/stores/conversionStatus.js';
   import { files } from '$lib/stores/files.js';
+  import { paymentStore } from '$lib/stores/payment.js';
   import { startConversion, cancelConversion } from '$lib/utils/conversionManager.js';
-  import { slide } from 'svelte/transition';
+  import { fade, fly } from 'svelte/transition';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
-
-  // State management for API key visibility
-  let lastNeedsApiKey = false; // Track previous state for debugging
-  let needsApiKey = false; // Initialize needsApiKey
-
-  // Reactive declarations for file state
-  $: {
-    const currentNeedsApiKey = $files.some(file => {
-      const requires = requiresApiKey(file);
-      console.log(`Checking API key requirement for ${file.name}:`, requires);
-      return requires;
-    });
-
-    // Log state changes
-    if (currentNeedsApiKey !== lastNeedsApiKey) {
-      console.log('API key requirement changed:', {
-        from: lastNeedsApiKey,
-        to: currentNeedsApiKey,
-        fileCount: $files.length
-      });
-      lastNeedsApiKey = currentNeedsApiKey;
-    }
-    
-    needsApiKey = currentNeedsApiKey;
-  }
 
   // Reactive declarations for conversion state
   $: showApiKeyInput = needsApiKey && !$apiKey;
-  $: canStartConversion = (!needsApiKey || !!$apiKey) && $files.length > 0 && $conversionStatus.status !== 'converting';
+  $: canStartConversion = (!needsApiKey || !!$apiKey) && 
+                         $files.length > 0 && 
+                         $conversionStatus.status !== 'converting' &&
+                         ($paymentStore.status === 'completed' || $paymentStore.status === 'skipped');
   $: isComplete = $conversionStatus.status === 'completed';
   $: hasError = $conversionStatus.status === 'error';
   $: isConverting = $conversionStatus.status === 'converting';
   $: showUploader = !isConverting && !isComplete;
+  $: showMainContent = $paymentStore.status === 'completed' || $paymentStore.status === 'skipped';
 
-  // Debug logging for state changes
+  // State management for API key visibility
+  let needsApiKey = false; // Initialize needsApiKey
   $: {
-    console.log('State Update:', {
-      needsApiKey,
-      hasApiKey: !!$apiKey,
-      showApiKeyInput,
-      canStartConversion,
-      isComplete,
-      hasError,
-      isConverting,
-      showUploader,
-      filesCount: $files.length,
-      conversionStatus: $conversionStatus.status
-    });
+    needsApiKey = $files.some(file => requiresApiKey(file));
   }
 
-  /**
-   * Handles starting the conversion process
-   * Validates preconditions and manages conversion state
-   */
-  async function handleStartConversion() {
-    console.log('ObsidianNoteConverter: handleStartConversion called', {
-      filesCount: $files.length,
-      conversionStatus: $conversionStatus.status,
-      needsApiKey,
-      hasApiKey: !!$apiKey
-    });
-    
-    if (!canStartConversion) {
-      console.log('ObsidianNoteConverter: Cannot start conversion - conditions not met', {
-        needsApiKey,
-        hasApiKey: !!$apiKey,
-        filesPresent: $files.length > 0,
-        currentStatus: $conversionStatus.status
-      });
-      return;
-    }
+  function handlePayment(event) {
+    const { amount } = event.detail;
+    console.log('Payment received:', { amount });
+    paymentStore.setAmount(amount);
+    paymentStore.setStatus('completed');
+  }
+
+  function handlePaymentSkip() {
+    console.log('Payment skipped');
+    paymentStore.setStatus('skipped');
+  }
+
+  function handleStartConversion() {
+    if (!canStartConversion) return;
     
     try {
-      console.log('ObsidianNoteConverter: Starting conversion process');
-      await startConversion();
-      console.log('ObsidianNoteConverter: Conversion started successfully');
+      console.log('Starting conversion process');
+      startConversion();
     } catch (error) {
-      console.error('ObsidianNoteConverter: Conversion error:', error);
+      console.error('Conversion error:', error);
       conversionStatus.setError(error.message);
       conversionStatus.setStatus('error');
     }
   }
 
   function handleCancelConversion() {
-    console.log('ObsidianNoteConverter: Cancelling conversion');
     cancelConversion();
   }
 </script>
 
-<main class="converter-app">
-  <div class="converter-sections">
-    <!-- Instructions Section -->
-    <section class="section instructions-section">
-      <Instructions />
-    </section>
+<div class="app-container">
+  {#if !showMainContent}
+    <PaymentInput 
+      showPayment={true}
+      on:payment={handlePayment}
+      on:skip={handlePaymentSkip}
+    />
+  {:else}
+    <div class="converter-app app-content-width" in:fade={{ duration: 300 }}>
+      <div class="instructions-wrapper">
+        <Instructions />
+      </div>
 
-    <!-- Only show FileUploader when not converting and not complete -->
-    {#if showUploader}
-      <section 
-        class="section upload-section" 
-        class:is-active={!isComplete}
-        transition:slide|local
-      >
-        <FileUploader />
-      </section>
-    {/if}
+      {#if showUploader}
+        <div class="upload-wrapper" transition:fly|local={{ y: 20, duration: 400 }}>
+          <FileUploader />
+        </div>
+      {/if}
 
-    {#if $files.length > 0}
-      <section 
-        class="section results-section" 
-        transition:slide|local
-      >
-        <ResultDisplay 
-          on:startConversion={handleStartConversion}
-          on:cancelConversion={handleCancelConversion}
-          on:convertMore={() => window.location.reload()}
-        />
-      </section>
-    {/if}
-  </div>
-</main>
+      {#if $files.length > 0}
+        <div class="results-wrapper" transition:fly|local={{ y: 20, duration: 400 }}>
+          <ResultDisplay 
+            on:startConversion={handleStartConversion}
+            on:cancelConversion={handleCancelConversion}
+            on:convertMore={() => window.location.reload()}
+          />
+        </div>
+      {/if}
+    </div>
+  {/if}
+</div>
 
 <style>
-  .converter-app {
-    max-width: var(--content-width-lg);
+  :global(.app-content-width) {
+    width: 100%;
+    max-width: 600px;
     margin: 0 auto;
-    padding: var(--spacing-xl) var(--spacing-lg);
+  }
+
+  .app-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 2rem var(--spacing-md);
+  }
+
+  .converter-app {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-2xl);
+    gap: var(--spacing-md);
   }
 
-  .converter-sections {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md); /* Reduced from xl */
+  .instructions-wrapper {
+    width: 100%;
   }
 
-  .section {
-    opacity: 0.95;
-    transition: all var(--transition-duration-normal) var(--transition-timing-ease);
+  .upload-wrapper,
+  .results-wrapper {
+    position: relative;
   }
 
-  .section:hover {
-    opacity: 1;
-  }
-
-  .section.is-active {
-    transform: scale(1.01);
-  }
-
-  .instructions-section {
-    margin-bottom: var(--spacing-sm); /* Reduced from xl */
-  }
-
-  /* Responsive Design */
   @media (max-width: 768px) {
-    .converter-app {
-      padding: var(--spacing-lg) var(--spacing-md);
-      gap: var(--spacing-xl);
+    .app-container {
+      padding: 1rem var(--spacing-sm);
     }
 
-    .converter-sections {
-      gap: var(--spacing-lg);
-    }
-  }
-
-  @media (max-width: 640px) {
     .converter-app {
-      padding: var(--spacing-md);
-    }
-  }
-
-  /* High Contrast Mode */
-  @media (prefers-contrast: high) {
-    .converter-app {
-      background-color: var(--color-background-high-contrast);
-    }
-    
-    .section {
-      border: 2px solid currentColor;
-    }
-  }
-
-  /* Reduced Motion */
-  @media (prefers-reduced-motion: reduce) {
-    .section,
-    .converter-app {
-      transition: none;
-      transform: none;
+      gap: var(--spacing-sm);
     }
   }
 </style>

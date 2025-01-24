@@ -2,7 +2,7 @@
   import Accordion from './common/Accordion.svelte';
 </script>
 
-<div class="instructions">
+<div class="instructions app-content-width">
   <Accordion title="README - About This Tool & How to Use It" icon="📚" expandedIcon="📚">
     <div class="instruction-content">
       <section class="instruction-section">
@@ -83,9 +83,6 @@
 <style>
   .instructions {
     width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
-    margin-top: calc(-1 * var(--spacing-md));
     color: var(--color-text-base, #333333);
   }
 

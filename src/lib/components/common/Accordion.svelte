@@ -2,43 +2,29 @@
   import { slide } from 'svelte/transition';
   
   export let title = '';
-  export let open = false;
-  export let icon = '▶';
-  export let expandedIcon = '▼';
-  
-  function toggle() {
-    open = !open;
-  }
+  export let icon = '';
+  export let expandedIcon = icon;
+  let expanded = false;
 </script>
 
-<div class="accordion">
-  <button 
-    class="accordion-header" 
-    on:click={toggle}
-    aria-expanded={open}
-  >
-    <span class="icon" aria-hidden="true">
-      {open ? expandedIcon : icon}
-    </span>
+<div class="accordion-wrapper">
+  <button class="accordion-header" on:click={() => expanded = !expanded}>
+    <span class="icon">{expanded ? expandedIcon : icon}</span>
     <span class="title">{title}</span>
+    <span class="arrow" class:expanded>{expanded ? '▼' : '▶'}</span>
   </button>
-  
-  {#if open}
-    <div 
-      class="accordion-content"
-      transition:slide={{ duration: 200 }}
-    >
-      <slot></slot>
+  {#if expanded}
+    <div class="accordion-content" transition:slide>
+      <slot />
     </div>
   {/if}
 </div>
 
 <style>
-  .accordion {
+  .accordion-wrapper {
     width: 100%;
     border: 1px solid var(--color-border);
-    border-radius: var(--rounded-lg);
-    /* Removed margin-bottom: var(--spacing-sm); */
+    border-radius: var(--rounded-md);
     background: var(--color-surface);
   }
 
@@ -46,52 +32,40 @@
     width: 100%;
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-lg);
+    gap: 1rem;
+    padding: 1rem;
     background: none;
     border: none;
+    color: var(--color-text);
     cursor: pointer;
     font-size: var(--font-size-base);
-    color: var(--color-text);
+    font-weight: 500;
     text-align: left;
   }
 
   .accordion-header:hover {
-    background: var(--color-hover);
+    background: var(--color-surface-hover);
+  }
+
+  .title {
+    flex: 1;
   }
 
   .icon {
+    font-size: 1.2em;
+  }
+
+  .arrow {
     font-size: 0.8em;
     transition: transform 0.2s ease;
   }
 
-  .title {
-    font-weight: 700;
-    font-size: var(--font-size-xl);
-    letter-spacing: -0.01em;
+  .arrow.expanded {
+    transform: rotate(0deg);
   }
 
   .accordion-content {
-    padding: var(--spacing-lg) var(--spacing-xl);
     border-top: 1px solid var(--color-border);
-    background: var(--color-surface-alt, #fafafa);
-  }
-
-  /* High Contrast Mode */
-  @media (prefers-contrast: high) {
-    .accordion {
-      border-width: 2px;
-    }
-    
-    .accordion-header {
-      outline: 2px solid currentColor;
-    }
-  }
-
-  /* Reduced Motion */
-  @media (prefers-reduced-motion: reduce) {
-    .icon {
-      transition: none;
-    }
+    background: var(--color-background);
   }
 </style>

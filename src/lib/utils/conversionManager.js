@@ -4,6 +4,7 @@ import { get } from 'svelte/store';
 import { files } from '$lib/stores/files.js';
 import { apiKey } from '$lib/stores/apiKey.js';
 import { conversionStatus } from '$lib/stores/conversionStatus.js';
+import { paymentStore } from '$lib/stores/payment.js';
 import client, { ConversionError } from '$lib/api/client.js';
 import FileSaver from 'file-saver';
 import { CONFIG } from '$lib/config';  // Add this import
@@ -127,6 +128,10 @@ function prepareBatchItems(items) {
 export async function startConversion() {
   const currentFiles = get(files);
   const currentApiKey = get(apiKey);
+  const paymentStatus = get(paymentStore);
+
+  // Reset payment prompt state
+  paymentStore.hidePrompt();
 
   if (currentFiles.length === 0) {
     const error = new Error('No files available for conversion.');
@@ -178,9 +183,12 @@ export async function startConversion() {
         FileSaver.saveAs(response, filename);
     }
 
-    // Update status
+    // Update status with payment acknowledgment
     conversionStatus.setStatus('completed');
-    showFeedback('Conversion completed successfully', 'success');
+    const paymentMsg = paymentStatus.status === 'completed' 
+      ? `✨ Conversion completed successfully! Thank you for your magical contribution of $${paymentStatus.amount}!`
+      : '✨ Conversion completed successfully!';
+    showFeedback(paymentMsg, 'success');
 
   } catch (error) {
     console.error('Conversion error:', error);
