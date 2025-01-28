@@ -1,10 +1,10 @@
 <script>
   import { createEventDispatcher } from 'svelte';
-import { files } from '$lib/stores/files.js';
-import { uploadStore } from '$lib/stores/uploadStore.js';
-import { paymentStore } from '$lib/stores/payment.js';
-import { fade } from 'svelte/transition';
-import { apiKey } from '$lib/stores/apiKey.js';
+  import { files } from '$lib/stores/files.js';
+  import { uploadStore } from '$lib/stores/uploadStore.js';
+  import { paymentStore } from '$lib/stores/payment.js';
+  import { fade } from 'svelte/transition';
+  import { apiKey } from '$lib/stores/apiKey.js';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
   import Container from './common/Container.svelte';
   import TabNavigation from './common/TabNavigation.svelte';
@@ -24,7 +24,7 @@ import { apiKey } from '$lib/stores/apiKey.js';
     documents: ['txt', 'pdf', 'docx', 'pptx'],
     data: ['csv', 'xlsx'],
     audio: ['mp3', 'wav', 'm4a'],
-    video: ['mp4', 'webm', 'avi', 'youtube']
+    video: ['mp4', 'webm', 'avi'] // youtube removed
   };
 
   // Flatten
@@ -171,7 +171,7 @@ import { apiKey } from '$lib/stores/apiKey.js';
         status: 'Ready',
         progress: 0,
         selected: false,
-        requiresApiKey: type !== 'youtube'
+        requiresApiKey: true // Removed YouTube exception
       };
 
       const result = files.addFile(newFile);
@@ -212,7 +212,6 @@ import { apiKey } from '$lib/stores/apiKey.js';
       <TabNavigation />
       <UrlInput 
         on:submitUrl={handleUrlSubmit}
-        on:submitYoutube={(e) => handleUrlSubmit({ detail: { url: e.detail.url, type: 'youtube' } })}
       />
     </div>
 

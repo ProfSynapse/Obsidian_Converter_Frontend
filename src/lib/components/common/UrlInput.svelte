@@ -14,12 +14,6 @@
 
     // URL type configurations
     const URL_TYPES = {
-        youtube: {
-            icon: '🎥',
-            placeholder: 'Enter YouTube URL to convert',
-            description: 'Convert YouTube video to Markdown notes',
-            type: 'youtube'
-        },
         parent: {
             icon: '🗺️',
             placeholder: 'Enter Parent URL to convert',
@@ -80,13 +74,7 @@
     function handleInput(event) {
         const value = event.target.value;
         inputValue = value;
-        
-        if (activeType === 'youtube') {
-            uploadStore.setYoutubeInput(value);
-        } else {
-            uploadStore.setUrlInput(value);
-        }
-        
+        uploadStore.setUrlInput(value);
         errorMessage = '';
     }
 
@@ -110,24 +98,12 @@
                 type: currentConfig.type
             };
 
-            // Validate based on type
-            if (currentConfig.type === 'youtube') {
-                const youtubeRegex = /^https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)/;
-                if (!youtubeRegex.test(normalizedUrl)) {
-                    throw new Error('Invalid YouTube URL format');
-                }
-            }
-
             // Add to files store
             const result = files.addFile(fileObj);
 
             if (result.success) {
                 inputValue = '';
-                if (activeType === 'youtube') {
-                    uploadStore.setYoutubeInput('');
-                } else {
-                    uploadStore.setUrlInput('');
-                }
+                uploadStore.setUrlInput('');
                 dispatch('submitUrl', { 
                     url: normalizedUrl, 
                     type: currentConfig.type 

@@ -41,29 +41,28 @@ async function prepareItem(item) {
     };
 
     /**
- * Normalizes a URL to ensure consistent format
- * @private
- */
-function normalizeUrl(url) {
-  try {
-    const urlObj = new URL(url);
-    const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
-    urlObj.pathname = normalizedPath;
-    return urlObj.href.toLowerCase();
-  } catch (error) {
-    console.error('URL normalization error:', error);
-    return url.toLowerCase();
-  }
-}
+     * Normalizes a URL to ensure consistent format
+     * @private
+     */
+    function normalizeUrl(url) {
+      try {
+        const urlObj = new URL(url);
+        const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
+        urlObj.pathname = normalizedPath;
+        return urlObj.href.toLowerCase();
+      } catch (error) {
+        console.error('URL normalization error:', error);
+        return url.toLowerCase();
+      }
+    }
 
-// Handle URL types (including parent URLs)
-    if (item.type === 'url' || item.type === 'parent' || item.type === 'youtube' || item.url || item.name.startsWith('http')) {
+    // Handle URL types (including parent URLs)
+    if (item.type === 'url' || item.type === 'parent' || item.url || item.name.startsWith('http')) {
       const rawUrl = item.url || item.content || item.name;
       const normalizedUrl = normalizeUrl(rawUrl);
       return {
         ...baseItem,
-        type: item.type === 'parent' ? 'parent' : 
-              item.type === 'youtube' ? 'youtube' : 'url',
+        type: item.type === 'parent' ? 'parent' : 'url',
         url: normalizedUrl, // Use normalized URL
         content: normalizedUrl, // Keep normalized URL for backward compatibility
         options: {
@@ -156,7 +155,6 @@ export async function startConversion() {
       if (item.type === 'video') return '/multimedia/video';
       if (item.type === 'url') return '/web/url';
       if (item.type === 'parent') return '/web/parent-url';
-      if (item.type === 'youtube') return '/web/youtube';
       return '/document/file';
     };
 

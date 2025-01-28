@@ -5,8 +5,8 @@
     
     const tabs = [
       { id: 'single', icon: '🔗', label: 'Single URL', description: 'Convert a single webpage' },
-      { id: 'parent', icon: '🗺️', label: 'Parent URL', description: 'Convert multiple linked pages' },
-      { id: 'youtube', icon: '🎥', label: 'YouTube', description: 'Convert YouTube videos' }
+      { id: 'parent', icon: '🗺️', label: 'Parent URL', description: 'Convert multiple linked pages' }
+      // { id: 'youtube', icon: '🎥', label: 'YouTube', description: 'Convert YouTube videos' }
     ];
 </script>
 

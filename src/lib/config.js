@@ -24,7 +24,6 @@ export const CONFIG = {
             FILE: '/document/file',
             URL: '/web/url',
             PARENT_URL: '/web/parent-url',
-            YOUTUBE: '/web/youtube',
             BATCH: '/batch',
             AUDIO: '/multimedia/audio',
             VIDEO: '/multimedia/video'
@@ -53,7 +52,6 @@ export const CONFIG = {
             // Web types
             URL: 'url',
             PARENT_URL: 'parenturl',
-            YOUTUBE: 'youtube',
             
             // Multimedia types
             AUDIO: 'audio',
@@ -89,7 +87,7 @@ export const CONFIG = {
     },
 
     CONVERSION: {
-        SUPPORTED_TYPES: ['file', 'url', 'parent', 'youtube', 'batch'],
+        SUPPORTED_TYPES: ['file', 'url', 'parent', 'batch'],
         DEFAULT_OPTIONS: {
             includeImages: true,
             includeMeta: true,

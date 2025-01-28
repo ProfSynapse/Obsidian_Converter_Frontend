@@ -1,11 +1,11 @@
 // src/lib/utils/fileUtils.js
 
 const FILE_CATEGORIES = {
-    documents: ['txt', 'rtf', 'pdf', 'docx', 'odt', 'epub', 'doc'],
+    documents: ['pdf', 'docx', 'pptx'],
     audio: ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'wma'],
     video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
-    data: ['csv', 'json', 'yaml', 'yml', 'xlsx', 'pptx'],
-    web: ['url', 'parenturl', 'youtube'] // Updated web category
+    data: ['csv', 'xlsx'],
+    web: ['url', 'parenturl'] // Removed youtube
 };
 
 // Audio and video formats that require API key
@@ -37,7 +37,7 @@ export function getFileType(file) {
 
     // Handle web content types
     if (typeof file === 'object' && file.type) {
-        if (['url', 'parenturl', 'youtube'].includes(file.type)) {
+        if (['url', 'parenturl'].includes(file.type)) {
             return 'web';
         }
     }
