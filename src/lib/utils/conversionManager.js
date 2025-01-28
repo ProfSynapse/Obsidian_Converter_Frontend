@@ -57,12 +57,13 @@ function normalizeUrl(url) {
 }
 
 // Handle URL types (including parent URLs)
-    if (item.type === 'url' || item.type === 'parent' || item.url || item.name.startsWith('http')) {
+    if (item.type === 'url' || item.type === 'parent' || item.type === 'youtube' || item.url || item.name.startsWith('http')) {
       const rawUrl = item.url || item.content || item.name;
       const normalizedUrl = normalizeUrl(rawUrl);
       return {
         ...baseItem,
-        type: item.type === 'parent' ? 'parent' : 'url',
+        type: item.type === 'parent' ? 'parent' : 
+              item.type === 'youtube' ? 'youtube' : 'url',
         url: normalizedUrl, // Use normalized URL
         content: normalizedUrl, // Keep normalized URL for backward compatibility
         options: {
