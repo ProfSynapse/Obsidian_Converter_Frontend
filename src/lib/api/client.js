@@ -17,8 +17,8 @@ class ConversionClient {
     this.config = CONFIG;
     this.baseUrl = baseUrl;
     this.isRailway = import.meta.env.PROD;
-    // Get supported types from FILES.TYPES instead of ITEM_TYPES
-    this.supportedTypes = Object.values(CONFIG.FILES.TYPES || {});
+    // Get supported types from CONVERSION.SUPPORTED_TYPES
+    this.supportedTypes = ['file', 'url', 'parent', 'youtube', 'audio', 'video'];
     
     // Log the API configuration
     console.log('API Configuration:', {
@@ -60,7 +60,7 @@ class ConversionClient {
     }
 
     // Special validation for parent URL
-    if (type === CONFIG.ITEM_TYPES.PARENT_URL && !item.url) {
+    if (type === 'parent' && !item.url) {
       throw ConversionError.validation('Parent URL is required');
     }
 
@@ -80,7 +80,7 @@ class ConversionClient {
         includeImages: true,
         includeMeta: true,
         convertLinks: true,
-        ...(type === CONFIG.ITEM_TYPES.PARENT_URL && {
+        ...(type === 'parent' && {
           depth: item.options?.depth || 1,
           maxPages: item.options?.maxPages || 10
         }),
@@ -114,23 +114,23 @@ class ConversionClient {
       console.log('Converting normalized item:', normalizedItem);
 
       // Validate required properties based on type
-      if (normalizedItem.type === CONFIG.ITEM_TYPES.URL && !normalizedItem.url) {
+      if (normalizedItem.type === 'url' && !normalizedItem.url) {
         throw ConversionError.validation('URL is required for URL conversion');
       }
 
       let result;
       switch (normalizedItem.type) {
-        case CONFIG.ITEM_TYPES.URL:
+        case 'url':
           result = await Converters.convertUrl(normalizedItem, apiKey);
           break;
-        case CONFIG.ITEM_TYPES.YOUTUBE:
+        case 'youtube':
           // YouTube conversion no longer requires API key
           result = await Converters.convertYoutube(normalizedItem);
           break;
-        case CONFIG.ITEM_TYPES.PARENT_URL:
+        case 'parent':
           result = await Converters.convertParentUrl(normalizedItem, apiKey);
           break;
-        case CONFIG.ITEM_TYPES.FILE:
+        case 'file':
           result = await Converters.convertFile(normalizedItem, apiKey);
           break;
         default:
@@ -224,19 +224,20 @@ class ConversionClient {
           const endpoint = getEndpoint?.(item) || this.getDefaultEndpoint(item);
           let result;
   
-          if (item.type === 'url') {
-            // Handle URL conversions
+          if (item.type === 'url' || item.type === 'youtube') {
+            // Handle URL and YouTube conversions
             const urlData = {
               url: item.url || item.content,
               name: item.name || 'url-conversion',
-              options: item.options || {}
+              options: item.options || {},
+              type: item.type // Include type in the request
             };
             
             result = await this.makeRequest(endpoint, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
+                ...(item.type === 'youtube' ? {} : apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
               body: JSON.stringify(urlData)
             });
@@ -362,7 +363,7 @@ class ConversionClient {
     items.forEach(item => {
       if (item.file instanceof File) {
         formData.append('files', item.file);
-      } else if (item.url || item.type === 'url') {
+      } else if (item.url || item.type === 'url' || item.type === 'youtube') {
         urlItems.push({
           id: item.id,
           type: item.type,
