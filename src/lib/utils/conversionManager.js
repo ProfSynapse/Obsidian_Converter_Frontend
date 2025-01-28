@@ -155,6 +155,7 @@ export async function startConversion() {
       if (item.type === 'video') return '/multimedia/video';
       if (item.type === 'url') return '/web/url';
       if (item.type === 'parent') return '/web/parent-url';
+      if (item.type === 'youtube') return '/web/youtube';
       return '/document/file';
     };
 

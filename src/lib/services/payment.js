@@ -1,20 +1,25 @@
 import { loadStripe } from '@stripe/stripe-js';
 import { paymentStore } from '../stores/payment';
+import { browser } from '$app/environment';
 
 class PaymentService {
   constructor() {
     this.stripe = null;
     this.elements = null;
-    this.init();
+    // Only initialize in browser environment
+    if (browser) {
+      this.init();
+    }
   }
 
   async init() {
     try {
-      if (!import.meta.env.STRIPE_PUBLIC_KEY) {
+      const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+      if (!publicKey) {
         throw new Error('Stripe public key not found in environment');
       }
 
-      this.stripe = await loadStripe(import.meta.env.STRIPE_PUBLIC_KEY);
+      this.stripe = await loadStripe(publicKey);
       if (this.stripe) {
         this.elements = this.stripe.elements();
         console.log('✨ Stripe initialized successfully');
