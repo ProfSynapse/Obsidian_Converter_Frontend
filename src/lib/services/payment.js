@@ -19,15 +19,26 @@ class PaymentService {
 
   async init() {
     try {
-      console.log('🚂 Railway Environment Check:', {
+      const envVars = {
         isProd: import.meta.env.PROD,
         railwayUrl: import.meta.env.RAILWAY_API_BASE_URL,
         allEnvKeys: Object.keys(import.meta.env),
-        stripeKeyExists: !!import.meta.env.VITE_STRIPE_PUBLIC_KEY
-      });
+        stripeKeyExists: !!import.meta.env.VITE_STRIPE_PUBLIC_KEY,
+        rawStripeKey: import.meta.env.VITE_STRIPE_PUBLIC_KEY,
+        keyLength: import.meta.env.VITE_STRIPE_PUBLIC_KEY?.length,
+        keyStart: import.meta.env.VITE_STRIPE_PUBLIC_KEY?.substring(0, 5)
+      };
+
+      console.log('🚂 Railway Environment Check:', envVars);
+      console.log('🔍 Environment variables loaded:', import.meta.env);
 
       const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
-      console.log('🔑 Attempting to initialize Stripe with key:', publicKey ? 'Key exists' : 'No key found');
+      console.log('🔑 Stripe key details:', {
+        exists: !!publicKey,
+        length: publicKey?.length,
+        startsWithPk: publicKey?.startsWith('pk_'),
+        value: publicKey || 'No key found'
+      });
       
       if (!publicKey) {
         throw new Error('Stripe public key not found in environment');
