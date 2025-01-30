@@ -26,18 +26,9 @@
   let initializationError = false;
 
   onMount(async () => {
-    console.log('🎭 PaymentInput mounting, environment:', {
-      browser: typeof window !== 'undefined',
-      showPayment,
-      mode: import.meta.env.MODE,
-      prod: import.meta.env.PROD
-    });
-
     if (showPayment) {
       try {
-        console.log('🎯 Attempting to initialize payment service...');
         await paymentService.init();
-        console.log('✅ Payment service initialized successfully');
         
         cardElement = paymentService.createCardElement();
         cardElement.mount('#card-element');
