@@ -21,7 +21,7 @@
    * (Here we break out audio vs video explicitly)
    */
   const SUPPORTED_FILES = {
-    documents: ['txt', 'pdf', 'docx', 'pptx'],
+    documents: ['pdf', 'docx', 'pptx'],
     data: ['csv', 'xlsx'],
     audio: ['mp3', 'wav', 'm4a'],
     video: ['mp4', 'webm', 'avi'] // youtube removed

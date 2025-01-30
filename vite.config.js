@@ -5,9 +5,6 @@ import { fileURLToPath } from 'url';
 
 export default defineConfig(({ mode }) => ({
   plugins: [sveltekit()],
-  define: {
-    'import.meta.env.VITE_STRIPE_PUBLIC_KEY': JSON.stringify(process.env.VITE_STRIPE_PUBLIC_KEY)
-  },
   resolve: {
     alias: {
       '$lib': fileURLToPath(new URL('./src/lib', import.meta.url)),

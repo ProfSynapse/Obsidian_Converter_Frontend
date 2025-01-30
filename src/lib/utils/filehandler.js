@@ -164,21 +164,11 @@ export function clearFiles() {
  * Maps file types to their corresponding icons
  */
 const TYPE_TO_ICON = {
-    'txt': Document,
-    'rtf': Document,
     'pdf': Document,
     'docx': Document,
-    'odt': Document,
-    'epub': Document,
     'csv': Document,
-    'json': Document,
-    'yaml': Document,
-    'yml': Document,
     'xlsx': Document,
     'pptx': Document,
-    'html': Document,
-    'htm': Document,
-    'xml': Document,
     'mp3': MusicalNote,
     'wav': MusicalNote,
     'ogg': MusicalNote,

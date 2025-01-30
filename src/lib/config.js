@@ -39,10 +39,10 @@ export const CONFIG = {
 
     FILES: {
         CATEGORIES: {
-            documents: ['txt', 'rtf', 'pdf', 'docx', 'doc', 'odt', 'epub'],
+            documents: ['pdf', 'docx', 'pptx'],
             audio: ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'wma'],
             video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
-            data: ['csv', 'json', 'yaml', 'yml', 'xlsx', 'pptx']
+            data: ['csv', 'xlsx']
         },
         TYPES: {
             // Document types

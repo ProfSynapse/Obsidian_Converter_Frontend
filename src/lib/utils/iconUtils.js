@@ -11,14 +11,9 @@ export const FILE_ICONS = {
   pdf: { icon: '📕', color: '#E24A4A', label: 'PDF Document' },
   doc: { icon: '📘', color: '#4A90E2', label: 'Word Document' },
   docx: { icon: '📘', color: '#4A90E2', label: 'Word Document' },
-  md: { icon: '📝', color: '#4AE2B5', label: 'Markdown Document' },
 
   // Data Files
   csv: { icon: '📊', color: '#4AE266', label: 'CSV File' },
-  json: { icon: '📋', color: '#E2C84A', label: 'JSON File' },
-  xml: { icon: '📋', color: '#E2884A', label: 'XML File' },
-  yaml: { icon: '📋', color: '#E2884A', label: 'YAML File' },
-  yml: { icon: '📋', color: '#E2884A', label: 'YAML File' },
   xlsx: { icon: '📈', color: '#4AE266', label: 'Excel Spreadsheet' },
   pptx: { icon: '📊', color: '#E24A4A', label: 'PowerPoint Presentation' },
 
@@ -44,7 +39,7 @@ export const FILE_ICONS = {
   // Special Types
   url: { icon: '🔗', color: '#4AE2B5', label: 'URL Link' },
   parenturl: { icon: '🗺️', color: '#9E4AE2', label: 'Parent URL' },
-  youtube: { icon: '▶️', color: '#E24A4A', label: 'YouTube Video' },
+  // youtube: { icon: '▶️', color: '#E24A4A', label: 'YouTube Video' },
 
   // Default Fallback
   default: { icon: '🗎', color: '#B8B8B8', label: 'File' }
