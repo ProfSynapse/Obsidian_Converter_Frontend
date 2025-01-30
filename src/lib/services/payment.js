@@ -4,6 +4,11 @@ import { browser } from '$app/environment';
 
 class PaymentService {
   constructor() {
+    console.log('🏗️ PaymentService constructor:', { 
+      browser,
+      timestamp: new Date().toISOString()
+    });
+    
     this.stripe = null;
     this.elements = null;
     // Only initialize in browser environment
@@ -14,7 +19,16 @@ class PaymentService {
 
   async init() {
     try {
+      console.log('🚂 Railway Environment Check:', {
+        isProd: import.meta.env.PROD,
+        railwayUrl: import.meta.env.RAILWAY_API_BASE_URL,
+        allEnvKeys: Object.keys(import.meta.env),
+        stripeKeyExists: !!import.meta.env.VITE_STRIPE_PUBLIC_KEY
+      });
+
       const publicKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+      console.log('🔑 Attempting to initialize Stripe with key:', publicKey ? 'Key exists' : 'No key found');
+      
       if (!publicKey) {
         throw new Error('Stripe public key not found in environment');
       }
