@@ -38,7 +38,10 @@
 
   function showFeedback(message, type = 'info') {
     uploadStore.setMessage(message, type);
-    return setTimeout(() => uploadStore.clearMessage(), 5000);
+    // Only set timeout for non-success messages
+    if (type !== 'success') {
+      return setTimeout(() => uploadStore.clearMessage(), 5000);
+    }
   }
 
   function handlePayment(event) {
@@ -100,6 +103,8 @@
   }
 
   function handleFilesAdded(newFiles) {
+    // Clear any existing success messages when adding new files
+    uploadStore.clearMessage();
     newFiles.forEach(file => {
       const validation = validateFile(file);
       if (!validation.valid) {
@@ -151,6 +156,8 @@
   }
 
   async function handleUrlSubmit(event) {
+    // Clear any existing success messages when submitting a new URL
+    uploadStore.clearMessage();
     const { url, type = 'url' } = event.detail;
     
     if (!url) {
@@ -236,9 +243,9 @@
       />
     </div>
     
-    {#if $uploadStore.errorMessage}
+    {#if $uploadStore.message}
       <div class="error-container" transition:fade>
-        <ErrorMessage message={$uploadStore.errorMessage} />
+        <ErrorMessage />
       </div>
     {/if}
 

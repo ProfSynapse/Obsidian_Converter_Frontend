@@ -512,13 +512,6 @@
     .result-item {
       transition: none;
     }
-    .breathing-gradient {
-      animation: none;
-    }
-    .start-button:not(:disabled):hover {
-      transform: none;
-      box-shadow: none;
-    }
   }
 
   .content-wrapper {

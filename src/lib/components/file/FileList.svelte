@@ -18,6 +18,10 @@
       const result = files.removeFile(id);
       if (result.success) {
           dispatch('fileRemoved', { id, file: result.file });
+          // Clear store if this was the last file
+          if ($files.length === 0) {
+              files.clearFiles();
+          }
       } else {
           console.error('Error removing file:', result.message);
       }
@@ -47,6 +51,10 @@
   function deleteSelected() {
       const selectedIds = $files.filter(f => f.selected).map(f => f.id);
       selectedIds.forEach(id => files.removeFile(id));
+      // Clear store if all files were selected
+      if (selectedIds.length === $files.length) {
+          files.clearFiles();
+      }
   }
 
   // Reactive declarations

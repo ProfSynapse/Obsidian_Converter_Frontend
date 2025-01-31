@@ -39,13 +39,6 @@
       <slot />
     </div>
   </main>
-
-  <!-- Footer -->
-  <footer class="footer">
-    <p class="footer-text text-center">
-      Files will be converted to Markdown and downloaded as a ZIP file
-    </p>
-  </footer>
 </div>
 
 <style>
@@ -104,20 +97,6 @@
     gap: var(--spacing-xl);
     width: 100%;
     max-width: var(--content-width-lg);
-  }
-
-  /* Footer Styles */
-  .footer {
-    padding: var(--spacing-lg) 0;
-    position: relative;
-    width: 100%;
-  }
-
-  .footer-text {
-    color: var(--color-text-on-dark);
-    font-size: var(--font-size-sm);
-    opacity: 0.8;
-    margin: 0;
   }
 
   /* Responsive Adjustments */

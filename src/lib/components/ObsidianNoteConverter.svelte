@@ -8,9 +8,19 @@
   import { conversionStatus } from '$lib/stores/conversionStatus.js';
   import { files } from '$lib/stores/files.js';
   import { paymentStore } from '$lib/stores/payment.js';
+  import { uploadStore } from '$lib/stores/uploadStore.js';
   import { startConversion, cancelConversion } from '$lib/utils/conversionManager.js';
   import { fade, fly } from 'svelte/transition';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
+  import { onDestroy } from 'svelte';
+
+  // Clear all stores on component destruction
+  onDestroy(() => {
+    files.clearFiles();
+    conversionStatus.reset();
+    uploadStore.clearMessage();
+    paymentStore.hidePrompt();
+  });
 
   // Reactive declarations for conversion state
   $: showApiKeyInput = needsApiKey && !$apiKey;
@@ -84,7 +94,15 @@
           <ResultDisplay 
             on:startConversion={handleStartConversion}
             on:cancelConversion={handleCancelConversion}
-            on:convertMore={() => window.location.reload()}
+            on:convertMore={() => {
+              // Clear stores before page reload
+              files.clearFiles();
+              conversionStatus.reset();
+              uploadStore.clearMessage();
+              paymentStore.hidePrompt();
+              // Reload page
+              window.location.reload();
+            }}
           />
         </div>
       {/if}

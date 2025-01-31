@@ -3,7 +3,7 @@
     import { createEventDispatcher } from 'svelte';
     import { fade, scale } from 'svelte/transition';
     import { uploadStore } from '../../stores/uploadStore';
-    import { formatFileSize, MAX_FILE_SIZE, MAX_VIDEO_SIZE } from '../../utils/fileUtils';
+    import { formatFileSize, MAX_FILE_SIZE, MAX_VIDEO_SIZE, validateFileSize, getFileType } from '../../utils/fileUtils';
   
     export let acceptedTypes = [];
     let fileInput;
@@ -17,6 +17,21 @@
       dragCounter = 0;
       
       const files = Array.from(event.dataTransfer.files);
+      // Add size validation before dispatching
+      const oversizedFiles = files.filter(file => {
+        const validation = validateFileSize(file);
+        return !validation.valid;
+      });
+
+      if (oversizedFiles.length > 0) {
+        const fileType = getFileType(oversizedFiles[0]);
+        const maxSize = fileType === 'video' ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+        uploadStore.setMessage(
+          `File too large: Maximum size is ${formatFileSize(maxSize)}`,
+          'error'
+        );
+        return;
+      }
       dispatch('filesDropped', { files });
     }
   
@@ -36,6 +51,21 @@
   
     function handleFileSelect(event) {
       const files = Array.from(event.target.files);
+      // Add size validation before dispatching
+      const oversizedFiles = files.filter(file => {
+        const validation = validateFileSize(file);
+        return !validation.valid;
+      });
+
+      if (oversizedFiles.length > 0) {
+        const fileType = getFileType(oversizedFiles[0]);
+        const maxSize = fileType === 'video' ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+        uploadStore.setMessage(
+          `File too large: Maximum size is ${formatFileSize(maxSize)}`,
+          'error'
+        );
+        return;
+      }
       dispatch('filesSelected', { files });
       event.target.value = ''; // Reset input
     }

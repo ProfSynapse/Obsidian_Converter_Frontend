@@ -3,9 +3,17 @@
 import { writable, derived } from 'svelte/store';
 import { v4 as uuidv4 } from 'uuid';
 import { requiresApiKey } from '$lib/utils/fileUtils.js';
+import { browser } from '$app/environment';
 
 // Create and export the stores
 export const files = createFilesStore();
+
+// Clear any stored files data on page load
+if (browser) {
+    // Clear any stored files data
+    localStorage.removeItem('obsidian_converter_files');
+    sessionStorage.removeItem('obsidian_converter_files');
+}
 export const currentFileType = derived(files, $files => {
     const activeFile = $files[0];
     if (!activeFile) return null;
@@ -96,7 +104,17 @@ function createAction(name, handler) {
  * Creates and returns the files store
  */
 function createFilesStore() {
-    const { subscribe, update, set } = writable([]);
+    const { subscribe, update, set } = writable([], (set) => {
+        // Cleanup function that runs when all subscribers unsubscribe
+        return () => {
+            set([]); // Clear the store
+            if (browser) {
+                // Clear any stored data
+                localStorage.removeItem('obsidian_converter_files');
+                sessionStorage.removeItem('obsidian_converter_files');
+            }
+        };
+    });
 
     function hasFile(url) {
         let found = false;
@@ -299,6 +317,11 @@ function createFilesStore() {
         clearFiles: createAction('clearFiles', () => {
             console.log('[filesStore] Clearing all files');
             let count = 0;
+            if (browser) {
+                // Clear any stored data
+                localStorage.removeItem('obsidian_converter_files');
+                sessionStorage.removeItem('obsidian_converter_files');
+            }
             return updateFiles(files => {
                 count = files.length;
                 console.log('[filesStore] Clearing', count, 'files');

@@ -113,11 +113,21 @@ function prepareBatchItems(items) {
   }
   
   // Log items before processing
-  console.log('Preparing batch items:', items);
+  console.log('Preparing items:', { 
+    count: items.length, 
+    types: items.map(item => item.type || 'unknown'),
+    names: items.map(item => item.name)
+  });
   
   return Promise.all(items.map(async item => {
     const prepared = await prepareItem(item);
-    console.log('Prepared item:', prepared); // Debug log
+    // Add metadata about whether this item should be batched
+    prepared.shouldBatch = prepared.type !== 'document';
+    console.log('Prepared item:', {
+      name: prepared.name,
+      type: prepared.type,
+      shouldBatch: prepared.shouldBatch
+    });
     return prepared;
   }));
 }
@@ -162,7 +172,7 @@ export async function startConversion() {
 
     // Process items with progress tracking
     const response = await client.processItems(items, currentApiKey, {
-        useBatch: itemCount > 1,
+        useBatch: itemCount > 1 && !items.every(item => item.type === 'document'),  // Don't use batch for single type documents
         getEndpoint,
         onProgress: (progress) => {
             console.log(`Conversion progress: ${progress}%`);
@@ -195,6 +205,12 @@ export async function startConversion() {
         }
         
         FileSaver.saveAs(response, filename);
+        
+        // Clear files store after successful download
+        const clearResult = files.clearFiles();
+        if (!clearResult.success) {
+            console.warn('Failed to clear files store:', clearResult.message);
+        }
     }
 
     // Update status with payment acknowledgment
