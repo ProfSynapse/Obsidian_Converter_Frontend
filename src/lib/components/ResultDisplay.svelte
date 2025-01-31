@@ -3,7 +3,7 @@
 <script>
   import { onDestroy } from 'svelte';
   import { derived } from 'svelte/store';
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { fade, fly } from 'svelte/transition';
 
   import Container from './common/Container.svelte';
@@ -31,13 +31,14 @@
 
   const dispatch = createEventDispatcher();
 
-  // --- 1) ConversionStatus store subscription ---
+  // --- 1) State management ---
   let status = 'idle';
   let progress = 0;
   let error = null;
   let currentFile = null;
   let processedCount = 0;
   let totalCount = 0;
+  let showSynapseMessage = false;
 
   const unsubConversion = conversionStatus.subscribe(value => {
     status = value.status;
@@ -83,6 +84,9 @@
       console.log('ResultDisplay: Cannot convert - conditions not met');
       return;
     }
+    
+    // Show Synapse message when conversion starts
+    showSynapseMessage = true;
     
     console.log('ResultDisplay: Dispatching startConversion event');
     dispatch('startConversion');
@@ -174,9 +178,12 @@
           >
             Stop Conversion
           </Button>
+        </div>
+      {/if}
 
-          <!-- Professor Synapse's Magical Message -->
-          <div class="synapse-message" in:fly={{ y: 30, duration: 400, delay: 300 }}>
+      <!-- Professor Synapse's Magical Message -->
+      {#if showSynapseMessage}
+        <div class="synapse-message" in:fly={{ y: 30, duration: 400 }}>
             <div class="professor-header">
               <span class="wizard-emoji">🧙🏾‍♂️</span>
               <h3>Greetings, Knowledge Seeker!</h3>
@@ -215,10 +222,10 @@
                 </div>
               </div>
             </div>
-          </div>
         </div>
+      {/if}
 
-      {:else}
+      {#if !isConverting}
         <!-- Modify this section to check conversion status -->
         {#if $conversionStatus.status === 'completed'}
           <div class="start-button-container">
