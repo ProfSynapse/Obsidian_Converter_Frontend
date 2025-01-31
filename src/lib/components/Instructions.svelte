@@ -48,8 +48,9 @@
           <li>
             <strong>Files from Your Computer</strong> - Click the upload box or drag files into it. You can add:
             <ul class="sub-list">
-              <li>Regular documents (like Word files or PDFs)</li>
-              <li>Audio/Video files (these need an API key)</li>
+              <li>Regular documents (like Word files or PDFs) - up to 50MB per file</li>
+              <li>Audio files (these need an API key) - up to 50MB per file</li>
+              <li>Video files (these need an API key) - up to 500MB per file</li>
             </ul>
           </li>
         </ul>

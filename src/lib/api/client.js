@@ -237,6 +237,7 @@ class ConversionClient {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'text/markdown, application/zip, application/octet-stream',
                 ...(item.type === 'youtube' ? {} : apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
               body: JSON.stringify(urlData)
@@ -247,6 +248,7 @@ class ConversionClient {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'text/markdown, application/zip, application/octet-stream',
                 ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
               body: JSON.stringify({
@@ -264,6 +266,7 @@ class ConversionClient {
             result = await this.makeRequest(endpoint, {
               method: 'POST',
               headers: {
+                'Accept': 'text/markdown, application/zip, application/octet-stream',
                 ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
               body: formData
@@ -382,10 +385,10 @@ class ConversionClient {
     try {
       // makeRequest already processes the response into the appropriate format
       const result = await this.makeRequest('/batch', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'application/zip, application/octet-stream'
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Accept': 'text/markdown, application/zip, application/octet-stream'
         },
         body: formData
       });
@@ -393,7 +396,7 @@ class ConversionClient {
       // Validate response type
       if (!(result instanceof Blob)) {
         throw new ConversionError(
-          'Invalid response format - expected ZIP file',
+          'Invalid response format - expected file download',
           'RESPONSE_ERROR',
           { received: typeof result }
         );

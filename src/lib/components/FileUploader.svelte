@@ -58,7 +58,16 @@
 
   function validateFile(file) {
     const extension = file.name.split('.').pop().toLowerCase();
-    return SUPPORTED_EXTENSIONS.includes(extension);
+    if (!SUPPORTED_EXTENSIONS.includes(extension)) {
+      return { valid: false, message: `Unsupported file type: ${file.name}` };
+    }
+
+    const sizeValidation = validateFileSize(file);
+    if (!sizeValidation.valid) {
+      return { valid: false, message: `${file.name}: ${sizeValidation.message}` };
+    }
+
+    return { valid: true };
   }
 
   function getFileCategory(extension) {
@@ -92,8 +101,9 @@
 
   function handleFilesAdded(newFiles) {
     newFiles.forEach(file => {
-      if (!validateFile(file)) {
-        showFeedback(`Unsupported file type: ${file.name}`, 'error');
+      const validation = validateFile(file);
+      if (!validation.valid) {
+        showFeedback(validation.message, 'error');
         return;
       }
 

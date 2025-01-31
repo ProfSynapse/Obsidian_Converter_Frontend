@@ -3,6 +3,7 @@
     import { createEventDispatcher } from 'svelte';
     import { fade, scale } from 'svelte/transition';
     import { uploadStore } from '../../stores/uploadStore';
+    import { formatFileSize, MAX_FILE_SIZE, MAX_VIDEO_SIZE } from '../../utils/fileUtils';
   
     export let acceptedTypes = [];
     let fileInput;
@@ -75,7 +76,13 @@
         <div class="text-content">
           <p class="primary-text">Drag and drop files here</p>
           <p class="secondary-text">or click to select files</p>
-          <p class="file-types">Supported formats: {displayTypes}</p>
+          <p class="file-types">
+            Supported formats: {displayTypes}
+            <br>
+            <span class="size-limits">
+              Size limits: Videos up to {formatFileSize(MAX_VIDEO_SIZE)}, other files up to {formatFileSize(MAX_FILE_SIZE)}
+            </span>
+          </p>
         </div>
       <!-- Drag Over State -->
       {:else}
@@ -172,7 +179,12 @@
       transform: translate(-50%, -50%) scale(1.1);
     }
   
-    /* Dark Mode */
+    .size-limits {
+    font-style: italic;
+    opacity: 0.9;
+  }
+
+  /* Dark Mode */
     @media (prefers-color-scheme: dark) {
       .drop-zone {
         background: var(--color-background);

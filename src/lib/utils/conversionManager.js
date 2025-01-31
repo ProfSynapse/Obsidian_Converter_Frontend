@@ -177,9 +177,23 @@ export async function startConversion() {
         }
     });
 
-    // Handle ZIP blob response
+    // Handle file download response
     if (response instanceof Blob) {
-        const filename = `conversion_${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
+        const contentType = response.type;
+        let filename;
+
+        // For single markdown files, use original filename with .md extension
+        if (contentType === 'text/markdown') {
+            // Use original filename if available, otherwise generate one
+            const originalName = items[0]?.name;
+            filename = originalName ? 
+                originalName.replace(/\.[^/.]+$/, '.md') : 
+                `document_${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
+        } else {
+            // For zip files (multiple files or complex conversions)
+            filename = `conversion_${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
+        }
+        
         FileSaver.saveAs(response, filename);
     }
 

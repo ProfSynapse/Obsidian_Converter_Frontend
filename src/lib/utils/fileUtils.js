@@ -1,5 +1,9 @@
 // src/lib/utils/fileUtils.js
 
+// File size limits
+export const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB in bytes
+export const MAX_VIDEO_SIZE = 500 * 1024 * 1024; // 500MB in bytes
+
 const FILE_CATEGORIES = {
     documents: ['pdf', 'docx', 'pptx'],
     audio: ['mp3', 'wav', 'ogg', 'm4a', 'aac', 'wma'],
@@ -97,4 +101,23 @@ export function formatFileSize(bytes) {
   }
   
   return `${Math.round(size * 100) / 100} ${units[unitIndex]}`;
+}
+
+/**
+ * Validates if a file size is within allowed limits
+ * @param {File} file - The file to check
+ * @returns {Object} - Validation result with valid status and message
+ */
+export function validateFileSize(file) {
+  if (!file || !file.size) return { valid: false, message: 'Invalid file' };
+  
+  const fileType = getFileType(file);
+  const maxSize = fileType === 'video' ? MAX_VIDEO_SIZE : MAX_FILE_SIZE;
+  const isValid = file.size <= maxSize;
+  
+  return {
+    valid: isValid,
+    maxSize,
+    message: isValid ? '' : `File exceeds maximum size of ${formatFileSize(maxSize)}`
+  };
 }

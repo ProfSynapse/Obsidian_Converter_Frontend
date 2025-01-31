@@ -114,3 +114,12 @@ Houses all test files for the application, including unit tests for utility func
 4. **Results Display**: Shows converted files and allows for individual or batch downloads of converted notes.
 5. **API Integration**: Communicates with a backend service for file conversion, handling authentication and data transfer.
 6. **Responsive Design**: Ensures a consistent user experience across different device sizes and types.
+
+## File Size Limits
+
+The application enforces the following file size limits to ensure optimal performance:
+
+- **Video Files**: Maximum 500MB per file (formats: mp4, webm, avi, mov, mkv)
+- **All Other Files**: Maximum 50MB per file (including documents, audio, and data files)
+
+These limits are enforced on the frontend to prevent unnecessary upload attempts of oversized files. Attempting to upload files larger than these limits will result in a user-friendly error message.
