@@ -5,7 +5,7 @@
   import { paymentStore } from '$lib/stores/payment.js';
   import { fade } from 'svelte/transition';
   import { apiKey } from '$lib/stores/apiKey.js';
-  import { requiresApiKey } from '$lib/utils/fileUtils.js';
+  import { requiresApiKey, validateFileSize } from '$lib/utils/fileUtils.js';
   import Container from './common/Container.svelte';
   import TabNavigation from './common/TabNavigation.svelte';
   import UrlInput from './common/UrlInput.svelte';
