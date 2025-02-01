@@ -3,6 +3,7 @@
   import { fade, fly } from 'svelte/transition';
   import { adStore } from '$lib/stores/adStore.js';
   import { onMount } from 'svelte';
+  import Container from './common/Container.svelte';
 
   let adRef;
 
@@ -23,8 +24,9 @@
 </script>
 
 {#if $adStore.visible}
-  <div class="synapse-message" in:fly={{ y: 30, duration: 400 }} bind:this={adRef}>
-    <div class="ad-container">
+  <div class="synapse-message" bind:this={adRef}>
+    <div class="ad-wrapper" in:fly={{ y: 30, duration: 400 }}>
+      <Container class="ad-container">
       <div class="professor-header">
         <span class="wizard-emoji">🧙🏾‍♂️</span>
         <h3>Greetings, Knowledge Seeker!</h3>
@@ -63,6 +65,7 @@
           </div>
         </div>
       </div>
+      </Container>
     </div>
   </div>
 {/if}
@@ -76,13 +79,12 @@
     padding: 0 var(--spacing-md);
   }
 
-  .ad-container {
-    padding: var(--spacing-lg);
-    background: var(--color-background-secondary);
-    border-radius: var(--rounded-lg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  .ad-wrapper {
     width: 100%;
-    max-width: 800px;
+  }
+
+  :global(.ad-container) {
+    background: var(--color-surface);
   }
 
   .professor-header {
@@ -183,10 +185,6 @@
     .synapse-message {
       padding: var(--spacing-sm);
       margin-top: var(--spacing-lg);
-    }
-
-    .ad-container {
-      padding: var(--spacing-md);
     }
 
     .professor-header h3 {
