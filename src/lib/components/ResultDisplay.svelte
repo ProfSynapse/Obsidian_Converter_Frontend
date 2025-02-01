@@ -87,10 +87,6 @@
   function handleApiKeySet(event) {
     console.log('API Key Set event:', event.detail);
   }
-
-  function handleRefresh() {
-    window.location.reload();
-  }
 </script>
 
 <!-- Container for everything (results, conversion controls, etc.) -->
@@ -117,15 +113,14 @@
         {/each}
       </ul>
 
-      <!-- Replace Convert More button with Refresh button -->
       <div class="start-button-container">
         <Button 
           variant="primary"
           size="large"
           fullWidth
-          on:click={handleRefresh}
+          on:click={() => dispatch('convertMore')}
         >
-          Refresh Page
+          Convert More Files
         </Button>
       </div>
     {:else}
@@ -166,9 +161,9 @@
               variant="primary"
               size="large"
               fullWidth
-              on:click={handleRefresh}
+              on:click={() => dispatch('convertMore')}
             >
-              Refresh Page
+              Convert More Files
             </Button>
           </div>
         {:else if !isConverting}

@@ -13,15 +13,16 @@
   import { fade, fly } from 'svelte/transition';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
   import { onDestroy } from 'svelte';
-import ProfessorSynapseAd from './ProfessorSynapseAd.svelte';
-import { adStore } from '$lib/stores/adStore.js';
+  import ProfessorSynapseAd from './ProfessorSynapseAd.svelte';
+  import { adStore } from '$lib/stores/adStore.js';
 
-  // Clear all stores on component destruction
+  // Clear all stores on component destruction (except adStore)
   onDestroy(() => {
     files.clearFiles();
     conversionStatus.reset();
     uploadStore.clearMessage();
     paymentStore.hidePrompt();
+    // Note: We don't reset adStore here as we want it to persist
   });
 
   // Reactive declarations for conversion state
@@ -59,8 +60,7 @@ import { adStore } from '$lib/stores/adStore.js';
     
     try {
       console.log('Starting conversion process');
-      // Show the ad when conversion starts
-      adStore.show();
+      adStore.show(); // Show ad when conversion starts
       startConversion();
     } catch (error) {
       console.error('Conversion error:', error);
@@ -83,7 +83,6 @@ import { adStore } from '$lib/stores/adStore.js';
     />
   {:else}
     <div class="converter-app app-content-width" in:fade={{ duration: 300 }}>
-      <ProfessorSynapseAd />
       <div class="instructions-wrapper">
         <Instructions />
       </div>
@@ -95,20 +94,23 @@ import { adStore } from '$lib/stores/adStore.js';
       {/if}
 
       {#if $files.length > 0}
-        <div class="results-wrapper" transition:fly|local={{ y: 20, duration: 400 }}>
+        <div class="conversion-section" transition:fly|local={{ y: 20, duration: 400 }}>
+          <ProfessorSynapseAd />
+          <div class="results-wrapper">
           <ResultDisplay 
             on:startConversion={handleStartConversion}
             on:cancelConversion={handleCancelConversion}
             on:convertMore={() => {
-              // Clear stores before page reload
+              // Reset UI state but preserve ad visibility
               files.clearFiles();
               conversionStatus.reset();
               uploadStore.clearMessage();
               paymentStore.hidePrompt();
-              // Reload page
-              window.location.reload();
+              // Don't hide the ad or reload the page
+              showUploader = true;
             }}
           />
+          </div>
         </div>
       {/if}
     </div>
@@ -141,8 +143,14 @@ import { adStore } from '$lib/stores/adStore.js';
   }
 
   .upload-wrapper,
-  .results-wrapper {
+  .conversion-section {
     position: relative;
+  }
+
+  .conversion-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
   }
 
   @media (max-width: 768px) {
