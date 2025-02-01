@@ -3,7 +3,8 @@ import { writable } from 'svelte/store';
 
 function createAdStore() {
   const { subscribe, set, update } = writable({
-    visible: false
+    visible: false,
+    initialized: false
   });
 
   return {
@@ -12,11 +13,11 @@ function createAdStore() {
       console.log('🎭 adStore.show() called');
       update(state => {
         console.log('🎭 adStore updating visibility to true');
-        return { ...state, visible: true };
+        return { ...state, visible: true, initialized: true };
       });
     },
     hide: () => update(state => ({ ...state, visible: false })),
-    reset: () => set({ visible: false })
+    reset: () => set({ visible: false, initialized: false })
   };
 }
 

@@ -8,18 +8,24 @@
   let adRef;
 
   onMount(() => {
-    console.log('🎭 ProfessorSynapseAd mounted, visibility:', $adStore.visible);
-    if ($adStore.visible) {
+    console.log('🎭 ProfessorSynapseAd mounted, state:', {
+      visible: $adStore.visible,
+      initialized: $adStore.initialized
+    });
+    if ($adStore.visible && $adStore.initialized) {
       setTimeout(() => {
         adRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
     }
   });
 
-  // Watch for changes to adStore visibility
+  // Watch for changes to adStore state
   $: {
-    console.log('🎭 adStore visibility changed:', $adStore.visible);
-    if ($adStore.visible && adRef) {
+    console.log('🎭 adStore state changed:', {
+      visible: $adStore.visible,
+      initialized: $adStore.initialized
+    });
+    if ($adStore.visible && $adStore.initialized && adRef) {
       setTimeout(() => {
         adRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -27,7 +33,7 @@
   }
 </script>
 
-{#if $adStore.visible}
+{#if $adStore.visible && $adStore.initialized}
   {console.log('🎭 Rendering ad content, visibility:', $adStore.visible)}
   <div class="synapse-message" bind:this={adRef}>
     <div class="ad-wrapper" in:fly={{ y: 30, duration: 400 }}>

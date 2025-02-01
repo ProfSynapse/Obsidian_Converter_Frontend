@@ -88,7 +88,11 @@
         <Instructions />
       </div>
 
-      <ProfessorSynapseAd />
+      <div class="ad-section">
+        {#key $adStore.initialized}
+          <ProfessorSynapseAd />
+        {/key}
+      </div>
 
       {#if showUploader}
         <div class="upload-wrapper" transition:fly|local={{ y: 20, duration: 400 }}>
@@ -145,8 +149,10 @@
   }
 
   .upload-wrapper,
-  .conversion-section {
+  .conversion-section,
+  .ad-section {
     position: relative;
+    width: 100%;
   }
 
   .conversion-section {
