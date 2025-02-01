@@ -16,7 +16,7 @@
       </div>
       
       <div class="scroll-message">
-        <p>While your knowledge transforms, let me share something magical with you! I'm Professor Synapse, and I've crafted a special series of lessons to help you master the art of knowledge management.</p>
+        <p>While your knowledge transforms, let me share something magical with you! We've crafted a special series of lessons to help you master the art of personal knowledge management with Obsidian.</p>
         
         <div class="magical-container">
           <iframe 
@@ -40,7 +40,8 @@
           <div class="crystal-ball">
             <Button 
               on:click={() => window.open(HUBSPOT_FORM_URL, '_blank')}
-              style="width: 100%; margin-top: var(--spacing-md);"
+              fullWidth
+              size="large"
             >
               ✨ Begin Your Magical Journey ✨
             </Button>
@@ -127,5 +128,8 @@
     padding: var(--spacing-md);
     background: var(--color-background-base);
     border-radius: var(--rounded-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 </style>
