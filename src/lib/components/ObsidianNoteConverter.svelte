@@ -8,26 +8,38 @@
   import { startConversion } from '$lib/utils/conversionManager.js';
   import { showAd } from '$lib/stores/adStore.js';
 
+  // Function to smoothly scroll to top of page
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   let mode = 'payment'; // 'payment', 'upload', or 'converted'
 
   function handleStartConversion() {
     mode = 'converted';
     showAd();
     startConversion();
+    scrollToTop();
   }
 </script>
 
 <div class="app-container">
   <div class="converter-app">
-    <Instructions />
-    
     {#if mode === 'payment'}
+      <Instructions />
       <PaymentInput 
         showPayment={true}
-        on:payment={() => mode = 'upload'}
-        on:skip={() => mode = 'upload'}
+        on:payment={() => {
+          mode = 'upload';
+          scrollToTop();
+        }}
+        on:skip={() => {
+          mode = 'upload';
+          scrollToTop();
+        }}
       />
     {:else if mode === 'upload'}
+      <Instructions />
       <FileUploader />
       {#if $files.length > 0}
         <div class="button-container">
@@ -48,7 +60,10 @@
           variant="primary"
           size="large"
           fullWidth
-          on:click={() => window.location.reload()}
+          on:click={() => {
+            scrollToTop();
+            window.location.reload();
+          }}
         >
           Convert More Files
         </Button>
