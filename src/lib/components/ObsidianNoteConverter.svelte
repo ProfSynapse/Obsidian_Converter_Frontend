@@ -2,15 +2,16 @@
   import FileUploader from './FileUploader.svelte';
   import Instructions from './Instructions.svelte';
   import ProfessorSynapseAd from './ProfessorSynapseAd.svelte';
+  import PaymentInput from './common/PaymentInput.svelte';
   import Button from './common/Button.svelte';
   import { files } from '$lib/stores/files.js';
   import { startConversion } from '$lib/utils/conversionManager.js';
   import { showAd } from '$lib/stores/adStore.js';
 
-  let isConverted = false;
+  let mode = 'payment'; // 'payment', 'upload', or 'converted'
 
   function handleStartConversion() {
-    isConverted = true;
+    mode = 'converted';
     showAd();
     startConversion();
   }
@@ -20,19 +21,13 @@
   <div class="converter-app">
     <Instructions />
     
-    {#if isConverted}
-      <ProfessorSynapseAd />
-      <div class="button-container">
-        <Button 
-          variant="primary"
-          size="large"
-          fullWidth
-          on:click={() => window.location.reload()}
-        >
-          Convert More Files
-        </Button>
-      </div>
-    {:else}
+    {#if mode === 'payment'}
+      <PaymentInput 
+        showPayment={true}
+        on:payment={() => mode = 'upload'}
+        on:skip={() => mode = 'upload'}
+      />
+    {:else if mode === 'upload'}
       <FileUploader />
       {#if $files.length > 0}
         <div class="button-container">
@@ -46,6 +41,18 @@
           </Button>
         </div>
       {/if}
+    {:else}
+      <ProfessorSynapseAd />
+      <div class="button-container">
+        <Button 
+          variant="primary"
+          size="large"
+          fullWidth
+          on:click={() => window.location.reload()}
+        >
+          Convert More Files
+        </Button>
+      </div>
     {/if}
   </div>
 </div>

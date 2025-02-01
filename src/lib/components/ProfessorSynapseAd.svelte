@@ -5,7 +5,7 @@
 </script>
 
 {#if $adStore.visible}
-  <div class="synapse-message" transition:fade>
+  <div class="ad-container" transition:fade>
     <Container>
       <div class="professor-header">
         <span class="wizard-emoji">🧙🏾‍♂️</span>
@@ -50,7 +50,7 @@
 {/if}
 
 <style>
-  .synapse-message {
+  .ad-container {
     margin-top: var(--spacing-xl);
     width: 100%;
   }
