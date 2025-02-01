@@ -85,26 +85,31 @@
         <Instructions />
       </div>
 
-      <ProfessorSynapseAd />
-
+      <!-- Always show FileUploader initially -->
       {#if showUploader}
         <div class="upload-wrapper">
           <FileUploader />
         </div>
       {/if}
 
-      <div class="results-wrapper">
-        <ResultDisplay 
-          on:startConversion={() => {
-            showUploader = false;
-            handleStartConversion();
-          }}
-          on:cancelConversion={handleCancelConversion}
-          on:convertMore={() => {
-            window.location.reload();
-          }}
-        />
-      </div>
+      <!-- Show ProfessorSynapseAd when visible -->
+      <ProfessorSynapseAd />
+
+      <!-- Show ResultDisplay only when files are present -->
+      {#if $files.length > 0}
+        <div class="results-wrapper">
+          <ResultDisplay 
+            on:startConversion={() => {
+              showUploader = false;
+              handleStartConversion();
+            }}
+            on:cancelConversion={handleCancelConversion}
+            on:convertMore={() => {
+              window.location.reload();
+            }}
+          />
+        </div>
+      {/if}
     </div>
   {/if}
 </div>

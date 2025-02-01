@@ -5,52 +5,52 @@
   import Container from './common/Container.svelte';
 </script>
 
-{#if $adStore.visible}
-  <div class="synapse-message" transition:fade>
+<div class="synapse-message" class:visible={$adStore.visible}>
+  {#if $adStore.visible}
     <div class="ad-wrapper" transition:fly={{ y: 30, duration: 400 }}>
       <Container class="ad-container">
-      <div class="professor-header">
-        <span class="wizard-emoji">🧙🏾‍♂️</span>
-        <h3>Greetings, Knowledge Seeker!</h3>
-      </div>
-      
-      <div class="scroll-message">
-        <p>While your knowledge transforms, let me share something magical with you! I'm Professor Synapse, and I've crafted a special series of lessons to help you master the art of knowledge management.</p>
-        
-        <div class="magical-container">
-          <iframe 
-            src="https://www.youtube.com/embed/videoseries?list=PLa9S_7NRneu-XYTNzCA8T_B3B37ZVrgxx" 
-            title="The Magical Arts of Knowledge Management"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          ></iframe>
+        <div class="professor-header">
+          <span class="wizard-emoji">🧙🏾‍♂️</span>
+          <h3>Greetings, Knowledge Seeker!</h3>
         </div>
-
-        <div class="enchanted-scroll">
-          <h4>✨ Want to Unlock More Knowledge Magic? ✨</h4>
-          <p>As your personal guide in this journey, I offer specialized training in the mystic arts of:</p>
-          <ul>
-            <li>🎯 Knowledge Management Mastery</li>
-            <li>📚 Personal Learning Systems</li>
-            <li>🧠 Information Architecture</li>
-          </ul>
+        
+        <div class="scroll-message">
+          <p>While your knowledge transforms, let me share something magical with you! I'm Professor Synapse, and I've crafted a special series of lessons to help you master the art of knowledge management.</p>
           
-          <div class="crystal-ball">
-            <script src="https://js.hsforms.net/forms/embed/6389588.js" defer></script>
-            <div 
-              class="hs-form-frame" 
-              data-region="na1" 
-              data-form-id="6ed41a66-642b-4b8b-a71d-ad287894c97f" 
-              data-portal-id="6389588"
-            ></div>
+          <div class="magical-container">
+            <iframe 
+              src="https://www.youtube.com/embed/videoseries?list=PLa9S_7NRneu-XYTNzCA8T_B3B37ZVrgxx" 
+              title="The Magical Arts of Knowledge Management"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
+
+          <div class="enchanted-scroll">
+            <h4>✨ Want to Unlock More Knowledge Magic? ✨</h4>
+            <p>As your personal guide in this journey, I offer specialized training in the mystic arts of:</p>
+            <ul>
+              <li>🎯 Knowledge Management Mastery</li>
+              <li>📚 Personal Learning Systems</li>
+              <li>🧠 Information Architecture</li>
+            </ul>
+            
+            <div class="crystal-ball">
+              <script src="https://js.hsforms.net/forms/embed/6389588.js" defer></script>
+              <div 
+                class="hs-form-frame" 
+                data-region="na1" 
+                data-form-id="6ed41a66-642b-4b8b-a71d-ad287894c97f" 
+                data-portal-id="6389588"
+              ></div>
+            </div>
           </div>
         </div>
-      </div>
       </Container>
     </div>
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
   .synapse-message {
@@ -59,6 +59,15 @@
     display: flex;
     justify-content: center;
     padding: 0 var(--spacing-md);
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    transition: opacity 0.3s ease-in-out, height 0.3s ease-in-out;
+  }
+
+  .synapse-message.visible {
+    opacity: 1;
+    height: auto;
   }
 
   .ad-wrapper {
