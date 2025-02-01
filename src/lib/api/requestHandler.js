@@ -134,11 +134,13 @@ export class RequestHandler {
    * @private
    */
   static async _handleResponse(response) {
+    // Clone the response for error checking
+    const responseForError = response.clone();
     const contentType = response.headers.get('Content-Type') || '';
     const responseType = this._getResponseType(contentType);
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorText = await responseForError.text();
       console.error('❌ Error Response:', {
         status: response.status,
         headers: Object.fromEntries(response.headers.entries()),
@@ -175,34 +177,30 @@ export class RequestHandler {
     let data;
     console.log('🔍 Processing response of type:', responseType);
     
-    switch (responseType) {
-      case ResponseTypes.BLOB:
-        console.log('📦 Converting response to blob...');
-        data = await response.blob();
-        console.log('📦 Blob created:', {
-          size: data.size,
-          type: data.type
-        });
-        break;
-      case ResponseTypes.JSON:
-        console.log('📋 Processing JSON response...');
-        data = await response.json();
-        if (!data.success && !response.headers.get('Content-Type')?.includes('application/zip')) {
-          throw ConversionError.fromResponse(data);
-        }
-        break;
-      default:
-        console.log('📝 Processing text response...');
-        data = await response.text();
-    }
+    // Determine if this should be treated as a blob download
+    const isDownloadable = response.headers.get('Content-Disposition')?.includes('attachment') ||
+                          response.headers.get('Content-Type')?.includes('application/zip') ||
+                          responseType === ResponseTypes.BLOB;
 
-    // Special handling for zip files that might be marked as JSON
-    if (data instanceof Blob || 
-        response.headers.get('Content-Disposition')?.includes('attachment') ||
-        response.headers.get('Content-Type')?.includes('application/zip')) {
-      console.log('🎁 Detected downloadable content, ensuring blob format');
-      if (!(data instanceof Blob)) {
-        data = await response.blob();
+    if (isDownloadable) {
+      console.log('📦 Processing as downloadable content');
+      data = await response.blob();
+      console.log('📦 Blob created:', {
+        size: data.size,
+        type: data.type
+      });
+    } else {
+      switch (responseType) {
+        case ResponseTypes.JSON:
+          console.log('📋 Processing JSON response...');
+          data = await response.json();
+          if (!data.success) {
+            throw ConversionError.fromResponse(data);
+          }
+          break;
+        default:
+          console.log('📝 Processing text response...');
+          data = await response.text();
       }
     }
 
