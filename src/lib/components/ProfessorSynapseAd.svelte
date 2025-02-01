@@ -4,38 +4,19 @@
   import Container from './common/Container.svelte';
   import { onMount } from 'svelte';
 
-  let formContainer;
-
-  // Function to safely load HubSpot form
-  const loadHubSpotForm = () => {
-    try {
-      if (window.hbspt) {
-        window.hbspt.forms.create({
-          region: "na1",
-          portalId: "6389588",
-          formId: "6ed41a66-642b-4b8b-a71d-ad287894c97f",
-          target: formContainer
-        });
-      } else {
-        console.warn("🔮 HubSpot form script not loaded yet");
-      }
-    } catch (error) {
-      console.error("🌋 Error loading HubSpot form:", error);
-    }
-  };
-
-  // Load HubSpot script dynamically
+  // Load HubSpot script on component mount
   onMount(() => {
     const script = document.createElement('script');
-    script.src = "https://js.hsforms.net/forms/embed/v2.js";
-    script.async = true;
-    script.onload = loadHubSpotForm;
-    script.onerror = () => console.error("🌋 Failed to load HubSpot script");
+    script.src = "https://js.hsforms.net/forms/embed/6389588.js";
+    script.defer = true;
+    script.onerror = () => console.error("🌋 Failed to load HubSpot form script");
     document.head.appendChild(script);
 
     return () => {
       // Cleanup on component unmount
-      document.head.removeChild(script);
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
     };
   });
 </script>
@@ -71,8 +52,13 @@
           </ul>
           
           <div class="crystal-ball">
-            <!-- HubSpot form container -->
-            <div bind:this={formContainer}></div>
+            <!-- HubSpot form embed -->
+            <div 
+              class="hs-form-frame" 
+              data-region="na1" 
+              data-form-id="6ed41a66-642b-4b8b-a71d-ad287894c97f" 
+              data-portal-id="6389588"
+            ></div>
           </div>
         </div>
       </div>
