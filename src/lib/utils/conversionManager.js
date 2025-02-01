@@ -136,6 +136,7 @@ function prepareBatchItems(items) {
  * Starts the conversion process
  */
 export async function startConversion() {
+  console.log('🎭 startConversion called, checking conditions...');
   const currentFiles = get(files);
   const currentApiKey = get(apiKey);
   const paymentStatus = get(paymentStore);

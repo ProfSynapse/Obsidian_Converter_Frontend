@@ -58,18 +58,18 @@
 
   // --- Actions ---
   function handleStartConversion() {
-    console.log('ResultDisplay: handleStartConversion called', {
+    console.log('🎭 ResultDisplay: handleStartConversion called', {
       canConvert,
       needsApiKey,
       hasApiKey
     });
     
     if (!canConvert) {
-      console.log('ResultDisplay: Cannot convert - conditions not met');
+      console.log('🎭 ResultDisplay: Cannot convert - conditions not met');
       return;
     }
     
-    console.log('ResultDisplay: Dispatching startConversion event');
+    console.log('🎭 ResultDisplay: Dispatching startConversion event');
     dispatch('startConversion');
   }
 

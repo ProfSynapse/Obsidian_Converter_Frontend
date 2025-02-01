@@ -60,6 +60,7 @@
     
     try {
       console.log('Starting conversion process');
+      console.log('🎭 Showing Professor Synapse Ad');
       adStore.show(); // Show ad when conversion starts
       startConversion();
     } catch (error) {
@@ -87,6 +88,8 @@
         <Instructions />
       </div>
 
+      <ProfessorSynapseAd />
+
       {#if showUploader}
         <div class="upload-wrapper" transition:fly|local={{ y: 20, duration: 400 }}>
           <FileUploader />
@@ -95,7 +98,6 @@
 
       {#if $files.length > 0}
         <div class="conversion-section" transition:fly|local={{ y: 20, duration: 400 }}>
-          <ProfessorSynapseAd />
           <div class="results-wrapper">
           <ResultDisplay 
             on:startConversion={handleStartConversion}

@@ -8,7 +8,13 @@ function createAdStore() {
 
   return {
     subscribe,
-    show: () => update(state => ({ ...state, visible: true })),
+    show: () => {
+      console.log('🎭 adStore.show() called');
+      update(state => {
+        console.log('🎭 adStore updating visibility to true');
+        return { ...state, visible: true };
+      });
+    },
     hide: () => update(state => ({ ...state, visible: false })),
     reset: () => set({ visible: false })
   };
