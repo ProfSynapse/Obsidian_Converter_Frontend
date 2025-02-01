@@ -2,10 +2,19 @@
 import { writable } from 'svelte/store';
 
 function createAdStore() {
-  const { subscribe, set, update } = writable({
-    visible: false,
-    initialized: false
-  });
+  // Initialize from localStorage if available
+  const storedState = typeof localStorage !== 'undefined' 
+    ? JSON.parse(localStorage.getItem('adStore') || '{"visible":false,"initialized":false}')
+    : { visible: false, initialized: false };
+
+  const { subscribe, set, update } = writable(storedState);
+
+  // Subscribe to changes and save to localStorage
+  if (typeof localStorage !== 'undefined') {
+    subscribe(state => {
+      localStorage.setItem('adStore', JSON.stringify(state));
+    });
+  }
 
   return {
     subscribe,
@@ -16,8 +25,7 @@ function createAdStore() {
         return { ...state, visible: true, initialized: true };
       });
     },
-    hide: () => update(state => ({ ...state, visible: false })),
-    reset: () => set({ visible: false, initialized: false })
+    // Remove hide and reset methods to prevent accidental visibility changes
   };
 }
 

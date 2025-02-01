@@ -114,14 +114,14 @@
       </ul>
 
       <div class="start-button-container">
-        <Button 
-          variant="primary"
-          size="large"
-          fullWidth
-          on:click={() => dispatch('convertMore')}
-        >
-          Convert More Files
-        </Button>
+          <Button 
+            variant="primary"
+            size="large"
+            fullWidth
+            on:click={() => window.location.reload()}
+          >
+            Convert More Files
+          </Button>
       </div>
     {:else}
       {#if showApiKeyInput}
@@ -161,7 +161,7 @@
               variant="primary"
               size="large"
               fullWidth
-              on:click={() => dispatch('convertMore')}
+              on:click={() => window.location.reload()}
             >
               Convert More Files
             </Button>

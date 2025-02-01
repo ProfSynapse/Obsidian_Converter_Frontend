@@ -16,13 +16,12 @@
   import ProfessorSynapseAd from './ProfessorSynapseAd.svelte';
   import { adStore } from '$lib/stores/adStore.js';
 
-  // Clear all stores on component destruction (except adStore)
+  // Clear necessary stores on component destruction
   onDestroy(() => {
     files.clearFiles();
     conversionStatus.reset();
     uploadStore.clearMessage();
     paymentStore.hidePrompt();
-    // Note: We don't reset adStore here as we want it to persist
   });
 
   // Reactive declarations for conversion state
@@ -107,13 +106,7 @@
             on:startConversion={handleStartConversion}
             on:cancelConversion={handleCancelConversion}
             on:convertMore={() => {
-              // Reset UI state but preserve ad visibility
-              files.clearFiles();
-              conversionStatus.reset();
-              uploadStore.clearMessage();
-              paymentStore.hidePrompt();
-              // Don't hide the ad or reload the page
-              showUploader = true;
+              window.location.reload();
             }}
           />
           </div>
