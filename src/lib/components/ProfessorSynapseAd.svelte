@@ -2,41 +2,12 @@
 <script>
   import { fade, fly } from 'svelte/transition';
   import { adStore } from '$lib/stores/adStore.js';
-  import { onMount } from 'svelte';
   import Container from './common/Container.svelte';
-
-  let adRef;
-
-  onMount(() => {
-    console.log('🎭 ProfessorSynapseAd mounted, state:', {
-      visible: $adStore.visible,
-      initialized: $adStore.initialized
-    });
-    if ($adStore.visible && $adStore.initialized) {
-      setTimeout(() => {
-        adRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-  });
-
-  // Watch for changes to adStore state
-  $: {
-    console.log('🎭 adStore state changed:', {
-      visible: $adStore.visible,
-      initialized: $adStore.initialized
-    });
-    if ($adStore.visible && $adStore.initialized && adRef) {
-      setTimeout(() => {
-        adRef?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
-    }
-  }
 </script>
 
-{#if $adStore.initialized}
-  {console.log('🎭 Rendering ad content, visibility:', $adStore.visible)}
-  <div class="synapse-message" bind:this={adRef} class:visible={$adStore.visible}>
-    <div class="ad-wrapper" in:fly={{ y: 30, duration: 400 }}>
+{#if $adStore.visible}
+  <div class="synapse-message" transition:fade>
+    <div class="ad-wrapper" transition:fly={{ y: 30, duration: 400 }}>
       <Container class="ad-container">
       <div class="professor-header">
         <span class="wizard-emoji">🧙🏾‍♂️</span>
@@ -88,12 +59,6 @@
     display: flex;
     justify-content: center;
     padding: 0 var(--spacing-md);
-    opacity: 0;
-    transition: opacity 0.3s ease-in-out;
-  }
-
-  .synapse-message.visible {
-    opacity: 1;
   }
 
   .ad-wrapper {

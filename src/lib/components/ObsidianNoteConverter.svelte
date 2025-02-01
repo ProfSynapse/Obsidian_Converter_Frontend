@@ -24,18 +24,15 @@
     paymentStore.hidePrompt();
   });
 
+  let showUploader = true;
+
   // Reactive declarations for conversion state
   $: showApiKeyInput = needsApiKey && !$apiKey;
   $: canStartConversion = (!needsApiKey || !!$apiKey) && 
                          $files.length > 0 && 
                          $conversionStatus.status !== 'converting' &&
                          ($paymentStore.status === 'completed' || $paymentStore.status === 'skipped');
-  $: isComplete = $conversionStatus.status === 'completed';
-  $: hasError = $conversionStatus.status === 'error';
-  $: isConverting = $conversionStatus.status === 'converting';
-  $: showUploader = !isConverting;
   $: showMainContent = $paymentStore.status === 'completed' || $paymentStore.status === 'skipped';
-  $: showResults = $files.length > 0;
 
   // State management for API key visibility
   let needsApiKey = false; // Initialize needsApiKey
@@ -83,40 +80,31 @@
       on:skip={handlePaymentSkip}
     />
   {:else}
-    <div class="converter-app app-content-width" in:fade={{ duration: 300 }}>
-      <!-- Instructions are always visible -->
+    <div class="converter-app app-content-width">
       <div class="instructions-wrapper">
         <Instructions />
       </div>
 
-      <!-- Ad section is always visible once initialized -->
-      {#if $adStore.initialized}
-        <div class="ad-section" transition:fly|local={{ y: 20, duration: 400 }}>
-          <ProfessorSynapseAd />
-        </div>
-      {/if}
+      <ProfessorSynapseAd />
 
-      <!-- File uploader -->
       {#if showUploader}
-        <div class="upload-wrapper" transition:fly|local={{ y: 20, duration: 400 }}>
+        <div class="upload-wrapper">
           <FileUploader />
         </div>
       {/if}
 
-      <!-- Results section -->
-      {#if showResults}
-        <div class="conversion-section" transition:fly|local={{ y: 20, duration: 400 }}>
-          <div class="results-wrapper">
-            <ResultDisplay 
-              on:startConversion={handleStartConversion}
-              on:cancelConversion={handleCancelConversion}
-              on:convertMore={() => {
-                window.location.reload();
-              }}
-            />
-          </div>
-        </div>
-      {/if}
+      <div class="results-wrapper">
+        <ResultDisplay 
+          on:startConversion={() => {
+            showUploader = false;
+            handleStartConversion();
+          }}
+          on:cancelConversion={handleCancelConversion}
+          on:convertMore={() => {
+            window.location.reload();
+          }}
+        />
+      </div>
     </div>
   {/if}
 </div>
