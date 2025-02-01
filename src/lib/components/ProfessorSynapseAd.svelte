@@ -33,9 +33,9 @@
   }
 </script>
 
-{#if $adStore.visible && $adStore.initialized}
+{#if $adStore.initialized}
   {console.log('🎭 Rendering ad content, visibility:', $adStore.visible)}
-  <div class="synapse-message" bind:this={adRef}>
+  <div class="synapse-message" bind:this={adRef} class:visible={$adStore.visible}>
     <div class="ad-wrapper" in:fly={{ y: 30, duration: 400 }}>
       <Container class="ad-container">
       <div class="professor-header">
@@ -88,6 +88,12 @@
     display: flex;
     justify-content: center;
     padding: 0 var(--spacing-md);
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .synapse-message.visible {
+    opacity: 1;
   }
 
   .ad-wrapper {
