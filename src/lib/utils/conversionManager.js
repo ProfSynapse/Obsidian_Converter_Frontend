@@ -112,22 +112,10 @@ function prepareBatchItems(items) {
     throw ConversionError.validation('No items provided for conversion');
   }
   
-  // Log items before processing
-  console.log('Preparing items:', { 
-    count: items.length, 
-    types: items.map(item => item.type || 'unknown'),
-    names: items.map(item => item.name)
-  });
-  
   return Promise.all(items.map(async item => {
     const prepared = await prepareItem(item);
     // Add metadata about whether this item should be batched
     prepared.shouldBatch = prepared.type !== 'document';
-    console.log('Prepared item:', {
-      name: prepared.name,
-      type: prepared.type,
-      shouldBatch: prepared.shouldBatch
-    });
     return prepared;
   }));
 }
@@ -136,7 +124,6 @@ function prepareBatchItems(items) {
  * Starts the conversion process
  */
 export async function startConversion() {
-  console.log('🎭 startConversion called, checking conditions...');
   const currentFiles = get(files);
   const currentApiKey = get(apiKey);
   const paymentStatus = get(paymentStore);
@@ -169,18 +156,14 @@ export async function startConversion() {
       return '/document/file';
     };
 
-    console.log('Starting conversion:', { itemCount, items });
-
     // Process items with progress tracking
     const response = await client.processItems(items, currentApiKey, {
         useBatch: itemCount > 1 && !items.every(item => item.type === 'document'),  // Don't use batch for single type documents
         getEndpoint,
         onProgress: (progress) => {
-            console.log(`Conversion progress: ${progress}%`);
             conversionStatus.setProgress(progress);
         },
         onItemComplete: (itemId, success, error) => {
-            console.log(`Item ${itemId} completed:`, { success, error });
             files.updateFile(itemId, {
                 status: success ? 'completed' : 'error',
                 error: error?.message || null
@@ -238,7 +221,6 @@ export async function startConversion() {
  * Cancels the ongoing conversion process
  */
 export function cancelConversion() {
-  console.log('Cancelling conversion');
   conversionStatus.setStatus('cancelled');
   client.cancelRequests(); // Assuming client has a method to cancel pending requests
   files.update(items => 

@@ -26,7 +26,6 @@
 <div class="app-container">
   <div class="converter-app">
     {#if mode === 'payment'}
-      <Instructions />
       <PaymentInput 
         showPayment={true}
         on:payment={() => {
