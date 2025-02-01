@@ -13,6 +13,8 @@
   import { fade, fly } from 'svelte/transition';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
   import { onDestroy } from 'svelte';
+import ProfessorSynapseAd from './ProfessorSynapseAd.svelte';
+import { adStore } from '$lib/stores/adStore.js';
 
   // Clear all stores on component destruction
   onDestroy(() => {
@@ -57,6 +59,8 @@
     
     try {
       console.log('Starting conversion process');
+      // Show the ad when conversion starts
+      adStore.show();
       startConversion();
     } catch (error) {
       console.error('Conversion error:', error);
@@ -79,6 +83,7 @@
     />
   {:else}
     <div class="converter-app app-content-width" in:fade={{ duration: 300 }}>
+      <ProfessorSynapseAd />
       <div class="instructions-wrapper">
         <Instructions />
       </div>

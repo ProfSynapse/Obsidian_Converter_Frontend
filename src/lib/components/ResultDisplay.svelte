@@ -1,9 +1,8 @@
 <!-- src/lib/components/ResultDisplay.svelte -->
-
 <script>
   import { onDestroy } from 'svelte';
   import { derived } from 'svelte/store';
-  import { createEventDispatcher, onMount } from 'svelte';
+  import { createEventDispatcher } from 'svelte';
   import { fade, fly } from 'svelte/transition';
 
   import Container from './common/Container.svelte';
@@ -15,30 +14,17 @@
   import { apiKey } from '$lib/stores/apiKey.js';
   import { requiresApiKey } from '$lib/utils/fileUtils.js';
   import { conversionStatus } from '$lib/stores/conversionStatus.js';
-  import { getFileIcon } from '$lib/utils/iconUtils.js';  // Add this import
-
-  /**
-   * conversionStatus shape (example):
-   * {
-   *   status: 'idle' | 'converting' | 'completed' | 'error' | 'stopped',
-   *   progress: number,       // 0..100
-   *   error: string|null,
-   *   currentFile: string|null,
-   *   processedCount: number, // how many files processed
-   *   totalCount: number      // total files
-   * }
-   */
+  import { getFileIcon } from '$lib/utils/iconUtils.js';
 
   const dispatch = createEventDispatcher();
 
-  // --- 1) State management ---
+  // --- State management ---
   let status = 'idle';
   let progress = 0;
   let error = null;
   let currentFile = null;
   let processedCount = 0;
   let totalCount = 0;
-  let showSynapseMessage = false;
 
   const unsubConversion = conversionStatus.subscribe(value => {
     status = value.status;
@@ -51,12 +37,10 @@
 
   onDestroy(() => unsubConversion());
 
-  // --- 2) Derived data from files store ---
-  // Which files are successfully converted?
+  // --- Derived data from files store ---
   const convertedFiles = derived(files, $files => 
     $files.filter(file => file.status === 'completed')
   );
-  // Track if there are *any* completed files
   let unsubscribeConverted = convertedFiles.subscribe(() => {});
   onDestroy(() => unsubscribeConverted());
 
@@ -72,7 +56,7 @@
   // Can we start conversion? (No key needed, or we do have a key)
   $: canConvert = !needsApiKey || hasApiKey;
 
-  // --- 3) Actions ---
+  // --- Actions ---
   function handleStartConversion() {
     console.log('ResultDisplay: handleStartConversion called', {
       canConvert,
@@ -84,9 +68,6 @@
       console.log('ResultDisplay: Cannot convert - conditions not met');
       return;
     }
-    
-    // Show Synapse message when conversion starts
-    showSynapseMessage = true;
     
     console.log('ResultDisplay: Dispatching startConversion event');
     dispatch('startConversion');
@@ -104,8 +85,6 @@
   }
 
   function handleApiKeySet(event) {
-    // If user successfully sets a key, you could auto-start conversion or do nothing
-    // if (event.detail.success) dispatch('startConversion');
     console.log('API Key Set event:', event.detail);
   }
 
@@ -150,7 +129,6 @@
         </Button>
       </div>
     {:else}
-      <!-- Removed the conversion-controls class to eliminate the divider -->
       {#if showApiKeyInput}
         <div class="wide-section">
           <ApiKeyInput
@@ -179,53 +157,8 @@
             Stop Conversion
           </Button>
         </div>
-      {/if}
 
-      <!-- Professor Synapse's Magical Message -->
-      {#if showSynapseMessage}
-        <div class="synapse-message" in:fly={{ y: 30, duration: 400 }}>
-            <div class="professor-header">
-              <span class="wizard-emoji">🧙🏾‍♂️</span>
-              <h3>Greetings, Knowledge Seeker!</h3>
-            </div>
-            
-            <div class="scroll-message">
-              <p>While your knowledge transforms, let me share something magical with you! I'm Professor Synapse, and I've crafted a special series of lessons to help you master the art of knowledge management.</p>
-              
-              <div class="magical-container">
-                <iframe 
-                  src="https://www.youtube.com/embed/videoseries?list=PLa9S_7NRneu-XYTNzCA8T_B3B37ZVrgxx" 
-                  title="The Magical Arts of Knowledge Management"
-                  frameborder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen
-                ></iframe>
-              </div>
-
-              <div class="enchanted-scroll">
-                <h4>✨ Want to Unlock More Knowledge Magic? ✨</h4>
-                <p>As your personal guide in this journey, I offer specialized training in the mystic arts of:</p>
-                <ul>
-                  <li>🎯 Knowledge Management Mastery</li>
-                  <li>📚 Personal Learning Systems</li>
-                  <li>🧠 Information Architecture</li>
-                </ul>
-                
-                <div class="crystal-ball">
-                  <script src="https://js.hsforms.net/forms/embed/6389588.js" defer></script>
-                  <div 
-                    class="hs-form-frame" 
-                    data-region="na1" 
-                    data-form-id="6ed41a66-642b-4b8b-a71d-ad287894c97f" 
-                    data-portal-id="6389588"
-                  ></div>
-                </div>
-              </div>
-            </div>
-        </div>
-      {/if}
-
-      {#if !isConverting}
+      {:else}
         <!-- Modify this section to check conversion status -->
         {#if $conversionStatus.status === 'completed'}
           <div class="start-button-container">
@@ -268,7 +201,6 @@
 </Container>
 
 <style>
-
   .result-list {
     list-style: none;
     padding: 0;
@@ -320,7 +252,7 @@
     background-color: var(--color-success-light);
     color: var(--color-success);
     padding: 4px 8px;
-    border-radius: var(--rounded-lg); /* Changed from var(--rounded-full) */
+    border-radius: var(--rounded-lg);
     display: flex;
     align-items: center;
     gap: var(--spacing-2xs);
@@ -329,7 +261,6 @@
   }
 
   /* Conversion Controls Area */
-
   .progress-section {
     display: flex;
     flex-direction: column;
@@ -342,9 +273,10 @@
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
   }
+
   .progress-info small {
     margin-left: var(--spacing-2xs);
-    color: var (--color-text-secondary);
+    color: var(--color-text-secondary);
     font-size: calc(var(--font-size-sm) * 0.9);
   }
 
@@ -360,7 +292,7 @@
     font-weight: var(--font-weight-medium);
   }
 
-  /* Start Conversion Button with breathing gradient */
+  /* Start Conversion Button */
   .start-button-container {
     width: 100%;
     display: flex;
@@ -368,9 +300,21 @@
     padding: var(--spacing-md) 0;
   }
 
+  /* Layout */
+  .content-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wide-section {
+    width: 100%;
+    padding: 0 var(--spacing-md);
+  }
+
   /* Responsive design */
   @media (max-width: 640px) {
-
     .result-item {
       gap: var(--spacing-2xs);
       padding: var(--spacing-2xs) var(--spacing-xs);
@@ -391,145 +335,9 @@
     }
   }
 
-  /* Professor Synapse Styles */
-  .synapse-message {
-    margin-top: var(--spacing-xl);
-    padding: var(--spacing-lg);
-    background: var(--color-background-secondary);
-    border-radius: var(--rounded-lg);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 800px;
-  }
-
-  .professor-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-  }
-
-  .wizard-emoji {
-    font-size: 2rem;
-    filter: drop-shadow(0 0 8px rgba(147, 51, 234, 0.3));
-  }
-
-  .professor-header h3 {
-    margin: 0;
-    font-size: var(--font-size-xl);
-    background: linear-gradient(135deg, #9333EA, #3B82F6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700;
-  }
-
-  .scroll-message {
-    padding: var(--spacing-md);
-    background: var(--color-background-base);
-    border-radius: var(--rounded-md);
-    position: relative;
-  }
-
-  .scroll-message::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #9333EA, #3B82F6);
-    border-radius: var(--rounded-md) var(--rounded-md) 0 0;
-    opacity: 0.7;
-  }
-
-  .magical-container {
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
-    margin: var(--spacing-lg) 0;
-  }
-
-  .magical-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border-radius: var(--rounded-md);
-    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.2);
-  }
-
-  .enchanted-scroll {
-    margin-top: var(--spacing-lg);
-    padding: var(--spacing-md);
-    background: var(--color-background-secondary);
-    border-radius: var(--rounded-md);
-    border: 1px solid rgba(147, 51, 234, 0.2);
-  }
-
-  .enchanted-scroll h4 {
-    margin: 0 0 var(--spacing-md);
-    text-align: center;
-    color: var(--color-primary);
-    font-weight: 600;
-  }
-
-  .enchanted-scroll ul {
-    list-style: none;
-    padding: 0;
-    margin: var(--spacing-md) 0;
-  }
-
-  .enchanted-scroll li {
-    margin-bottom: var(--spacing-sm);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-  }
-
-  .crystal-ball {
-    margin-top: var(--spacing-lg);
-    padding: var(--spacing-md);
-    background: var(--color-background-base);
-    border-radius: var(--rounded-md);
-    box-shadow: 0 4px 12px rgba(147, 51, 234, 0.1);
-  }
-
-  /* Mobile Adjustments */
-  @media (max-width: 640px) {
-    .synapse-message {
-      padding: var(--spacing-md);
-      margin-top: var(--spacing-lg);
-    }
-
-    .professor-header h3 {
-      font-size: var(--font-size-lg);
-    }
-
-    .wizard-emoji {
-      font-size: 1.5rem;
-    }
-
-    .magical-container {
-      margin: var(--spacing-md) 0;
-    }
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .result-item {
       transition: none;
     }
-  }
-
-  .content-wrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: stretch; /* Changed from center to stretch */
-  }
-
-  .wide-section {
-    width: 100%;
-    padding: 0 var(--spacing-md);
   }
 </style>
