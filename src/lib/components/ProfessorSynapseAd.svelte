@@ -2,23 +2,9 @@
   import { fade } from 'svelte/transition';
   import { adStore } from '$lib/stores/adStore.js';
   import Container from './common/Container.svelte';
-  import { onMount } from 'svelte';
+  import Button from './common/Button.svelte';
 
-  // Load HubSpot script on component mount
-  onMount(() => {
-    const script = document.createElement('script');
-    script.src = "https://js.hsforms.net/forms/embed/6389588.js";
-    script.defer = true;
-    script.onerror = () => console.error("🌋 Failed to load HubSpot form script");
-    document.head.appendChild(script);
-
-    return () => {
-      // Cleanup on component unmount
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  });
+  const HUBSPOT_FORM_URL = "https://share.hsforms.com/2btQaZmQrS4unHa0oeJTJfw3sy8k";
 </script>
 
 {#if $adStore.visible}
@@ -52,13 +38,12 @@
           </ul>
           
           <div class="crystal-ball">
-            <!-- HubSpot form embed -->
-            <div 
-              class="hs-form-frame" 
-              data-region="na1" 
-              data-form-id="6ed41a66-642b-4b8b-a71d-ad287894c97f" 
-              data-portal-id="6389588"
-            ></div>
+            <Button 
+              on:click={() => window.open(HUBSPOT_FORM_URL, '_blank')}
+              style="width: 100%; margin-top: var(--spacing-md);"
+            >
+              ✨ Begin Your Magical Journey ✨
+            </Button>
           </div>
         </div>
       </div>
