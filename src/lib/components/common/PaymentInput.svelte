@@ -128,7 +128,6 @@
         
         <div class="signature">
           ~ Professor Synapse<br>
-          Head Algorithmancer
         </div>
       </div>
 

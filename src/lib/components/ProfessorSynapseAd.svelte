@@ -2,6 +2,42 @@
   import { fade } from 'svelte/transition';
   import { adStore } from '$lib/stores/adStore.js';
   import Container from './common/Container.svelte';
+  import { onMount } from 'svelte';
+
+  let formContainer;
+
+  // Function to safely load HubSpot form
+  const loadHubSpotForm = () => {
+    try {
+      if (window.hbspt) {
+        window.hbspt.forms.create({
+          region: "na1",
+          portalId: "6389588",
+          formId: "6ed41a66-642b-4b8b-a71d-ad287894c97f",
+          target: formContainer
+        });
+      } else {
+        console.warn("🔮 HubSpot form script not loaded yet");
+      }
+    } catch (error) {
+      console.error("🌋 Error loading HubSpot form:", error);
+    }
+  };
+
+  // Load HubSpot script dynamically
+  onMount(() => {
+    const script = document.createElement('script');
+    script.src = "https://js.hsforms.net/forms/embed/v2.js";
+    script.async = true;
+    script.onload = loadHubSpotForm;
+    script.onerror = () => console.error("🌋 Failed to load HubSpot script");
+    document.head.appendChild(script);
+
+    return () => {
+      // Cleanup on component unmount
+      document.head.removeChild(script);
+    };
+  });
 </script>
 
 {#if $adStore.visible}
@@ -27,21 +63,16 @@
 
         <div class="enchanted-scroll">
           <h4>✨ Want to Unlock More Knowledge Magic? ✨</h4>
-          <p>As your personal guide in this journey, I offer specialized training in the mystic arts of:</p>
+          <p>Synaptic Labs offers specialized training in the mystic arts of:</p>
           <ul>
-            <li>🎯 Knowledge Management Mastery</li>
-            <li>📚 Personal Learning Systems</li>
-            <li>🧠 Information Architecture</li>
+            <li>🎯 Personal Knowledge Management Solutions</li>
+            <li>📚 Obsidian Vault & Plugin development</li>
+            <li>🧠 Information Architecture for your Second Brain</li>
           </ul>
           
           <div class="crystal-ball">
-            <script src="https://js.hsforms.net/forms/embed/6389588.js" defer></script>
-            <div 
-              class="hs-form-frame" 
-              data-region="na1" 
-              data-form-id="6ed41a66-642b-4b8b-a71d-ad287894c97f" 
-              data-portal-id="6389588"
-            ></div>
+            <!-- HubSpot form container -->
+            <div bind:this={formContainer}></div>
           </div>
         </div>
       </div>
