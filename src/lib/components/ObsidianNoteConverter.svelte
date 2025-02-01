@@ -1,126 +1,56 @@
 <script>
   import FileUploader from './FileUploader.svelte';
-  import ResultDisplay from './ResultDisplay.svelte';
-  import ApiKeyInput from './ApiKeyInput.svelte';
   import Instructions from './Instructions.svelte';
-  import PaymentInput from './common/PaymentInput.svelte';
-  import { apiKey } from '$lib/stores/apiKey.js';
-  import { conversionStatus } from '$lib/stores/conversionStatus.js';
-  import { files } from '$lib/stores/files.js';
-  import { paymentStore } from '$lib/stores/payment.js';
-  import { uploadStore } from '$lib/stores/uploadStore.js';
-  import { startConversion, cancelConversion } from '$lib/utils/conversionManager.js';
-  import { fade, fly } from 'svelte/transition';
-  import { requiresApiKey } from '$lib/utils/fileUtils.js';
-  import { onDestroy } from 'svelte';
   import ProfessorSynapseAd from './ProfessorSynapseAd.svelte';
-  import { adStore } from '$lib/stores/adStore.js';
+  import Button from './common/Button.svelte';
+  import { files } from '$lib/stores/files.js';
+  import { startConversion } from '$lib/utils/conversionManager.js';
+  import { showAd } from '$lib/stores/adStore.js';
 
-  // Clear necessary stores on component destruction
-  onDestroy(() => {
-    files.clearFiles();
-    conversionStatus.reset();
-    uploadStore.clearMessage();
-    paymentStore.hidePrompt();
-  });
-
-  let showUploader = true;
-
-  // Reactive declarations for conversion state
-  $: showApiKeyInput = needsApiKey && !$apiKey;
-  $: canStartConversion = (!needsApiKey || !!$apiKey) && 
-                         $files.length > 0 && 
-                         $conversionStatus.status !== 'converting' &&
-                         ($paymentStore.status === 'completed' || $paymentStore.status === 'skipped');
-  $: showMainContent = $paymentStore.status === 'completed' || $paymentStore.status === 'skipped';
-
-  // State management for API key visibility
-  let needsApiKey = false; // Initialize needsApiKey
-  $: {
-    needsApiKey = $files.some(file => requiresApiKey(file));
-  }
-
-  function handlePayment(event) {
-    const { amount } = event.detail;
-    console.log('Payment received:', { amount });
-    paymentStore.setAmount(amount);
-    paymentStore.setStatus('completed');
-  }
-
-  function handlePaymentSkip() {
-    console.log('Payment skipped');
-    paymentStore.setStatus('skipped');
-  }
+  let isConverted = false;
 
   function handleStartConversion() {
-    if (!canStartConversion) return;
-    
-    try {
-      console.log('Starting conversion process');
-      console.log('🎭 Showing Professor Synapse Ad');
-      adStore.show(); // Show ad when conversion starts
-      startConversion();
-    } catch (error) {
-      console.error('Conversion error:', error);
-      conversionStatus.setError(error.message);
-      conversionStatus.setStatus('error');
-    }
-  }
-
-  function handleCancelConversion() {
-    cancelConversion();
+    isConverted = true;
+    showAd();
+    startConversion();
   }
 </script>
 
 <div class="app-container">
-  {#if !showMainContent}
-    <PaymentInput 
-      showPayment={true}
-      on:payment={handlePayment}
-      on:skip={handlePaymentSkip}
-    />
-  {:else}
-    <div class="converter-app app-content-width">
-      <div class="instructions-wrapper">
-        <Instructions />
-      </div>
-
-      <!-- Always show FileUploader initially -->
-      {#if showUploader}
-        <div class="upload-wrapper">
-          <FileUploader />
-        </div>
-      {/if}
-
-      <!-- Show ProfessorSynapseAd when visible -->
+  <div class="converter-app">
+    <Instructions />
+    
+    {#if isConverted}
       <ProfessorSynapseAd />
-
-      <!-- Show ResultDisplay only when files are present -->
+      <div class="button-container">
+        <Button 
+          variant="primary"
+          size="large"
+          fullWidth
+          on:click={() => window.location.reload()}
+        >
+          Convert More Files
+        </Button>
+      </div>
+    {:else}
+      <FileUploader />
       {#if $files.length > 0}
-        <div class="results-wrapper">
-          <ResultDisplay 
-            on:startConversion={() => {
-              showUploader = false;
-              handleStartConversion();
-            }}
-            on:cancelConversion={handleCancelConversion}
-            on:convertMore={() => {
-              window.location.reload();
-            }}
-          />
+        <div class="button-container">
+          <Button
+            variant="primary"
+            size="large"
+            fullWidth
+            on:click={handleStartConversion}
+          >
+            Start Conversion
+          </Button>
         </div>
       {/if}
-    </div>
-  {/if}
+    {/if}
+  </div>
 </div>
 
 <style>
-  :global(.app-content-width) {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-  }
-
   .app-container {
     width: 100%;
     min-height: 100vh;
@@ -130,35 +60,23 @@
   }
 
   .converter-app {
+    width: 100%;
+    max-width: 600px;
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
   }
 
-  .instructions-wrapper {
+  .button-container {
     width: 100%;
-  }
-
-  .upload-wrapper,
-  .conversion-section,
-  .ad-section {
-    position: relative;
-    width: 100%;
-  }
-
-  .conversion-section {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
+    justify-content: center;
+    padding: var(--spacing-md) 0;
   }
 
   @media (max-width: 768px) {
     .app-container {
       padding: 1rem var(--spacing-sm);
-    }
-
-    .converter-app {
-      gap: var(--spacing-sm);
     }
   }
 </style>
