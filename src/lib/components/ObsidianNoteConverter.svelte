@@ -13,31 +13,17 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  let mode = 'payment'; // 'payment', 'upload', or 'converted'
+  let mode = 'upload'; // 'upload', 'payment', or 'converted'
 
   function handleStartConversion() {
-    mode = 'converted';
-    showAd();
-    startConversion();
+    mode = 'payment';
     scrollToTop();
   }
 </script>
 
 <div class="app-container">
   <div class="converter-app">
-    {#if mode === 'payment'}
-      <PaymentInput 
-        showPayment={true}
-        on:payment={() => {
-          mode = 'upload';
-          scrollToTop();
-        }}
-        on:skip={() => {
-          mode = 'upload';
-          scrollToTop();
-        }}
-      />
-    {:else if mode === 'upload'}
+    {#if mode === 'upload'}
       <Instructions />
       <FileUploader />
       {#if $files.length > 0}
@@ -52,6 +38,22 @@
           </Button>
         </div>
       {/if}
+    {:else if mode === 'payment'}
+      <PaymentInput 
+        showPayment={true}
+        on:payment={() => {
+          mode = 'converted';
+          showAd();
+          startConversion();
+          scrollToTop();
+        }}
+        on:skip={() => {
+          mode = 'converted';
+          showAd();
+          startConversion();
+          scrollToTop();
+        }}
+      />
     {:else}
       <ProfessorSynapseAd />
       <div class="button-container">

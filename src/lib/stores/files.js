@@ -66,13 +66,18 @@ const FileUtils = {
     },
 
     /**
-     * Checks for duplicate files
+     * Checks for duplicate files considering URL and type
+     * For URLs, we only consider them duplicate if they have the same type (parent/single)
      */
     isDuplicate(files, newFile) {
-        return files.some(f => (
-            (f.url && newFile.url && f.url === newFile.url) ||
-            (f.name && newFile.name && f.name === newFile.name && f.type === newFile.type)
-        ));
+        return files.some(f => {
+            // For URL-based files
+            if (f.url && newFile.url) {
+                return f.url === newFile.url && f.type === newFile.type;
+            }
+            // For regular files
+            return f.name && newFile.name && f.name === newFile.name && f.type === newFile.type;
+        });
     },
 
     /**
@@ -151,15 +156,37 @@ function createFilesStore() {
             console.log('[filesStore] Attempting to add file:', newFile);
             
             return updateFiles(files => {
-                if (FileUtils.isDuplicate(files, newFile)) {
-                    console.log('[filesStore] Duplicate file detected:', newFile.name);
+            // Special handling for parent URLs - check if it exists as a single URL
+            if (newFile.type === 'parent') {
+                const existingFile = files.find(f => 
+                    f.url === newFile.url && f.type === 'url'
+                );
+                if (existingFile) {
+                    console.log('[filesStore] Converting single URL to parent:', existingFile.name);
+                    const updatedFiles = files.map(f => 
+                        f.id === existingFile.id 
+                            ? {...f, type: 'parent', name: `${f.name} (Parent)`}
+                            : f
+                    );
                     return {
-                        files,
-                        result: FileUtils.createResult(false, 
-                            `File "${newFile.name}" already exists`
+                        files: updatedFiles,
+                        result: FileUtils.createResult(true, 
+                            'URL converted to parent successfully'
                         )
                     };
                 }
+            }
+
+            // Check for duplicate considering type
+            if (FileUtils.isDuplicate(files, newFile)) {
+                console.log('[filesStore] Duplicate file detected:', newFile.name);
+                return {
+                    files,
+                    result: FileUtils.createResult(false, 
+                        `URL already exists with the same type`
+                    )
+                };
+            }
 
                 console.log('[filesStore] Adding file:', newFile);
                 console.log('[filesStore] Current file count:', files.length);
