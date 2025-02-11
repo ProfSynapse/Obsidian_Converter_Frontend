@@ -1,7 +1,13 @@
 // src/lib/components/stores/uploadStore.js
 import { writable } from 'svelte/store';
+import { browser } from '$app/environment';
 
 function createUploadStore() {
+  // Clear store on page load
+  if (browser) {
+    console.log('🧹 Clearing upload store on page load');
+  }
+
   const { subscribe, update, set } = writable({
     activeTab: 'single',
     dragOver: false,

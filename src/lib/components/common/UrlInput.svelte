@@ -95,12 +95,21 @@
             const fileObj = {
                 url: normalizedUrl,
                 name: `${urlObj.hostname}${urlObj.pathname}`,
-                type: currentConfig.type
+                type: currentConfig.type,
+                options: {
+                    ...((currentConfig.type === 'parent') && {
+                        maxDepth: 3,
+                        maxPages: 100,
+                        includeImages: true,
+                        includeMeta: true
+                    })
+                }
             };
 
             // Add to files store
             const result = files.addFile(fileObj);
-
+            
+            // Always clear input on successful submission, even for duplicates
             if (result.success) {
                 inputValue = '';
                 uploadStore.setUrlInput('');
@@ -108,7 +117,8 @@
                     url: normalizedUrl, 
                     type: currentConfig.type 
                 });
-            } else {
+            } else if (!result.success && result.message) {
+                // Only show error messages for actual errors, not duplicates
                 errorMessage = result.message;
             }
 

@@ -177,13 +177,13 @@ function createFilesStore() {
                 }
             }
 
-            // Check for duplicate considering type
+            // Handle duplicates silently
             if (FileUtils.isDuplicate(files, newFile)) {
-                console.log('[filesStore] Duplicate file detected:', newFile.name);
+                console.log('[filesStore] Duplicate URL detected - ignoring:', newFile.name);
                 return {
                     files,
-                    result: FileUtils.createResult(false, 
-                        `URL already exists with the same type`
+                    result: FileUtils.createResult(true, 
+                        'URL processed successfully'
                     )
                 };
             }

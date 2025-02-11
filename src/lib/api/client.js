@@ -229,9 +229,14 @@ class ConversionClient {
                 ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
               body: JSON.stringify({
-                url: item.content,
-                name: item.name,
-                options: item.options
+                parenturl: item.url || item.content,
+                options: {
+                  includeImages: true,
+                  includeMeta: true,
+                  maxDepth: item.options?.maxDepth || 3,
+                  maxPages: item.options?.maxPages || 100,
+                  ...item.options
+                }
               })
             });
           } else if (item.file) {

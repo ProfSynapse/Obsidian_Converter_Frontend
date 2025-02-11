@@ -163,15 +163,14 @@ export class Converters {
     
     // Structure specifically for parent URL endpoint
     const requestBody = {
-      parenturl: normalizedUrl, // Changed from url to parenturl
+      parenturl: normalizedUrl,
       options: {
-        depth: input.options?.depth || 1,
-        maxPages: input.options?.maxPages || 10,
+        maxDepth: input.options?.depth || input.options?.maxDepth || 3,
+        maxPages: input.options?.maxPages || 100,
         includeImages: input.options?.includeImages ?? true,
         includeMeta: input.options?.includeMeta ?? true,
         convertLinks: input.options?.convertLinks ?? true
-      },
-      name: input.name?.trim() || 'Untitled'
+      }
     };
 
     const options = {
