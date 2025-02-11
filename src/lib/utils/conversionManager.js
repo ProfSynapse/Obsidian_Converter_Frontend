@@ -7,7 +7,8 @@ import { conversionStatus } from '$lib/stores/conversionStatus.js';
 import { paymentStore } from '$lib/stores/payment.js';
 import client, { ConversionError } from '$lib/api/client.js';
 import FileSaver from 'file-saver';
-import { CONFIG } from '$lib/config';  // Add this import
+import { CONFIG } from '$lib/config'; 
+import { conversionResult } from '$lib/stores/conversionResult.js';
 
 /**
  * Utility function to read a file as base64
@@ -171,16 +172,13 @@ export async function startConversion() {
         }
     });
 
-    // Store the conversion response for later download
-let conversionResult = null;
-
-// Handle file download response
+        // Store the conversion response for later download
     if (response instanceof Blob) {
-        conversionResult = {
+        conversionResult.setResult({
             blob: response,
             contentType: response.type,
             items: items // Store items for filename generation
-        };
+        });
     }
 
     // Update status with payment acknowledgment
@@ -207,12 +205,13 @@ let conversionResult = null;
  * Triggers the download of the converted files
  */
 export function triggerDownload() {
-    if (!conversionResult) {
+    const result = get(conversionResult);
+    if (!result) {
         console.error('No conversion result available');
         return;
     }
 
-    const { blob, contentType, items } = conversionResult;
+    const { blob, contentType, items } = result;
     let filename;
 
     // For single markdown files, use original filename with .md extension
@@ -228,12 +227,11 @@ export function triggerDownload() {
     
     FileSaver.saveAs(blob, filename);
     
-    // Clear files store and conversion result after successful download
+    // Only clear files store after successful download
     const clearResult = files.clearFiles();
     if (!clearResult.success) {
         console.warn('Failed to clear files store:', clearResult.message);
     }
-    conversionResult = null;
 }
 
 /**

@@ -5,6 +5,8 @@
   import Container from './common/Container.svelte';
   import ProgressBar from './common/ProgressBar.svelte';
   import { conversionStatus, currentFile } from '$lib/stores/conversionStatus.js';
+  import { conversionResult } from '$lib/stores/conversionResult.js';
+  import { triggerDownload } from '$lib/utils/conversionManager.js';
 
   const dispatch = createEventDispatcher();
 
@@ -60,7 +62,26 @@
         </span>
       </div>
 
-      {#if isCompleted || hasError}
+      {#if isCompleted}
+        <div class="button-container">
+          {#if $conversionResult}
+            <Button 
+              variant="primary"
+              size="large"
+              on:click={() => triggerDownload()}
+            >
+              Download Files
+            </Button>
+          {/if}
+          <Button 
+            variant={$conversionResult ? "secondary" : "primary"}
+            size="large"
+            on:click={() => window.location.reload()}
+          >
+            Convert More Files
+          </Button>
+        </div>
+      {:else if hasError}
         <div class="button-container">
           <Button 
             variant="primary"
@@ -68,7 +89,7 @@
             fullWidth
             on:click={() => window.location.reload()}
           >
-            {hasError ? 'Try Again' : 'Convert More Files'}
+            Try Again
           </Button>
         </div>
       {/if}
@@ -128,6 +149,7 @@
   .button-container {
     width: 100%;
     display: flex;
+    gap: var(--spacing-md);
     justify-content: center;
     padding: var(--spacing-md) 0;
   }

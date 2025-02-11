@@ -6,6 +6,7 @@
   import Button from './common/Button.svelte';
 import { files } from '$lib/stores/files.js';
 import { startConversion, triggerDownload } from '$lib/utils/conversionManager.js';
+import { conversionResult } from '$lib/stores/conversionResult.js';
 import { showAd } from '$lib/stores/adStore.js';
 import { conversionStatus } from '$lib/stores/conversionStatus.js';
 import ResultDisplay from './ResultDisplay.svelte';
@@ -20,6 +21,8 @@ let mode = 'upload'; // 'upload', 'payment', 'converting', or 'converted'
 function handleStartConversion() {
   mode = 'payment';
   scrollToTop();
+  // Clear any previous conversion result
+  conversionResult.clearResult();
 }
 
 function handlePaymentComplete() {
@@ -28,7 +31,12 @@ function handlePaymentComplete() {
   showAd();
   startConversion().then(() => {
     if ($conversionStatus.status === 'completed') {
-      triggerDownload();
+      // Attempt auto-download
+      setTimeout(() => {
+        if ($conversionResult) {
+          triggerDownload();
+        }
+      }, 500); // Small delay to ensure UI is ready
       mode = 'converted';
     }
   });
