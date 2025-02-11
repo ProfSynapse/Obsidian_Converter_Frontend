@@ -4,21 +4,35 @@
   import ProfessorSynapseAd from './ProfessorSynapseAd.svelte';
   import PaymentInput from './common/PaymentInput.svelte';
   import Button from './common/Button.svelte';
-  import { files } from '$lib/stores/files.js';
-  import { startConversion } from '$lib/utils/conversionManager.js';
-  import { showAd } from '$lib/stores/adStore.js';
+import { files } from '$lib/stores/files.js';
+import { startConversion, triggerDownload } from '$lib/utils/conversionManager.js';
+import { showAd } from '$lib/stores/adStore.js';
+import { conversionStatus } from '$lib/stores/conversionStatus.js';
+import ResultDisplay from './ResultDisplay.svelte';
 
-  // Function to smoothly scroll to top of page
-  function scrollToTop() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+// Function to smoothly scroll to top of page
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-  let mode = 'upload'; // 'upload', 'payment', or 'converted'
+let mode = 'upload'; // 'upload', 'payment', 'converting', or 'converted'
 
-  function handleStartConversion() {
-    mode = 'payment';
-    scrollToTop();
-  }
+function handleStartConversion() {
+  mode = 'payment';
+  scrollToTop();
+}
+
+function handlePaymentComplete() {
+  mode = 'converting';
+  scrollToTop();
+  showAd();
+  startConversion().then(() => {
+    if ($conversionStatus.status === 'completed') {
+      triggerDownload();
+      mode = 'converted';
+    }
+  });
+}
 </script>
 
 <div class="app-container">
@@ -41,20 +55,12 @@
     {:else if mode === 'payment'}
       <PaymentInput 
         showPayment={true}
-        on:payment={() => {
-          mode = 'converted';
-          showAd();
-          startConversion();
-          scrollToTop();
-        }}
-        on:skip={() => {
-          mode = 'converted';
-          showAd();
-          startConversion();
-          scrollToTop();
-        }}
+        on:payment={handlePaymentComplete}
+        on:skip={handlePaymentComplete}
       />
-    {:else}
+    {:else if mode === 'converting'}
+      <ResultDisplay />
+    {:else if mode === 'converted'}
       <ProfessorSynapseAd />
       <div class="button-container">
         <Button 

@@ -171,30 +171,16 @@ export async function startConversion() {
         }
     });
 
-    // Handle file download response
-    if (response instanceof Blob) {
-        const contentType = response.type;
-        let filename;
+    // Store the conversion response for later download
+let conversionResult = null;
 
-        // For single markdown files, use original filename with .md extension
-        if (contentType === 'text/markdown') {
-            // Use original filename if available, otherwise generate one
-            const originalName = items[0]?.name;
-            filename = originalName ? 
-                originalName.replace(/\.[^/.]+$/, '.md') : 
-                `document_${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
-        } else {
-            // For zip files (multiple files or complex conversions)
-            filename = `conversion_${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
-        }
-        
-        FileSaver.saveAs(response, filename);
-        
-        // Clear files store after successful download
-        const clearResult = files.clearFiles();
-        if (!clearResult.success) {
-            console.warn('Failed to clear files store:', clearResult.message);
-        }
+// Handle file download response
+    if (response instanceof Blob) {
+        conversionResult = {
+            blob: response,
+            contentType: response.type,
+            items: items // Store items for filename generation
+        };
     }
 
     // Update status with payment acknowledgment
@@ -215,6 +201,39 @@ export async function startConversion() {
     conversionStatus.setStatus('error');
     showFeedback(errorMessage, 'error');
   }
+}
+
+/**
+ * Triggers the download of the converted files
+ */
+export function triggerDownload() {
+    if (!conversionResult) {
+        console.error('No conversion result available');
+        return;
+    }
+
+    const { blob, contentType, items } = conversionResult;
+    let filename;
+
+    // For single markdown files, use original filename with .md extension
+    if (contentType === 'text/markdown') {
+        const originalName = items[0]?.name;
+        filename = originalName ? 
+            originalName.replace(/\.[^/.]+$/, '.md') : 
+            `document_${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
+    } else {
+        // For zip files (multiple files or complex conversions)
+        filename = `conversion_${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
+    }
+    
+    FileSaver.saveAs(blob, filename);
+    
+    // Clear files store and conversion result after successful download
+    const clearResult = files.clearFiles();
+    if (!clearResult.success) {
+        console.warn('Failed to clear files store:', clearResult.message);
+    }
+    conversionResult = null;
 }
 
 /**
