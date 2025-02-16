@@ -13,6 +13,7 @@
   import ErrorMessage from './common/ErrorMessage.svelte';
   import FileList from './file/FileList.svelte';
   import PaymentInput from './common/PaymentInput.svelte';
+  import ApiKeyInput from './ApiKeyInput.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -255,6 +256,13 @@
       </div>
     {/if}
 
+    <!-- API Key Input (when needed) -->
+    {#if needsApiKey}
+      <div class="api-key-wrapper">
+        <ApiKeyInput />
+      </div>
+    {/if}
+
     <!-- Payment Input -->
     <PaymentInput 
       showPayment={showPaymentPrompt}
@@ -300,6 +308,10 @@
   }
 
   .file-list-wrapper {
+    margin-top: var(--spacing-lg);
+  }
+
+  .api-key-wrapper {
     margin-top: var(--spacing-lg);
   }
 
