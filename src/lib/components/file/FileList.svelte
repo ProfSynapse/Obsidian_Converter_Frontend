@@ -99,18 +99,37 @@
       flex-direction: column;
       gap: var(--spacing-md);
       width: 100%;
-      background: rgba(var(--color-prime-rgb), 0.02);
+      background: transparent;
       border-radius: var(--rounded-lg);
       padding: var(--spacing-md);
       position: relative;
       box-shadow: var(--shadow-sm);
   }
 
+  .file-list-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-lg);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.3;
+  }
+
   .file-list-actions {
       display: flex;
       justify-content: space-between;
       gap: var(--spacing-sm);
-      padding: var(--spacing-xs) var(--spacing-sm);
+      padding: var(--spacing-xs);
       position: relative;
       z-index: 1;
   }
@@ -151,7 +170,7 @@
       max-height: 400px;
       overflow-y: auto;
       padding: var(--spacing-xs);
-      background: rgba(var(--color-prime-rgb), 0.03);
+      background: rgba(var(--color-prime-rgb), 0.02);
       border-radius: var(--rounded-md);
       scrollbar-width: thin;
       scrollbar-color: var(--color-border) transparent;
@@ -183,8 +202,47 @@
       text-align: center;
       padding: var(--spacing-xl);
       color: var(--color-text-secondary);
-      background: rgba(var(--color-prime-rgb), 0.02);
+      background: transparent;
       border-radius: var(--rounded-lg);
       position: relative;
+  }
+
+  .empty-state::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-lg);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.2;
+  }
+
+  /* High Contrast Mode */
+  @media (prefers-contrast: high) {
+      .file-list-container::before,
+      .empty-state::before {
+          padding: 3px;
+          opacity: 1;
+      }
+  }
+
+  /* Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+      .action-button {
+          transition: none;
+      }
+
+      .action-button:hover {
+          transform: none;
+      }
   }
 </style>
