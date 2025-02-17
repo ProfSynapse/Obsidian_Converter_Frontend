@@ -72,7 +72,7 @@
 <style>
   .api-key-wrapper {
     width: 100%;
-    max-width: 800px; /* Increased from 600px */
+    max-width: 1000px; /* Matches FileUploader container width */
     margin: 0 auto;
   }
 

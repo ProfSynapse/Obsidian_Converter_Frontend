@@ -9,7 +9,7 @@
 
 {#if $adStore.visible}
   <div class="ad-container" transition:fade>
-    <Container>
+    <Container isGradient={true}>
       <div class="professor-header">
         <span class="wizard-emoji">🧙🏾‍♂️</span>
         <h3>Greetings, Knowledge Seeker!</h3>
@@ -77,7 +77,7 @@
 
   .scroll-message {
     padding: var(--spacing-md);
-    background: var(--color-background-base);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: var(--rounded-md);
   }
 
@@ -100,7 +100,7 @@
   .enchanted-scroll {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
-    background: var(--color-background-secondary);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: var(--rounded-md);
   }
 
@@ -126,7 +126,7 @@
   .crystal-ball {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
-    background: var(--color-background-base);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: var(--rounded-md);
     display: flex;
     flex-direction: column;

@@ -41,7 +41,7 @@
   }
 </script>
 
-<Container>
+<Container isGradient={true}>
   <div class="conversion-status" transition:fade>
     {#if isConverting || isCompleted || hasError}
       <div class="status-message">

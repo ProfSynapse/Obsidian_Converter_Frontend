@@ -3,12 +3,13 @@
   export let title = ''; // Optional title prop
   export let subtitle = ''; // Optional subtitle prop
   export let noPadding = false; // Option to remove padding
+  export let isGradient = false; // Option for gradient background
   let className = ''; // Additional classes
   export { className as class };
   export let maxWidth = '1000px'; // Default max-width
 </script>
 
-<div class="container {className}" style="max-width: {maxWidth};">
+<div class="container {className} {isGradient ? 'gradient' : ''}" style="max-width: {maxWidth};">
   {#if title}
     <div class="container-header">
       <h2 class="title">{title}</h2>
@@ -24,13 +25,19 @@
 
 <style>
   .container {
-    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    background: var(--color-surface);
     border-radius: var(--rounded-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
     transition: transform var(--transition-duration-normal) var(--transition-timing-ease),
                 box-shadow var(--transition-duration-normal) var(--transition-timing-ease);
     width: 100%;
+  }
+
+  .container.gradient {
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    color: var(--color-text-on-dark);
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   .container:hover {
@@ -46,7 +53,7 @@
   .title {
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-on-dark);
+    color: inherit;
     margin: 0;
     display: flex;
     align-items: center;
@@ -55,35 +62,36 @@
 
   .subtitle {
     font-size: var(--font-size-base);
-    color: var(--color-text-on-dark);
+    color: inherit;
     opacity: 0.8;
     margin: var(--spacing-sm) 0 0;
   }
 
   .content {
     padding: var(--spacing-md);
-    color: var(--color-text-on-dark);
+    color: inherit;
   }
 
   .content.no-padding {
     padding: 0;
   }
 
-  .content :global(h1),
-  .content :global(h2),
-  .content :global(h3),
-  .content :global(h4),
-  .content :global(h5),
-  .content :global(h6),
-  .content :global(p),
-  .content :global(span),
-  .content :global(label) {
+  .gradient :global(*) {
     color: var(--color-text-on-dark);
   }
 
-  .content :global(a) {
+  .gradient .content :global(a) {
     color: var(--color-text-on-dark);
     text-decoration: underline;
+    opacity: 0.9;
+  }
+
+  .gradient .content :global(a:hover) {
+    opacity: 1;
+  }
+
+  .gradient .content :global(.accordion-wrapper) {
+    border-color: rgba(255, 255, 255, 0.2);
   }
 
   /* Responsive adjustments */

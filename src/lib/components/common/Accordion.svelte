@@ -4,10 +4,11 @@
   export let title = '';
   export let icon = '';
   export let expandedIcon = icon;
+  export let isGradientParent = false;
   let expanded = false;
 </script>
 
-<div class="accordion-wrapper">
+<div class="accordion-wrapper" class:gradient-parent={isGradientParent}>
   <button class="accordion-header" on:click={() => expanded = !expanded}>
     <span class="icon">{expanded ? expandedIcon : icon}</span>
     <span class="title">{title}</span>
@@ -25,7 +26,14 @@
     width: 100%;
     border: 1px solid var(--color-border);
     border-radius: var(--rounded-md);
+  }
+
+  .accordion-wrapper:not(.gradient-parent) {
     background: var(--color-surface);
+  }
+
+  .accordion-wrapper.gradient-parent {
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .accordion-header {
@@ -36,7 +44,7 @@
     padding: 1rem;
     background: none;
     border: none;
-    color: var(--color-text);
+    color: inherit;
     cursor: pointer;
     font-size: var(--font-size-base);
     font-weight: 500;
@@ -44,7 +52,7 @@
   }
 
   .accordion-header:hover {
-    background: var(--color-surface-hover);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .title {
@@ -66,6 +74,6 @@
 
   .accordion-content {
     border-top: 1px solid var(--color-border);
-    background: var(--color-background);
+    background: rgba(255, 255, 255, 0.05);
   }
 </style>

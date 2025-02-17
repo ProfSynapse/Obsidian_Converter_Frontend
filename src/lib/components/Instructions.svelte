@@ -1,9 +1,15 @@
 <script>
   import Accordion from './common/Accordion.svelte';
+  import Container from './common/Container.svelte';
 </script>
 
-<div class="instructions app-content-width">
-  <Accordion title="README - About This Tool & How to Use It" icon="📚" expandedIcon="📚">
+<Container isGradient={true}>
+  <Accordion 
+    title="README - About This Tool & How to Use It" 
+    icon="📚" 
+    expandedIcon="📚"
+    isGradientParent={true}
+  >
     <div class="instruction-content">
       <section class="instruction-section">
         <h3>🎯 Purpose</h3>
@@ -79,20 +85,13 @@
       </section>
     </div>
   </Accordion>
-</div>
+</Container>
 
 <style>
-  .instructions {
-    width: 100%;
-    color: var(--color-text-base, #333333);
-  }
-
   .instruction-content {
     padding: var(--spacing-xl) var(--spacing-2xl);
     line-height: 1.7;
     font-size: var(--font-size-lg);
-    /* Ensure base text is always visible */
-    color: var(--color-text-base, #333333);
   }
 
   .instruction-section {
@@ -106,8 +105,6 @@
   h3 {
     font-size: var(--font-size-xl);
     font-weight: 700;
-    /* Use more specific emphasis color with fallback */
-    color: var(--color-text-emphasis, var(--color-text-base, #333333));
     margin-bottom: var(--spacing-lg);
   }
 
@@ -130,15 +127,11 @@
   }
 
   strong {
-    /* Match heading color scheme */
-    color: var(--color-text-emphasis, var(--color-text-base, #333333));
     font-weight: 600;
   }
 
   em {
-    /* Ensure secondary text is visible in dark mode */
-    color: var(--color-text-secondary, var(--color-text-base, #666666));
-    background: var(--color-surface-highlight, rgba(127, 127, 127, 0.1));
+    background: rgba(255, 255, 255, 0.1);
     padding: 0.2em 0.4em;
     border-radius: var(--rounded-sm);
     font-family: var(--font-mono);
@@ -146,23 +139,23 @@
   }
 
   a {
-    color: var(--color-primary, #007bff);
+    color: inherit;
     text-decoration: none;
+    border-bottom: 1px dashed currentColor;
   }
 
   a:hover {
-    text-decoration: underline;
+    border-bottom-style: solid;
   }
 
   p {
     margin-bottom: var(--spacing-md);
-    color: var(--color-text-base, #333333);
   }
 
   .resources {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
-    background: var(--color-surface-highlight, rgba(127, 127, 127, 0.1));
+    background: rgba(255, 255, 255, 0.1);
     border-radius: var(--rounded-md);
   }
 

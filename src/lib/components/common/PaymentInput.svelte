@@ -2,6 +2,7 @@
   import { createEventDispatcher, onMount, onDestroy } from 'svelte';
   import { fade, fly } from 'svelte/transition';
   import Button from './Button.svelte';
+  import Container from './Container.svelte';
   import { paymentService } from '../../services/payment';
   import { paymentStore } from '../../stores/payment';
 
@@ -109,8 +110,8 @@
 </script>
 
 {#if showPayment}
-  <div class="magical-border {className}" in:fade={{ duration: 300 }}>
-    <div class="content" in:fly={{ y: 20, duration: 400 }}>
+  <Container isGradient={true} class={className}>
+    <div class="payment-content" in:fly={{ y: 20, duration: 400 }}>
       <!-- Professor's Message -->
       <div class="professor-message">
         <h2>🧙🏾‍♂️ Welcome to the Markdown Transformation Engine!</h2>
@@ -188,16 +189,28 @@
         </button>
       </div>
     </div>
-  </div>
+  </Container>
 {/if}
 
 <style>
+  .payment-content {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: min-content;
+    position: relative;
+  }
+
   .card-element-container {
     margin: 1rem 0;
     padding: 1rem;
     border: 2px solid var(--color-border);
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.1);
   }
 
   .card-element-container:has(#card-element:not(:empty)) {
@@ -217,42 +230,15 @@
     border-radius: 4px;
   }
 
-  .magical-border {
-    width: 100%;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 2px;
-    min-height: min-content;
-    height: auto;
-    display: flex;
-    background: linear-gradient(45deg, #FFD700, #FF69B4, #4B0082, #FFD700);
-    background-size: 400% 400%;
-    border-radius: 12px;
-    animation: shimmer 3s ease infinite;
-  }
-
-  .content {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    min-height: min-content;
-    background: var(--color-background);
-    padding: 1.5rem;
-    border-radius: 10px;
-    position: relative;
-  }
-
   .professor-message {
     position: relative;
     padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
     margin-bottom: 1rem;
   }
 
   h2 {
-    color: var(--color-primary);
     font-size: 1.25rem;
     margin-bottom: 0.75rem;
     text-align: center;
@@ -261,7 +247,7 @@
   .feature-list {
     margin: 1rem 0;
     padding: 0.75rem;
-    background: rgba(var(--color-primary-rgb), 0.1);
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 8px;
   }
 
@@ -285,7 +271,7 @@
     font-style: italic;
     margin-top: 0.75rem;
     padding-left: 1rem;
-    color: var(--color-primary);
+    opacity: 0.8;
     font-size: 0.9rem;
   }
 
@@ -306,22 +292,20 @@
     padding: 0.5rem;
     border: 2px solid var(--color-border);
     border-radius: 6px;
-    background: transparent;
-    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.1);
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 0.9rem;
   }
 
   .amount-button:hover {
-    border-color: var(--color-primary);
+    border-color: var(--color-text-on-dark);
     transform: translateY(-2px);
   }
 
   .amount-button.selected {
-    background: var(--color-primary);
-    border-color: var(--color-primary);
-    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: var(--color-text-on-dark);
   }
 
   .input-row {
@@ -343,7 +327,6 @@
   .currency-symbol {
     position: absolute;
     left: 0.75rem;
-    color: var(--color-text);
   }
 
   input {
@@ -352,14 +335,13 @@
     padding-left: 1.5rem;
     border: 2px solid var(--color-border);
     border-radius: 6px;
-    background: transparent;
-    color: var(--color-text);
+    background: rgba(255, 255, 255, 0.1);
     font-size: 0.9rem;
   }
 
   input:focus {
     outline: none;
-    border-color: var(--color-primary);
+    border-color: var(--color-text-on-dark);
   }
 
   .support-button {
@@ -373,26 +355,18 @@
   .skip-button {
     background: none;
     border: none;
-    color: var(--color-text-light);
     cursor: pointer;
     font-size: 0.8rem;
     font-style: italic;
     text-decoration: underline;
     padding: 0.25rem;
-    transition: color 0.3s ease;
+    transition: opacity 0.3s ease;
     opacity: 0.7;
     margin: 0 auto;
   }
 
   .skip-button:hover {
-    color: var(--color-primary);
-    opacity: 0.9;
-  }
-
-  @keyframes shimmer {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    opacity: 1;
   }
 
   @media (max-width: 640px) {
