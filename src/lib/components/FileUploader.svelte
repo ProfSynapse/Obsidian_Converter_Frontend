@@ -222,7 +222,7 @@
 
 <div class="file-uploader" in:fade={{ duration: 200 }}>
   <!-- Single Container for all upload options -->
-  <Container title="Add Convertables!" subtitle="Upload files or convert from URL">
+  <Container>
     <!-- URL Input Section -->
     <div class="section url-section">
       <TabNavigation />
@@ -280,17 +280,38 @@
   .section {
     width: 100%;
     padding: var(--spacing-sm);
+    position: relative;
   }
 
   .url-section {
-    background: var(--color-background);
+    background: transparent;
     border-radius: var(--rounded-lg);
+    position: relative;
+  }
+
+  /* Gradient border for url-section */
+  .url-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   .section-divider {
     width: 100%;
     height: 1px;
-    background: var(--color-border);
+    background: linear-gradient(90deg, var(--color-prime), var(--color-second));
     margin: var(--spacing-sm) 0;
     opacity: 0.5;
   }

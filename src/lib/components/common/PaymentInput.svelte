@@ -110,7 +110,7 @@
 </script>
 
 {#if showPayment}
-  <Container isGradient={true} class={className}>
+  <Container class={className}>
     <div class="payment-content" in:fly={{ y: 20, duration: 400 }}>
       <!-- Professor's Message -->
       <div class="professor-message">
@@ -167,7 +167,7 @@
         <div class="card-element-container">
           <div id="card-element"></div>
           {#if error}
-            <div class="error-message">{error}</div>
+            <div class="error-message" in:fade>{error}</div>
           {/if}
         </div>
 
@@ -208,9 +208,27 @@
   .card-element-container {
     margin: 1rem 0;
     padding: 1rem;
-    border: 2px solid var(--color-border);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--rounded-lg);
+    background: transparent;
+    position: relative;
+  }
+
+  .card-element-container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   .card-element-container:has(#card-element:not(:empty)) {
@@ -219,36 +237,80 @@
 
   #card-element {
     padding: 0.5rem;
+    position: relative;
+    z-index: 1;
   }
 
   .error-message {
-    color: #ff4444;
+    color: var(--color-error);
     font-size: 0.9rem;
     margin-top: 0.5rem;
     padding: 0.5rem;
-    background: rgba(255, 68, 68, 0.1);
-    border-radius: 4px;
+    border-radius: var(--rounded-md);
+    position: relative;
+    background: transparent;
+  }
+
+  .error-message::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-md);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-error), var(--color-error-light));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   .professor-message {
     position: relative;
-    padding: 0.5rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    padding: 1rem;
+    background: transparent;
+    border-radius: var(--rounded-lg);
     margin-bottom: 1rem;
+  }
+
+  .professor-message::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   h2 {
     font-size: 1.25rem;
     margin-bottom: 0.75rem;
     text-align: center;
+    color: var(--color-text);
+    position: relative;
+    z-index: 1;
   }
 
   .feature-list {
     margin: 1rem 0;
     padding: 0.75rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
+    background: transparent;
+    border-radius: var(--rounded-lg);
+    position: relative;
+    z-index: 1;
   }
 
   .feature-list ul {
@@ -260,11 +322,15 @@
   .feature-list li {
     margin: 0.4rem 0;
     padding-left: 1rem;
+    color: var(--color-text);
   }
 
   p {
     margin-bottom: 0.75rem;
     line-height: 1.4;
+    color: var(--color-text);
+    position: relative;
+    z-index: 1;
   }
 
   .signature {
@@ -273,6 +339,9 @@
     padding-left: 1rem;
     opacity: 0.8;
     font-size: 0.9rem;
+    color: var(--color-text);
+    position: relative;
+    z-index: 1;
   }
 
   .payment-options {
@@ -290,22 +359,40 @@
   .amount-button {
     flex: 1;
     padding: 0.5rem;
-    border: 2px solid var(--color-border);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border-radius: var(--rounded-md);
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 0.9rem;
+    position: relative;
+    color: var(--color-text);
+  }
+
+  .amount-button::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-md);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   .amount-button:hover {
-    border-color: var(--color-text-on-dark);
     transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
   }
 
-  .amount-button.selected {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: var(--color-text-on-dark);
+  .amount-button.selected::before {
+    background: linear-gradient(135deg, var(--color-second), var(--color-prime));
   }
 
   .input-row {
@@ -327,21 +414,41 @@
   .currency-symbol {
     position: absolute;
     left: 0.75rem;
+    color: var(--color-text);
+    z-index: 2;
   }
 
   input {
     width: 100%;
     padding: 0.5rem;
     padding-left: 1.5rem;
-    border: 2px solid var(--color-border);
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    background: transparent;
+    border-radius: var(--rounded-md);
     font-size: 0.9rem;
+    color: var(--color-text);
+    position: relative;
+  }
+
+  .input-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-md);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   input:focus {
     outline: none;
-    border-color: var(--color-text-on-dark);
   }
 
   .support-button {
@@ -363,6 +470,7 @@
     transition: opacity 0.3s ease;
     opacity: 0.7;
     margin: 0 auto;
+    color: var(--color-text);
   }
 
   .skip-button:hover {

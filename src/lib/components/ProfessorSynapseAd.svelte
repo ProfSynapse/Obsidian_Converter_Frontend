@@ -9,7 +9,7 @@
 
 {#if $adStore.visible}
   <div class="ad-container" transition:fade>
-    <Container isGradient={true}>
+    <Container>
       <div class="professor-header">
         <span class="wizard-emoji">🧙🏾‍♂️</span>
         <h3>Greetings, Knowledge Seeker!</h3>
@@ -18,14 +18,16 @@
       <div class="scroll-message">
         <p>While your knowledge transforms, let me share something magical with you! We've crafted a special series of lessons to help you master the art of personal knowledge management with Obsidian.</p>
         
-        <div class="magical-container">
-          <iframe 
-            src="https://www.youtube.com/embed/videoseries?list=PLa9S_7NRneu-XYTNzCA8T_B3B37ZVrgxx" 
-            title="The Magical Arts of Knowledge Management"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowfullscreen
-          ></iframe>
+        <div class="video-section">
+          <div class="magical-container">
+            <iframe 
+              src="https://www.youtube.com/embed/videoseries?list=PLa9S_7NRneu-XYTNzCA8T_B3B37ZVrgxx" 
+              title="The Magical Arts of Knowledge Management"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          </div>
         </div>
 
         <div class="enchanted-scroll">
@@ -63,29 +65,100 @@
     align-items: center;
     gap: var(--spacing-sm);
     margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--rounded-lg);
+    position: relative;
+  }
+
+  .professor-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.3;
   }
 
   .wizard-emoji {
     font-size: 2rem;
+    position: relative;
+    z-index: 1;
   }
 
   .professor-header h3 {
     margin: 0;
     font-size: var(--font-size-xl);
     font-weight: 700;
+    position: relative;
+    z-index: 1;
   }
 
   .scroll-message {
     padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--rounded-md);
+    background: transparent;
+    border-radius: var(--rounded-lg);
+    position: relative;
+    color: var(--color-text);
+  }
+
+  .scroll-message::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.2;
+  }
+
+  .video-section {
+    padding: var(--spacing-md);
+    border-radius: var(--rounded-lg);
+    position: relative;
+    margin: var(--spacing-lg) 0;
+  }
+
+  .video-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-second), var(--color-prime));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   .magical-container {
     position: relative;
     width: 100%;
     padding-bottom: 56.25%;
-    margin: var(--spacing-lg) 0;
   }
 
   .magical-container iframe {
@@ -99,21 +172,45 @@
 
   .enchanted-scroll {
     margin-top: var(--spacing-lg);
-    padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.15);
-    border-radius: var(--rounded-md);
+    padding: var(--spacing-lg);
+    background: transparent;
+    border-radius: var(--rounded-lg);
+    position: relative;
+  }
+
+  .enchanted-scroll::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.3;
   }
 
   .enchanted-scroll h4 {
     margin: 0 0 var(--spacing-md);
     text-align: center;
     font-weight: 600;
+    position: relative;
+    z-index: 1;
   }
 
   .enchanted-scroll ul {
     list-style: none;
     padding: 0;
     margin: var(--spacing-md) 0;
+    position: relative;
+    z-index: 1;
   }
 
   .enchanted-scroll li {
@@ -126,10 +223,42 @@
   .crystal-ball {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--rounded-md);
+    background: transparent;
+    border-radius: var(--rounded-lg);
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative;
+  }
+
+  .crystal-ball::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-second), var(--color-prime));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.2;
+  }
+
+  /* High Contrast Mode */
+  @media (prefers-contrast: high) {
+    .professor-header::before,
+    .scroll-message::before,
+    .video-section::before,
+    .enchanted-scroll::before,
+    .crystal-ball::before {
+      padding: 3px;
+      opacity: 1;
+    }
   }
 </style>

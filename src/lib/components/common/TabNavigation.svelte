@@ -35,15 +35,36 @@
 <style>
     .tabs-nav {
       width: 100%;
-      background: var(--color-surface);
+      background: transparent;
       padding: var(--spacing-xs);
       border-radius: var(--rounded-lg);
-      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .tabs-nav::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-lg);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.3;
     }
   
     .tabs-container {
       display: flex;
       gap: var(--spacing-xs);
+      position: relative;
+      z-index: 1;
     }
   
     .tab-button {
@@ -59,24 +80,49 @@
       border-radius: var(--rounded-md);
       color: var(--color-text-secondary);
       font-size: var(--font-size-sm);
-      font-weight: var (--font-weight-medium);
+      font-weight: var(--font-weight-medium);
       cursor: pointer;
       transition: all var(--transition-duration-normal);
       overflow: hidden;
     }
-  
-    .tab-button:hover:not(.active) {
-      background: var(--color-background);
-      color: var(--color-text);
+
+    .tab-button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-md);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--transition-duration-normal);
     }
   
-    .tab-button.active {
-      color: var(--color-prime);
-      background: var(--color-background);
+    .tab-button:hover:not(.active)::before {
+      opacity: 0.2;
+    }
+  
+    .tab-button.active::before {
+      opacity: 0.3;
     }
   
     .tab-icon {
       font-size: 1.2em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .tab-label {
+      position: relative;
+      z-index: 1;
     }
   
     .active-indicator {
@@ -85,7 +131,7 @@
       left: 0;
       width: 100%;
       height: 2px;
-      background: var(--color-prime);
+      background: linear-gradient(90deg, var(--color-prime), var(--color-second));
       border-radius: var(--rounded-full);
     }
   
@@ -102,18 +148,20 @@
   
     /* High Contrast Mode */
     @media (prefers-contrast: high) {
-      .tab-button {
-        border: 1px solid currentColor;
-      }
-      
-      .tab-button.active {
-        border-width: 2px;
+      .tabs-nav::before,
+      .tab-button::before {
+        padding: 3px;
+        opacity: 1;
       }
     }
   
     /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
       .tab-button {
+        transition: none;
+      }
+
+      .tab-button::before {
         transition: none;
       }
     }

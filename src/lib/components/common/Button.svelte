@@ -29,6 +29,7 @@
     transition: all 0.2s ease;
     font-size: var(--font-size-base);
     gap: var(--spacing-xs);
+    position: relative;
   }
 
   .button:disabled {
@@ -38,27 +39,55 @@
   }
 
   .button.primary {
-    background: linear-gradient(90deg, #3B82F6 0%, #9333EA 100%);
+    background: linear-gradient(90deg, var(--color-prime), var(--color-second));
     color: white;
     background-size: 200% 200%;
     animation: breathe 3s ease-in-out infinite;
   }
 
   .button.secondary {
-    background: var(--color-background-secondary);
-    color: var(--color-text-primary);
+    background: transparent;
+    color: var(--color-text);
+    position: relative;
+  }
+
+  .button.secondary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   .button.danger {
-    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(90deg, var(--color-error), var(--color-error-light));
     color: white;
     background-size: 200% 200%;
     animation: breathe 3s ease-in-out infinite;
   }
 
   .button:not(:disabled):hover {
-    transform: scale(1.02);
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .button.primary:not(:disabled):hover,
+  .button.danger:not(:disabled):hover {
+    background-size: 150% 150%;
+  }
+
+  .button.secondary:not(:disabled):hover::before {
+    background: linear-gradient(135deg, var(--color-second), var(--color-prime));
   }
 
   .full-width {
@@ -82,12 +111,27 @@
     100% { background-position: 0% 50%; }
   }
 
+  /* High Contrast Mode */
+  @media (prefers-contrast: high) {
+    .button.secondary::before {
+      padding: 3px;
+    }
+  }
+
+  /* Reduced Motion */
   @media (prefers-reduced-motion: reduce) {
     .button {
       animation: none;
     }
+    
     .button:hover {
       transform: none;
+    }
+
+    .button.primary:hover,
+    .button.danger:hover {
+      background-size: 200% 200%;
+      background-position: 0% 50%;
     }
   }
 </style>

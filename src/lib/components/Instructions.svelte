@@ -3,12 +3,11 @@
   import Container from './common/Container.svelte';
 </script>
 
-<Container isGradient={true}>
+<Container>
   <Accordion 
     title="README - About This Tool & How to Use It" 
     icon="📚" 
     expandedIcon="📚"
-    isGradientParent={true}
   >
     <div class="instruction-content">
       <section class="instruction-section">
@@ -27,7 +26,7 @@
           <li>Preparing your data for local AI tools and Large Language Models</li>
           <li>Building a personal knowledge graph that you fully control</li>
         </ul>
-        <div class="resources">
+        <div class="resources-section">
           <p><strong>New to Obsidian?</strong> Check out these resources:</p>
           <ul>
             <li><a href="https://obsidian.md/" target="_blank" rel="noopener noreferrer">Download Obsidian</a> - Free personal knowledge base</li>
@@ -92,10 +91,34 @@
     padding: var(--spacing-xl) var(--spacing-2xl);
     line-height: 1.7;
     font-size: var(--font-size-lg);
+    color: var(--color-text);
   }
 
   .instruction-section {
     margin-bottom: var(--spacing-2xl);
+    padding: var(--spacing-md);
+    border-radius: var(--rounded-lg);
+    position: relative;
+    background: transparent;
+  }
+
+  .instruction-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.2;
   }
 
   .instruction-section:last-child {
@@ -106,11 +129,15 @@
     font-size: var(--font-size-xl);
     font-weight: 700;
     margin-bottom: var(--spacing-lg);
+    position: relative;
+    z-index: 1;
   }
 
   ul, ol {
     margin: 0;
     padding-left: var(--spacing-xl);
+    position: relative;
+    z-index: 1;
   }
 
   .sub-list {
@@ -131,7 +158,7 @@
   }
 
   em {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(var(--color-prime-rgb), 0.1);
     padding: 0.2em 0.4em;
     border-radius: var(--rounded-sm);
     font-family: var(--font-mono);
@@ -139,32 +166,68 @@
   }
 
   a {
-    color: inherit;
+    color: var(--color-text);
     text-decoration: none;
-    border-bottom: 1px dashed currentColor;
+    position: relative;
+    background: linear-gradient(90deg, var(--color-prime), var(--color-second));
+    background-size: 100% 1px;
+    background-repeat: no-repeat;
+    background-position: bottom;
+    padding-bottom: 1px;
   }
 
   a:hover {
-    border-bottom-style: solid;
+    background-size: 100% 2px;
   }
 
   p {
     margin-bottom: var(--spacing-md);
+    position: relative;
+    z-index: 1;
   }
 
-  .resources {
+  .resources-section {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: var(--rounded-md);
+    border-radius: var(--rounded-lg);
+    position: relative;
+    background: transparent;
   }
 
-  .resources p {
+  .resources-section::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-second), var(--color-prime));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.3;
+  }
+
+  .resources-section p {
     margin-bottom: var(--spacing-sm);
   }
 
-  .resources ul {
+  .resources-section ul {
     margin-bottom: 0;
+  }
+
+  /* High Contrast Mode */
+  @media (prefers-contrast: high) {
+    .instruction-section::before,
+    .resources-section::before {
+      padding: 3px;
+      opacity: 1;
+    }
   }
 
   /* Extra Large Screens */

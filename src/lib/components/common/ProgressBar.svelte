@@ -23,7 +23,7 @@
     class="progress-fill {showGlow ? 'with-glow' : ''}"
     style="
       width: {$progress}%;
-      background-color: {color};
+      background: {color};
     "
   >
     {#if showGlow}
@@ -35,10 +35,29 @@
 <style>
   .progress-bar {
     width: 100%;
-    background: #E5E7EB; /* neutral gray */
-    border-radius: 9999px; /* pill shape */
+    background: transparent;
+    border-radius: 9999px;
     overflow: hidden;
     position: relative;
+  }
+
+  .progress-bar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 9999px;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.3;
   }
 
   .progress-fill {
@@ -46,15 +65,16 @@
     transition: background-color 0.3s ease;
     border-radius: 9999px;
     position: relative;
+    background: linear-gradient(90deg, var(--color-prime), var(--color-second)) !important;
   }
 
   .progress-fill.with-glow {
-    filter: drop-shadow(0 0 2px rgba(59,130,246,0.6));
+    filter: drop-shadow(0 0 2px var(--color-prime));
   }
 
   .progress-glow {
     position: absolute;
-    inset: 0; /* top, right, bottom, left = 0 */
+    inset: 0;
     background: linear-gradient(
       90deg,
       transparent 0%,
@@ -67,5 +87,13 @@
   @keyframes shine {
     from { transform: translateX(-100%); }
     to   { transform: translateX(100%); }
+  }
+
+  /* High Contrast */
+  @media (prefers-contrast: high) {
+    .progress-bar::before {
+      padding: 3px;
+      opacity: 1;
+    }
   }
 </style>

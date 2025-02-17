@@ -25,19 +25,38 @@
 
 <style>
   .container {
-    background: var(--color-surface);
+    background: transparent;
     border-radius: var(--rounded-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
     transition: transform var(--transition-duration-normal) var(--transition-timing-ease),
                 box-shadow var(--transition-duration-normal) var(--transition-timing-ease);
     width: 100%;
+    position: relative;
   }
 
-  .container.gradient {
+  /* Gradient border using background-image with a white background */
+  .container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px; /* Border width */
     background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    color: var(--color-text-on-dark);
-    border-color: rgba(255, 255, 255, 0.2);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Remove gradient styles since we're using borders for all containers */
+  .container.gradient {
+    color: var(--color-text);
   }
 
   .container:hover {
@@ -76,14 +95,15 @@
     padding: 0;
   }
 
+  /* Update gradient styles to use primary text color */
   .gradient :global(*) {
-    color: var(--color-text-on-dark);
+    color: var(--color-text);
   }
 
   .gradient .content :global(a) {
-    color: var(--color-text-on-dark);
+    color: var(--color-text);
     text-decoration: underline;
-    opacity: 0.9;
+    opacity: 0.8;
   }
 
   .gradient .content :global(a:hover) {
@@ -91,7 +111,7 @@
   }
 
   .gradient .content :global(.accordion-wrapper) {
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--color-border);
   }
 
   /* Responsive adjustments */

@@ -128,28 +128,48 @@
     .drop-zone {
       width: 100%;
       min-height: 200px;
-      border: 2px dashed var(--color-border);
       border-radius: var(--rounded-lg);
-      background: var(--color-surface);
+      background: transparent;
       transition: all var(--transition-duration-normal);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: var(--spacing-xl);
+      position: relative;
+    }
+
+    .drop-zone::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-lg);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.5;
     }
   
-    .drop-zone:hover {
-      border-color: var(--color-prime);
-      background: var(--color-background);
+    .drop-zone:hover::before {
+      opacity: 1;
     }
   
     .drop-zone.drag-over {
-      border-color: var(--color-prime);
-      border-style: solid;
-      background: var(--color-background);
       transform: scale(1.02);
       box-shadow: var(--shadow-md);
+    }
+
+    .drop-zone.drag-over::before {
+      opacity: 1;
+      background: linear-gradient(135deg, var(--color-second), var(--color-prime));
     }
   
     .drop-zone-content {
@@ -158,6 +178,8 @@
       align-items: center;
       gap: var(--spacing-md);
       text-align: center;
+      position: relative;
+      z-index: 1;
     }
   
     .icon-container {
@@ -210,20 +232,8 @@
     }
   
     .size-limits {
-    font-style: italic;
-    opacity: 0.9;
-  }
-
-  /* Dark Mode */
-    @media (prefers-color-scheme: dark) {
-      .drop-zone {
-        background: var(--color-background);
-      }
-  
-      .drop-zone:hover,
-      .drop-zone.drag-over {
-        background: var(--color-surface);
-      }
+      font-style: italic;
+      opacity: 0.9;
     }
   
     /* Mobile Adjustments */
@@ -249,8 +259,9 @@
   
     /* High Contrast Mode */
     @media (prefers-contrast: high) {
-      .drop-zone {
-        border-width: 3px;
+      .drop-zone::before {
+        padding: 3px;
+        opacity: 1;
       }
     }
   

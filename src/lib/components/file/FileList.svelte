@@ -109,9 +109,30 @@
       flex-direction: column;
       gap: var(--spacing-md);
       width: 100%;
-      background: var(--color-background);
+      background: transparent;
       border-radius: var(--rounded-lg);
       padding: var(--spacing-md);
+      position: relative;
+      box-shadow: var(--shadow-sm);
+  }
+
+  /* Gradient border */
+  .file-list-container::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-lg);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
   }
 
   .file-list-actions {
@@ -119,13 +140,15 @@
       justify-content: space-between;
       gap: var(--spacing-sm);
       padding: var(--spacing-xs) var(--spacing-sm);
+      position: relative;
+      z-index: 1;
   }
 
   .action-button {
       padding: var(--spacing-xs) var(--spacing-sm);
       border-radius: var(--rounded-md);
-      border: 2px solid var(--color-border);
-      background: var(--color-surface);
+      position: relative;
+      background: transparent;
       color: var(--color-text);
       font-weight: 500;
       cursor: pointer;
@@ -133,22 +156,42 @@
       display: flex;
       align-items: center;
       gap: var(--spacing-xs);
+      overflow: hidden;
+  }
+
+  .action-button::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-md);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
   }
 
   .action-button:hover {
-      background: var(--color-background-hover);
       transform: translateY(-1px);
       box-shadow: var(--shadow-sm);
   }
 
   .delete-button {
       color: var(--color-error);
-      border-color: var(--color-error-light);
+  }
+
+  .delete-button::before {
+      background: linear-gradient(135deg, var(--color-error), var(--color-error-light));
   }
 
   .delete-button:hover {
-      background: var(--color-error-light);
-      border-color: var(--color-error);
+      background: rgba(var(--color-error-rgb), 0.1);
   }
 
   .file-list {
@@ -158,10 +201,30 @@
       max-height: 400px;
       overflow-y: auto;
       padding: var(--spacing-xs);
-      background: var(--color-surface);
+      background: transparent;
       border-radius: var(--rounded-md);
       scrollbar-width: thin;
       scrollbar-color: var(--color-border) transparent;
+      position: relative;
+      z-index: 1;
+  }
+
+  .file-list::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-md);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
   }
 
   .file-list::-webkit-scrollbar {
@@ -175,19 +238,39 @@
   .file-list::-webkit-scrollbar-thumb {
       background-color: var(--color-border);
       border-radius: var(--rounded-full);
-      border: 2px solid var(--color-surface);
+      border: 2px solid transparent;
   }
 
   .file-item {
       width: 100%;
+      position: relative;
+      z-index: 1;
   }
 
   .empty-state {
       text-align: center;
       padding: var(--spacing-xl);
       color: var(--color-text-secondary);
-      background: var(--color-surface);
+      background: transparent;
       border-radius: var(--rounded-lg);
-      border: 2px dashed var(--color-border);
+      position: relative;
+  }
+
+  .empty-state::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: var(--rounded-lg);
+      padding: 2px;
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      -webkit-mask: 
+          linear-gradient(#fff 0 0) content-box, 
+          linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
   }
 </style>
