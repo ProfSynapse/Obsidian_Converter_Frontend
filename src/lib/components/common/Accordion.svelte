@@ -24,46 +24,23 @@
 <style>
   .accordion-wrapper {
     width: 100%;
-    border-radius: var(--rounded-lg);
-    position: relative;
     background: transparent;
-  }
-
-  .accordion-wrapper::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--rounded-lg);
-    padding: 2px;
-    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    opacity: 0.3;
   }
 
   .accordion-header {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm);
     background: none;
     border: none;
     color: inherit;
     cursor: pointer;
     font-size: var(--font-size-base);
-    font-weight: 500;
+    font-weight: 600;
     text-align: left;
-    position: relative;
-    z-index: 1;
-    border-radius: var(--rounded-lg);
+    border-radius: var(--rounded-md);
     transition: background-color 0.2s ease;
   }
 
@@ -89,28 +66,14 @@
   }
 
   .accordion-content {
-    position: relative;
+    margin-top: var(--spacing-xs);
     background: transparent;
-    margin-top: -2px;
-    padding: var(--spacing-sm);
   }
 
-  .accordion-content::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--color-prime), var(--color-second));
-    opacity: 0.3;
-  }
-
-  /* High Contrast Mode */
-  @media (prefers-contrast: high) {
-    .accordion-wrapper::before {
-      padding: 3px;
-      opacity: 1;
+  /* Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    .accordion-header {
+      transition: none;
     }
   }
 </style>
