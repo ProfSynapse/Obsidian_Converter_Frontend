@@ -59,19 +59,21 @@
       align-items: center;
       gap: var(--spacing-sm);
       padding: var(--spacing-sm) var(--spacing-md);
-      background: var(--color-surface);
+      background: var(--color-background);
       border-radius: var(--rounded-md);
       transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
   }
 
   .file-card:hover {
       background: rgba(var(--color-prime-rgb), 0.05);
       transform: translateY(-1px);
-      box-shadow: var(--shadow-sm);
+      box-shadow: var(--shadow-md);
   }
 
   .file-card.is-selected {
       background: rgba(var(--color-prime-rgb), 0.1);
+      box-shadow: var(--shadow-md);
   }
 
   .select-area {
@@ -151,6 +153,10 @@
   @media (prefers-contrast: high) {
       .select-checkbox {
           border-width: 3px;
+      }
+
+      .file-card {
+          box-shadow: var(--shadow-lg);
       }
   }
 

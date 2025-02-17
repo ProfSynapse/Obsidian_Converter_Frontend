@@ -17,28 +17,20 @@
 
   const dispatch = createEventDispatcher();
 
-  /**
-   * Configuration object for supported file types
-   * (Here we break out audio vs video explicitly)
-   */
   const SUPPORTED_FILES = {
     documents: ['pdf', 'docx', 'pptx'],
     data: ['csv', 'xlsx'],
     audio: ['mp3', 'wav', 'm4a'],
-    video: ['mp4', 'webm', 'avi'] // youtube removed
+    video: ['mp4', 'webm', 'avi']
   };
 
-  // Flatten
   const SUPPORTED_EXTENSIONS = Object.values(SUPPORTED_FILES).flat();
 
-  // Reactive
   $: showFileList = $files.length > 0;
   $: needsApiKey = $files.some(file => requiresApiKey(file));
-
   $: showPaymentPrompt = $paymentStore.showPaymentPrompt;
 
-    function showFeedback(message, type = 'info') {
-    // Only show error and info messages, not success
+  function showFeedback(message, type = 'info') {
     if (type !== 'success') {
       uploadStore.setMessage(message, type);
       return setTimeout(() => uploadStore.clearMessage(), 5000);
@@ -75,10 +67,8 @@
   }
 
   function getFileCategory(extension) {
-    // Ensure lowercase comparison
     extension = extension.toLowerCase();
     
-    // Special handling for spreadsheet files
     if (['csv', 'xlsx', 'xls'].includes(extension)) {
       return 'data';
     }
@@ -91,10 +81,6 @@
     return 'unknown';
   }
 
-  /**
-   * Generates a unique ID for items
-   * @private
-   */
   function generateId() {
     try {
       return crypto.randomUUID();
@@ -104,7 +90,6 @@
   }
 
   function handleFilesAdded(newFiles) {
-    // Clear any existing success messages when adding new files
     uploadStore.clearMessage();
     newFiles.forEach(file => {
       const validation = validateFile(file);
@@ -120,7 +105,7 @@
         id: generateId(),
         name: file.name,
         file: file,
-        type: extension,  // Changed: Use the extension directly instead of category
+        type: extension,
         status: 'Ready',
         progress: 0,
         selected: false,
@@ -136,16 +121,9 @@
     });
   }
 
-  /**
-   * Normalizes a URL to prevent duplicates by:
-   * - Removing trailing slashes
-   * - Converting to lowercase
-   * - Standardizing protocol
-   */
   function normalizeUrl(url) {
     try {
       const urlObj = new URL(url);
-      // Remove trailing slashes and convert to lowercase
       const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
       urlObj.pathname = normalizedPath;
       return urlObj.href.toLowerCase();
@@ -156,7 +134,6 @@
   }
 
   async function handleUrlSubmit(event) {
-    // Clear any existing success messages when submitting a new URL
     uploadStore.clearMessage();
     const { url, type = 'url' } = event.detail;
     
@@ -169,7 +146,6 @@
       const normalizedUrl = normalizeUrl(url);
       const newUrl = new URL(normalizedUrl);
       
-      // Check if URL already exists (case-insensitive and ignoring trailing slashes)
       const isDuplicate = $files.some(file => {
         if (!file.url) return false;
         return normalizeUrl(file.url) === normalizedUrl;
@@ -188,7 +164,7 @@
         status: 'Ready',
         progress: 0,
         selected: false,
-        requiresApiKey: true // Removed YouTube exception
+        requiresApiKey: true
       };
 
       const result = files.addFile(newFile);
@@ -206,7 +182,6 @@
     const uploadedFiles = Array.from(event.target.files || []);
     handleFilesAdded(uploadedFiles);
 
-    // If API key needed but missing, scroll to input...
     const needsKey = uploadedFiles.some(file => requiresApiKey(file));
     if (needsKey && !$apiKey) {
       setTimeout(() => {
@@ -214,59 +189,57 @@
         apiKeySection?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 300);
     } else if (uploadedFiles.length > 0) {
-      // Show payment prompt after files are added
       paymentStore.showPrompt();
     }
   }
 </script>
 
 <div class="file-uploader" in:fade={{ duration: 200 }}>
-  <!-- Single Container for all upload options -->
   <Container>
-    <!-- URL Input Section -->
-    <div class="section url-section">
-      <TabNavigation />
-      <UrlInput 
-        on:submitUrl={handleUrlSubmit}
+    <div class="uploader-content">
+      <!-- URL Input Section -->
+      <div class="section">
+        <TabNavigation />
+        <UrlInput 
+          on:submitUrl={handleUrlSubmit}
+        />
+      </div>
+
+      <div class="section-divider"></div>
+
+      <!-- File Upload Section -->
+      <div class="section">
+        <DropZone 
+          acceptedTypes={SUPPORTED_EXTENSIONS}
+          on:filesDropped={(event) => handleFilesAdded(event.detail.files)}
+          on:filesSelected={(event) => handleFilesAdded(event.detail.files)}
+        />
+      </div>
+      
+      {#if $uploadStore.message}
+        <div class="section">
+          <ErrorMessage />
+        </div>
+      {/if}
+
+      {#if showFileList}
+        <div class="section">
+          <FileList />
+        </div>
+      {/if}
+
+      {#if needsApiKey}
+        <div class="section">
+          <ApiKeyInput />
+        </div>
+      {/if}
+
+      <PaymentInput 
+        showPayment={showPaymentPrompt}
+        on:payment={handlePayment}
+        on:skip={handlePaymentSkip}
       />
     </div>
-
-    <div class="section-divider"></div>
-
-    <!-- File Upload Section -->
-    <div class="section upload-section">
-      <DropZone 
-        acceptedTypes={SUPPORTED_EXTENSIONS}
-        on:filesDropped={(event) => handleFilesAdded(event.detail.files)}
-        on:filesSelected={(event) => handleFilesAdded(event.detail.files)}
-      />
-    </div>
-    
-    {#if $uploadStore.message}
-      <div class="error-container" transition:fade>
-        <ErrorMessage />
-      </div>
-    {/if}
-
-    {#if showFileList}
-      <div class="file-list-wrapper">
-        <FileList />
-      </div>
-    {/if}
-
-    <!-- API Key Input (when needed) -->
-    {#if needsApiKey}
-      <div class="api-key-wrapper">
-        <ApiKeyInput />
-      </div>
-    {/if}
-
-    <!-- Payment Input -->
-    <PaymentInput 
-      showPayment={showPaymentPrompt}
-      on:payment={handlePayment}
-      on:skip={handlePaymentSkip}
-    />
   </Container>
 </div>
 
@@ -277,99 +250,33 @@
     margin: 0 auto;
   }
 
+  .uploader-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
   .section {
     width: 100%;
-    padding: var(--spacing-sm);
-    position: relative;
-  }
-
-  .url-section {
-    background: transparent;
-    border-radius: var(--rounded-lg);
-    position: relative;
-  }
-
-  /* Gradient border for url-section */
-  .url-section::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--rounded-lg);
-    padding: 2px;
-    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
   }
 
   .section-divider {
     width: 100%;
     height: 1px;
     background: linear-gradient(90deg, var(--color-prime), var(--color-second));
-    margin: var(--spacing-sm) 0;
-    opacity: 0.5;
+    opacity: 0.3;
   }
 
-  .upload-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
-  }
-
-  .error-container {
-    margin-top: var(--spacing-sm);
-  }
-
-  .file-list-wrapper {
-    margin-top: var(--spacing-sm);
-  }
-
-  .api-key-wrapper {
-    margin-top: var(--spacing-sm);
-  }
-
-  /* Responsive adjustments */
+  /* Mobile Adjustments */
   @media (max-width: 768px) {
-    .section {
-      padding: var(--spacing-xs);
-    }
-
-    .section-divider {
-      margin: var(--spacing-xs) 0;
-    }
-
-    .upload-section {
-      gap: var(--spacing-xs);
-    }
-
-    .file-list-wrapper,
-    .api-key-wrapper {
-      margin-top: var(--spacing-xs);
+    .uploader-content {
+      gap: var(--spacing-sm);
     }
   }
 
   @media (max-width: 640px) {
-    .section {
-      padding: var(--spacing-2xs);
-    }
-
-    .section-divider {
-      margin: var(--spacing-2xs) 0;
-    }
-
-    .upload-section {
-      gap: var(--spacing-2xs);
-    }
-
-    .file-list-wrapper,
-    .api-key-wrapper {
-      margin-top: var(--spacing-2xs);
+    .uploader-content {
+      gap: var(--spacing-xs);
     }
   }
 </style>
