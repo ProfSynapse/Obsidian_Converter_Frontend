@@ -68,26 +68,7 @@
     padding: var(--spacing-md);
     border-radius: var(--rounded-lg);
     position: relative;
-    background: rgba(var(--color-prime-rgb), 0.02);
-  }
-
-  .professor-header::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--rounded-lg);
-    padding: 2px;
-    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    opacity: 0.3;
+    background: rgba(var(--color-prime-rgb), 0.03);
   }
 
   .wizard-emoji {
@@ -117,25 +98,7 @@
     border-radius: var(--rounded-lg);
     position: relative;
     margin: var(--spacing-lg) 0;
-    background: rgba(var(--color-prime-rgb), 0.03);
-  }
-
-  .video-section::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--rounded-lg);
-    padding: 2px;
-    background: linear-gradient(135deg, var(--color-second), var(--color-prime));
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
+    background: rgba(var(--color-prime-rgb), 0.04);
   }
 
   .magical-container {
@@ -156,10 +119,29 @@
   .enchanted-scroll {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-lg);
-    background: rgba(var(--color-prime-rgb), 0.02);
+    background: rgba(var(--color-prime-rgb), 0.03);
     border-radius: var(--rounded-lg);
     position: relative;
     box-shadow: var(--shadow-sm);
+  }
+
+  .enchanted-scroll::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: var(--rounded-lg);
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.4;
   }
 
   .enchanted-scroll h4 {
@@ -198,14 +180,9 @@
 
   /* High Contrast Mode */
   @media (prefers-contrast: high) {
-    .professor-header::before,
-    .video-section::before {
+    .enchanted-scroll::before {
       padding: 3px;
       opacity: 1;
-    }
-
-    .enchanted-scroll {
-      border: 2px solid var(--color-prime);
     }
   }
 </style>
