@@ -37,10 +37,10 @@
 
   $: showPaymentPrompt = $paymentStore.showPaymentPrompt;
 
-  function showFeedback(message, type = 'info') {
-    uploadStore.setMessage(message, type);
-    // Only set timeout for non-success messages
+    function showFeedback(message, type = 'info') {
+    // Only show error and info messages, not success
     if (type !== 'success') {
+      uploadStore.setMessage(message, type);
       return setTimeout(() => uploadStore.clearMessage(), 5000);
     }
   }
@@ -129,7 +129,6 @@
 
       const result = files.addFile(newFile);
       if (result.success) {
-        showFeedback(`Added: ${file.name}`, 'success');
         dispatch('filesAdded', { files: [newFile] });
       } else {
         showFeedback(result.message, 'error');
@@ -194,7 +193,6 @@
 
       const result = files.addFile(newFile);
       if (result.success) {
-        showFeedback(`Added URL: ${newUrl.hostname}`, 'success');
         dispatch('filesAdded', { files: [newFile] });
       } else {
         showFeedback(result.message, 'error');
