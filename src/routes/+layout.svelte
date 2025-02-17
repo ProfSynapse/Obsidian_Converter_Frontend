@@ -38,17 +38,16 @@
     flex-direction: column;
     min-height: 100vh;
     width: 100%;
-    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    padding: var(--spacing-lg);
+    background: var(--color-surface);
+    padding: var(--spacing-sm);
     box-sizing: border-box;
     align-items: center;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
   }
 
   /* Main Content Area */
   .main {
     flex: 1;
-    padding: var(--spacing-lg) 0;
     position: relative;
     display: flex;
     justify-content: center;
@@ -59,37 +58,17 @@
   .content-area {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-md);
     width: 100%;
     max-width: var(--content-width-lg);
     margin: 0 auto;
   }
 
-  /* Extra Large Screens */
-  @media (min-width: 1440px) {
-    .app-shell {
-      padding: var(--spacing-xl);
-      gap: var(--spacing-xl);
-    }
-
-    .main {
-      padding: var(--spacing-xl) 0;
-    }
-
-    .content-area {
-      gap: var(--spacing-2xl);
-    }
-  }
-
   /* Responsive Adjustments */
-  @media (max-width: 768px) {
+  @media (min-width: 1440px) {
     .app-shell {
       padding: var(--spacing-md);
       gap: var(--spacing-md);
-    }
-
-    .main {
-      padding: var(--spacing-md) 0;
     }
 
     .content-area {
@@ -97,18 +76,25 @@
     }
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 768px) {
     .app-shell {
-      padding: var(--spacing-sm);
-      gap: var(--spacing-sm);
-    }
-
-    .main {
-      padding: var(--spacing-sm) 0;
+      padding: var(--spacing-xs);
+      gap: var(--spacing-xs);
     }
 
     .content-area {
-      gap: var(--spacing-md);
+      gap: var(--spacing-sm);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .app-shell {
+      padding: var(--spacing-2xs);
+      gap: var(--spacing-2xs);
+    }
+
+    .content-area {
+      gap: var(--spacing-xs);
     }
   }
 </style>

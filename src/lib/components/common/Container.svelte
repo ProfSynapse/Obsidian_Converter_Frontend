@@ -24,7 +24,7 @@
 
 <style>
   .container {
-    background: var(--color-surface);
+    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
     border-radius: var(--rounded-lg);
     box-shadow: var(--shadow-sm);
     overflow: hidden;
@@ -46,7 +46,7 @@
   .title {
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text);
+    color: var(--color-text-on-dark);
     margin: 0;
     display: flex;
     align-items: center;
@@ -55,16 +55,35 @@
 
   .subtitle {
     font-size: var(--font-size-base);
-    color: var(--color-text-secondary);
+    color: var(--color-text-on-dark);
+    opacity: 0.8;
     margin: var(--spacing-sm) 0 0;
   }
 
   .content {
     padding: var(--spacing-md);
+    color: var(--color-text-on-dark);
   }
 
   .content.no-padding {
     padding: 0;
+  }
+
+  .content :global(h1),
+  .content :global(h2),
+  .content :global(h3),
+  .content :global(h4),
+  .content :global(h5),
+  .content :global(h6),
+  .content :global(p),
+  .content :global(span),
+  .content :global(label) {
+    color: var(--color-text-on-dark);
+  }
+
+  .content :global(a) {
+    color: var(--color-text-on-dark);
+    text-decoration: underline;
   }
 
   /* Responsive adjustments */

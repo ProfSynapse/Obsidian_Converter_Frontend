@@ -100,7 +100,7 @@ html, body {
   font-size: var(--font-size-base);
   line-height: 1.5;
   color: var(--color-text);
-  background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+  background: var(--color-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -295,6 +295,9 @@ p { margin: 0 0 var(--spacing-md); }
     --color-text: #f0f0f0;
     --color-text-light: rgba(240, 240, 240, 0.7);
     --color-border: rgba(255, 255, 255, 0.1);
+    /* Adjust gradient colors to be more vibrant in dark mode */
+    --color-prime: #00c4b4;
+    --color-second: #b42eac;
   }
 }
 
