@@ -5,7 +5,7 @@
   export let noPadding = false; // Option to remove padding
   let className = ''; // Additional classes
   export { className as class };
-  export let maxWidth = '900px'; // Default max-width
+  export let maxWidth = '1000px'; // Default max-width
 </script>
 
 <div class="container {className}" style="max-width: {maxWidth};">
@@ -39,7 +39,7 @@
   }
 
   .container-header {
-    padding: var(--spacing-lg) var(--spacing-xl);
+    padding: var(--spacing-sm) var(--spacing-md);
     border-bottom: 1px solid var(--color-border);
   }
 
@@ -60,7 +60,7 @@
   }
 
   .content {
-    padding: var(--spacing-xl);
+    padding: var(--spacing-md);
   }
 
   .content.no-padding {
@@ -70,21 +70,21 @@
   /* Responsive adjustments */
   @media (min-width: 1440px) {
     .container-header {
-      padding: var(--spacing-xl) var(--spacing-2xl);
-    }
-
-    .content {
-      padding: var(--spacing-2xl);
-    }
-  }
-
-  @media (max-width: 768px) {
-    .container-header {
       padding: var(--spacing-md) var(--spacing-lg);
     }
 
     .content {
       padding: var(--spacing-lg);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .container-header {
+      padding: var(--spacing-xs) var(--spacing-sm);
+    }
+
+    .content {
+      padding: var(--spacing-sm);
     }
 
     .title {
@@ -94,11 +94,11 @@
 
   @media (max-width: 640px) {
     .container-header {
-      padding: var(--spacing-sm) var(--spacing-md);
+      padding: var(--spacing-2xs) var(--spacing-xs);
     }
 
     .content {
-      padding: var(--spacing-md);
+      padding: var(--spacing-xs);
     }
 
     .title {

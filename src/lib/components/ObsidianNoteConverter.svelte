@@ -93,41 +93,41 @@ function handlePaymentComplete() {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: var(--spacing-xl) var(--spacing-lg);
+    padding: var(--spacing-sm);
   }
 
   .converter-app {
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-2xs);
   }
 
   .button-container {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: var(--spacing-lg) 0;
-  }
-
-  @media (min-width: 1440px) {
-    .app-container {
-      padding: var(--spacing-2xl) var(--spacing-xl);
-    }
+    padding: var(--spacing-2xs) 0;
   }
 
   @media (max-width: 768px) {
     .app-container {
-      padding: var(--spacing-md) var(--spacing-sm);
+      padding: var(--spacing-xs);
     }
 
     .converter-app {
-      gap: var(--spacing-md);
+      gap: var(--spacing-2xs);
     }
 
     .button-container {
-      padding: var(--spacing-md) 0;
+      padding: var(--spacing-2xs) 0;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .app-container {
+      padding: var(--spacing-2xs);
     }
   }
 </style>
