@@ -36,27 +36,7 @@
       width: 100%;
       background: transparent;
       padding: var(--spacing-xs);
-      border-radius: var(--rounded-lg);
-      position: relative;
-    }
-
-    .tabs-nav::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: var(--rounded-lg);
-      padding: 2px;
-      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-      -webkit-mask: 
-          linear-gradient(#fff 0 0) content-box, 
-          linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
-      opacity: 0.2;
+      margin-bottom: var(--spacing-md);
     }
   
     .tabs-container {
@@ -64,7 +44,7 @@
       gap: var(--spacing-sm);
       position: relative;
       z-index: 1;
-      padding: var(--spacing-xs);
+      padding: var(--spacing-2xs);
     }
   
     .tab-button {
@@ -83,7 +63,6 @@
       cursor: pointer;
       transition: all var(--transition-duration-normal);
       overflow: hidden;
-      min-height: 60px;
     }
 
     .tab-button::before {
@@ -106,7 +85,6 @@
 
     .tab-content {
       display: flex;
-      flex-direction: column;
       align-items: center;
       gap: var(--spacing-xs);
       position: relative;
@@ -114,7 +92,7 @@
     }
   
     .tab-icon {
-      font-size: 1.5em;
+      font-size: 1.2em;
       transition: transform var(--transition-duration-normal);
     }
 
@@ -140,28 +118,20 @@
       }
   
       .tab-button {
-        min-height: unset;
         padding: var(--spacing-xs) var(--spacing-sm);
       }
 
       .tab-content {
-        flex-direction: row;
         justify-content: flex-start;
-        gap: var(--spacing-sm);
       }
 
       .tab-icon {
-        font-size: 1.2em;
+        font-size: 1.1em;
       }
     }
   
     /* High Contrast Mode */
     @media (prefers-contrast: high) {
-      .tabs-nav::before {
-        padding: 3px;
-        opacity: 1;
-      }
-
       .tab-button.active::before {
         opacity: 0.3;
       }

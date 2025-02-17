@@ -1,7 +1,7 @@
 <!-- src/lib/components/common/UrlInput.svelte -->
 <script>
     import { createEventDispatcher } from 'svelte';
-    import { fade, fly } from 'svelte/transition';
+    import { fade } from 'svelte/transition';
     import { uploadStore } from '../../stores/uploadStore.js';
     import { files } from '../../stores/files.js';
 
@@ -32,9 +32,6 @@
     $: currentConfig = URL_TYPES[activeType] || URL_TYPES.single;
     $: isValidFormat = inputValue && couldBeValidUrl(inputValue);
 
-    /**
-     * Basic URL validation function
-     */
     function couldBeValidUrl(input) {
         try {
             const trimmed = input.trim();
@@ -44,9 +41,6 @@
         }
     }
 
-    /**
-     * URL normalization function
-     */
     function normalizeUrl(input) {
         if (!input) throw new Error('URL is required');
         
@@ -119,7 +113,6 @@
     }
 
     function handlePaste() {
-        // Add visual feedback class
         const input = document.querySelector('.url-input');
         input.classList.add('pasted');
         setTimeout(() => input.classList.remove('pasted'), 300);
@@ -128,10 +121,6 @@
 
 <div class="url-input-section" in:fade={{ duration: 200 }}>
     <div class="input-container">
-        <div class="protocol-prefix" aria-hidden="true">
-            https://
-        </div>
-
         <input
             type="text"
             class="url-input"
@@ -232,16 +221,6 @@
         background: linear-gradient(135deg, var(--color-second), var(--color-prime));
     }
 
-    .protocol-prefix {
-        padding: 0 var(--spacing-xs);
-        color: var(--color-text-secondary);
-        font-family: var(--font-mono);
-        font-size: var(--font-size-sm);
-        user-select: none;
-        position: relative;
-        z-index: 1;
-    }
-
     .url-input {
         flex: 1;
         border: none;
@@ -336,7 +315,6 @@
             padding: var(--spacing-xs);
         }
 
-        .protocol-prefix,
         .url-input {
             font-size: var(--font-size-sm);
         }
