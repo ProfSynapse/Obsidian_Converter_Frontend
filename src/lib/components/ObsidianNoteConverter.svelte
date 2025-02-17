@@ -93,27 +93,41 @@ function handlePaymentComplete() {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 2rem var(--spacing-md);
+    padding: var(--spacing-xl) var(--spacing-lg);
   }
 
   .converter-app {
     width: 100%;
-    max-width: 600px;
+    max-width: 900px;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-lg);
   }
 
   .button-container {
     width: 100%;
     display: flex;
     justify-content: center;
-    padding: var(--spacing-md) 0;
+    padding: var(--spacing-lg) 0;
+  }
+
+  @media (min-width: 1440px) {
+    .app-container {
+      padding: var(--spacing-2xl) var(--spacing-xl);
+    }
   }
 
   @media (max-width: 768px) {
     .app-container {
-      padding: 1rem var(--spacing-sm);
+      padding: var(--spacing-md) var(--spacing-sm);
+    }
+
+    .converter-app {
+      gap: var(--spacing-md);
+    }
+
+    .button-container {
+      padding: var(--spacing-md) 0;
     }
   }
 </style>

@@ -88,15 +88,15 @@
   }
 
   .instruction-content {
-    padding: var(--spacing-lg) var(--spacing-xl);
+    padding: var(--spacing-xl) var(--spacing-2xl);
     line-height: 1.7;
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);
     /* Ensure base text is always visible */
     color: var(--color-text-base, #333333);
   }
 
   .instruction-section {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
   }
 
   .instruction-section:last-child {
@@ -104,11 +104,11 @@
   }
 
   h3 {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-xl);
     font-weight: 700;
     /* Use more specific emphasis color with fallback */
     color: var(--color-text-emphasis, var(--color-text-base, #333333));
-    margin-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
   }
 
   ul, ol {
@@ -174,6 +174,36 @@
     margin-bottom: 0;
   }
 
+  /* Extra Large Screens */
+  @media (min-width: 1440px) {
+    .instruction-content {
+      padding: var(--spacing-2xl);
+      font-size: var(--font-size-xl);
+    }
+
+    h3 {
+      font-size: var(--font-size-2xl);
+      margin-bottom: var(--spacing-xl);
+    }
+  }
+
+  /* Tablet Adjustments */
+  @media (max-width: 768px) {
+    .instruction-content {
+      padding: var(--spacing-lg) var(--spacing-xl);
+      font-size: var(--font-size-base);
+    }
+
+    h3 {
+      font-size: var(--font-size-lg);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .instruction-section {
+      margin-bottom: var(--spacing-xl);
+    }
+  }
+
   /* Mobile Adjustments */
   @media (max-width: 640px) {
     .instruction-content {
@@ -183,6 +213,7 @@
 
     h3 {
       font-size: var(--font-size-base);
+      margin-bottom: var(--spacing-sm);
     }
 
     ul, ol {
@@ -191,6 +222,10 @@
 
     .sub-list {
       padding-left: var(--spacing-md);
+    }
+
+    .instruction-section {
+      margin-bottom: var(--spacing-lg);
     }
   }
 </style>
