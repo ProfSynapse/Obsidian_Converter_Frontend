@@ -41,48 +41,58 @@ async function prepareItem(item) {
       }
     };
 
-    /**
-     * Normalizes a URL to ensure consistent format
-     * @private
-     */
-    function normalizeUrl(url) {
-      try {
-        const urlObj = new URL(url);
-        const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
-        urlObj.pathname = normalizedPath;
-        return urlObj.href.toLowerCase();
-      } catch (error) {
-        console.error('URL normalization error:', error);
-        return url.toLowerCase();
-      }
-    }
-
-    // Handle URL types (including parent URLs)
-    if (item.type === 'url' || item.type === 'parent' || item.url || item.name.startsWith('http')) {
-      const rawUrl = item.url || item.content || item.name;
-      const normalizedUrl = normalizeUrl(rawUrl);
-      return {
-        ...baseItem,
-        type: item.type === 'parent' ? 'parent' : 'url',
-        url: normalizedUrl, // Use normalized URL
-        content: normalizedUrl, // Keep normalized URL for backward compatibility
-        options: {
-          ...baseItem.options,
-          ...(item.type === 'parent' ? { depth: 1, maxPages: 10 } : {}),
-          ...item.options // Preserve any custom options passed
-        }
-      };
-    }
-
     // Handle File type
     if (item.file instanceof File) {
       const fileExt = item.name.split('.').pop().toLowerCase();
       const type = determineFileType(fileExt);
       
+      // File size validation
+      if (item.file.size > CONFIG.CONVERSION.FILE_SIZE_LIMIT) {
+        throw ConversionError.validation(
+          `File size exceeds limit of ${CONFIG.CONVERSION.FILE_SIZE_LIMIT / (1024 * 1024)}MB`
+        );
+      }
+
+      // File type validation
+      if (!type) {
+        throw ConversionError.validation(`Unsupported file type: ${fileExt}`);
+      }
+
+      // Check if API key is required for this file type
+      if (CONFIG.FILES.API_REQUIRED.includes(fileExt) && !get(apiKey)) {
+        throw ConversionError.validation('API key is required for this file type');
+      }
+
       return {
         ...baseItem,
         type,
         file: item.file
+      };
+    }
+
+    // Handle URL types (including parent URLs)
+    if (item.type === 'url' || item.type === 'parent' || item.url || item.name.startsWith('http')) {
+      const rawUrl = item.url || item.content || item.name;
+      let normalizedUrl;
+      try {
+        const urlObj = new URL(rawUrl);
+        const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
+        urlObj.pathname = normalizedPath;
+        normalizedUrl = urlObj.href.toLowerCase();
+      } catch (error) {
+        throw ConversionError.validation('Invalid URL format');
+      }
+
+      return {
+        ...baseItem,
+        type: item.type === 'parent' ? 'parent' : 'url',
+        url: normalizedUrl,
+        content: normalizedUrl,
+        options: {
+          ...baseItem.options,
+          ...(item.type === 'parent' ? { depth: 1, maxPages: 10 } : {}),
+          ...item.options
+        }
       };
     }
 
@@ -94,15 +104,17 @@ async function prepareItem(item) {
 }
 
 function determineFileType(extension) {
+  if (!extension) return null;
+  
   const categories = CONFIG.FILES.CATEGORIES;
+  const ext = extension.toLowerCase();
   
-  if (categories.audio.includes(extension)) return 'audio';
-  if (categories.video.includes(extension)) return 'video';
-  if (categories.documents.includes(extension)) return 'document';
-  if (categories.data.includes(extension)) return 'data';
-  if (categories.web.includes(extension)) return 'web';
+  if (categories.audio.includes(ext)) return 'audio';
+  if (categories.video.includes(ext)) return 'video';
+  if (categories.documents.includes(ext)) return 'document';
+  if (categories.data.includes(ext)) return 'data';
   
-  return 'file';
+  return null; // Return null for unsupported types
 }
 
 /**

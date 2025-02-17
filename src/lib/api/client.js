@@ -57,6 +57,24 @@ class ConversionClient {
     const normalizedContent = item.content && typeof item.content === 'string' ? 
       this._normalizeUrl(item.content) : item.content;
 
+    // File validation for audio/video/document types
+    if (item.file instanceof File) {
+      const fileType = item.file.name.split('.').pop().toLowerCase();
+      const determinedType = this.getItemType(item);
+      
+      // Validate file size
+      if (item.file.size > this.config.CONVERSION.FILE_SIZE_LIMIT) {
+        throw ConversionError.validation(
+          `File size exceeds limit of ${this.config.CONVERSION.FILE_SIZE_LIMIT / (1024 * 1024)}MB`
+        );
+      }
+
+      // Validate file type
+      if (!this.isSupportedFileType(fileType)) {
+        throw ConversionError.validation(`Unsupported file type: ${fileType}`);
+      }
+    }
+
     // Normalize the item's properties
     return {
       id: item.id || this._generateId(),
@@ -77,6 +95,17 @@ class ConversionClient {
     };
   }
 
+  isSupportedFileType(extension) {
+    if (!extension) return false;
+    const categories = this.config.FILES.CATEGORIES;
+    return (
+      categories.documents.includes(extension) ||
+      categories.audio.includes(extension) ||
+      categories.video.includes(extension) ||
+      categories.data.includes(extension)
+    );
+  }
+
   /**
    * Generates a unique ID for items
    * @private
@@ -87,87 +116,6 @@ class ConversionClient {
     } catch (e) {
       return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
-  }
-
-  /**
-   * Converts a single item
-   * @public
-   */
-  async convertItem(item, apiKey) {
-    try {
-      const normalizedItem = this._validateAndNormalizeItem(item);
-
-      // Validate required properties based on type
-      if (normalizedItem.type === 'url' && !normalizedItem.url) {
-        throw ConversionError.validation('URL is required for URL conversion');
-      }
-
-      let result;
-      switch (normalizedItem.type) {
-        case 'url':
-          result = await Converters.convertUrl(normalizedItem, apiKey);
-          break;
-        case 'youtube':
-          result = await Converters.convertYoutube(normalizedItem);
-          break;
-        case 'parent':
-          result = await Converters.convertParentUrl(normalizedItem, apiKey);
-          break;
-        case 'file':
-          result = await Converters.convertFile(normalizedItem, apiKey);
-          break;
-        default:
-          throw ConversionError.validation(`Unsupported conversion type: ${normalizedItem.type}`);
-      }
-
-      return result;
-
-    } catch (error) {
-      console.error(`Error converting item ${item?.name || 'unknown'}:`, error);
-      throw ErrorUtils.wrap(error);
-    }
-  }
-
-  /**
-   * Processes multiple items sequentially
-   * @private
-   */
-  async processItemsSequentially(items, apiKey, onProgress, onItemComplete) {
-    const results = [];
-    const totalItems = items.length;
-    let completedItems = 0;
-
-    for (const item of items) {
-      try {
-        // Update progress
-        if (onProgress) {
-          const progress = Math.round((completedItems / totalItems) * 100);
-          onProgress(progress);
-        }
-
-        const result = await this.convertItem(item, apiKey);
-        results.push({ success: true, result, item });
-
-        if (onItemComplete) {
-          onItemComplete(item.id, true);
-        }
-
-      } catch (error) {
-        console.error(`Error processing item ${item.name}:`, error);
-        results.push({ success: false, error: ErrorUtils.wrap(error), item });
-
-        if (onItemComplete) {
-          onItemComplete(item.id, false, error);
-        }
-      }
-
-      completedItems++;
-    }
-
-    // Ensure we reach 100% progress
-    if (onProgress) onProgress(100);
-
-    return results;
   }
 
   /**
@@ -188,11 +136,11 @@ class ConversionClient {
       throw new ConversionError('No items provided for processing');
     }
   
-    const { useBatch = false, onProgress, onItemComplete, getEndpoint } = options;
+    const { useBatch = false, onProgress, onItemComplete } = options;
   
     try {
       if (useBatch) {
-        return this.processBatch(items, apiKey, onProgress);
+        return this.processBatch(items, apiKey, { onProgress, onItemComplete });
       }
   
       let progress = 0;
@@ -200,7 +148,7 @@ class ConversionClient {
   
       const results = await Promise.all(items.map(async (item) => {
         try {
-          const endpoint = getEndpoint?.(item) || this.getDefaultEndpoint(item);
+          const endpoint = this.getDefaultEndpoint(item);
           let result;
   
           if (item.type === 'url' || item.type === 'youtube') {
@@ -216,7 +164,7 @@ class ConversionClient {
               headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'text/markdown, application/zip, application/octet-stream',
-                ...(item.type === 'youtube' ? {} : apiKey && { 'Authorization': `Bearer ${apiKey}` })
+                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
               body: JSON.stringify(urlData)
             });
@@ -240,6 +188,14 @@ class ConversionClient {
               })
             });
           } else if (item.file) {
+            // Validate file size
+            if (item.file.size > this.config.CONVERSION.FILE_SIZE_LIMIT) {
+              throw new ConversionError(
+                `File size exceeds limit of ${this.config.CONVERSION.FILE_SIZE_LIMIT / (1024 * 1024)}MB`,
+                'VALIDATION_ERROR'
+              );
+            }
+
             const formData = new FormData();
             formData.append('file', item.file);
             formData.append('options', JSON.stringify(item.options || {}));
@@ -279,15 +235,48 @@ class ConversionClient {
   }
   
   getDefaultEndpoint(item) {
-    const typeMap = {
-      url: '/web/url',
-      parent: '/web/parent-url',
-      youtube: '/web/youtube',
-      audio: '/multimedia/audio',
-      video: '/multimedia/video',
-      file: '/document/file'
+    const type = this.getItemType(item);
+    const basePath = '/api/v1';
+    
+    const endpointMap = {
+      audio: `${basePath}/multimedia/audio`,
+      video: `${basePath}/multimedia/video`,
+      url: `${basePath}/web/url`,
+      parent: `${basePath}/web/parent-url`,
+      youtube: `${basePath}/web/youtube`,
+      file: `${basePath}/document/file`
     };
-    return typeMap[item.type] || '/document/file';
+    
+    return endpointMap[type] || `${basePath}/document/file`;
+  }
+
+  getItemType(item) {
+    if (!item) return 'file';
+    
+    const fileType = item.file?.name.split('.').pop().toLowerCase();
+    if (item.type === 'audio' || this.isAudioType(fileType)) return 'audio';
+    if (item.type === 'video' || this.isVideoType(fileType)) return 'video';
+    if (item.type === 'url') return 'url';
+    if (item.type === 'parent') return 'parent';
+    if (item.type === 'youtube') return 'youtube';
+    
+    // Check if it's a supported document type
+    if (this.config.FILES.CATEGORIES.documents.includes(fileType)) {
+      return 'file';
+    }
+    
+    throw new ConversionError(
+      `Unsupported file type: ${fileType}`,
+      'VALIDATION_ERROR'
+    );
+  }
+
+  isAudioType(ext) {
+    return this.config.FILES.CATEGORIES.audio.includes(ext);
+  }
+
+  isVideoType(ext) {
+    return this.config.FILES.CATEGORIES.video.includes(ext);
   }
 
   async _getErrorMessage(response) {
@@ -308,131 +297,6 @@ class ConversionClient {
     } catch {
       return 'Error processing server response';
     }
-  }
-
-  async _handleSuccessResponse(response, item) {
-    const contentType = response.headers.get('content-type');
-    
-    if (contentType?.includes('application/zip') || 
-        contentType?.includes('application/octet-stream')) {
-      return this._handleFileDownload(response, item);
-    }
-
-    const result = await response.json();
-    if (!result.success) {
-      throw new ConversionError(result.error || 'Conversion failed');
-    }
-    return result;
-  }
-
-  /**
-   * Processes batch items
-   * @public
-   */
-  async processBatch(items, apiKey, { onProgress, onItemComplete }) {
-    if (!items?.length) {
-      throw new ConversionError('No items provided for batch processing');
-    }
-
-    const formData = new FormData();
-    const urlItems = [];
-
-    items.forEach(item => {
-      if (item.file instanceof File) {
-        formData.append('files', item.file);
-      } else if (item.url || item.type === 'url' || item.type === 'youtube') {
-        urlItems.push({
-          id: item.id,
-          type: item.type,
-          url: item.url || item.content,
-          name: item.name,
-          options: item.options
-        });
-      }
-    });
-
-    if (urlItems.length > 0) {
-      formData.append('items', JSON.stringify(urlItems));
-    }
-
-    try {
-      const result = await this.makeRequest('/batch', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'text/markdown, application/zip, application/octet-stream'
-        },
-        body: formData
-      });
-
-      if (!(result instanceof Blob)) {
-        throw new ConversionError(
-          'Invalid response format - expected file download',
-          'RESPONSE_ERROR',
-          { received: typeof result }
-        );
-      }
-      
-      onProgress?.(100);
-      items.forEach(item => onItemComplete?.(item.id, true));
-      
-      return result;
-
-    } catch (error) {
-      console.error('Batch conversion failed:', error);
-      
-      const wrappedError = error instanceof ConversionError ? 
-        error : 
-        new ConversionError(
-          error.message || 'Batch conversion failed',
-          error.code || 'BATCH_ERROR',
-          error.details || null
-        );
-
-      items.forEach(item => onItemComplete?.(item.id, false, wrappedError));
-      
-      throw wrappedError;
-    }
-  }
-
-  getDefaultEndpoint(item) {
-    const type = this.getItemType(item);
-    const basePath = '/api/v1';
-    
-    switch(type) {
-        case 'audio':
-            return `${basePath}/multimedia/audio`;
-        case 'video':
-            return `${basePath}/multimedia/video`;
-        case 'url':
-            return `${basePath}/web/url`;
-        case 'parent':
-            return `${basePath}/web/parent-url`;
-        case 'youtube':
-            return `${basePath}/web/youtube`;
-        default:
-            return `${basePath}/document/file`;
-    }
-  }
-
-  getItemType(item) {
-    if (!item) return 'file';
-    
-    const fileType = item.file?.name.split('.').pop().toLowerCase();
-    if (item.type === 'audio' || this.isAudioType(fileType)) return 'audio';
-    if (item.type === 'video' || this.isVideoType(fileType)) return 'video';
-    if (item.type === 'url') return 'url';
-    if (item.type === 'parent') return 'parent';
-    if (item.type === 'youtube') return 'youtube';
-    return 'file';
-  }
-
-  isAudioType(ext) {
-    return this.config.FILES.CATEGORIES.audio.includes(ext);
-  }
-
-  isVideoType(ext) {
-    return this.config.FILES.CATEGORIES.video.includes(ext);
   }
 
   cancelRequests() {

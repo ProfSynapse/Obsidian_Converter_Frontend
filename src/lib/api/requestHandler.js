@@ -17,11 +17,9 @@ const ResponseTypes = {
  * Default request configuration
  */
 const DEFAULT_CONFIG = {
-  credentials: 'include',
   mode: 'cors',
   headers: {
-    'Accept': 'application/json, application/zip, application/octet-stream',
-    'Content-Type': 'application/json'
+    'Accept': 'application/json, application/zip, application/octet-stream'
   },
   keepalive: true
 };
@@ -86,42 +84,33 @@ export class RequestHandler {
    */
   static async makeRequest(endpoint, options) {
     try {
+      const requestOptions = {
+        method: options.method || 'POST',
+        mode: 'cors',
+        headers: { ...options.headers },
+        body: options.body,
+        signal: options.signal,
+        keepalive: true
+      };
+
+      // Handle FormData specifically
       if (options.body instanceof FormData) {
-        // Clone headers to avoid mutation
-        const headers = { ...options.headers };
-        delete headers['Content-Type']; // Remove Content-Type for FormData
-
-        const requestOptions = {
-          method: options.method || 'POST',
-          credentials: 'include',
-          mode: 'cors',
-          headers,
-          body: options.body,
-          signal: options.signal,
-          keepalive: true
-        };
-
-        // Log request details
-        this._logRequest(endpoint, requestOptions);
-
-        const response = await fetch(endpoint, requestOptions);
-        return await RequestHandler._handleResponse(response);
+        // Don't set Content-Type for FormData
+        delete requestOptions.headers['Content-Type'];
+      } else if (!(options.body instanceof Blob)) {
+        // Set Content-Type for JSON requests
+        requestOptions.headers['Content-Type'] = 'application/json';
       }
 
-      // Handle non-FormData requests
-      console.log('🚀 Making non-FormData request to:', endpoint);
-      const response = await fetch(endpoint, {
-        ...DEFAULT_CONFIG,
-        ...options,
-        headers: {
-          ...DEFAULT_CONFIG.headers,
-          ...options.headers
-        }
-      });
+      this._logRequest(endpoint, requestOptions);
+      
+      console.log('🚀 Making request to:', endpoint);
+      const response = await fetch(endpoint, requestOptions);
       console.log('📦 Response received:', {
         status: response.status,
         contentType: response.headers.get('Content-Type')
       });
+      
       return await RequestHandler._handleResponse(response);
     } catch (error) {
       console.error('Request failed:', error);
