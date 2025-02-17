@@ -11,19 +11,18 @@
     let inputValue = '';
     let errorMessage = '';
     let loading = false;
+    let showTooltip = false;
 
     // URL type configurations
     const URL_TYPES = {
         parent: {
             icon: '🗺️',
-            placeholder: 'Enter Parent URL to convert',
-            description: 'Convert all pages linked from this URL',
+            placeholder: 'Enter parent URL to convert all linked pages',
             type: 'parent'
         },
         single: {
             icon: '🔗',
-            placeholder: 'Enter URL to convert',
-            description: 'Convert single webpage to Markdown',
+            placeholder: 'Enter URL to convert to Markdown',
             type: 'url'
         }
     };
@@ -39,7 +38,6 @@
     function couldBeValidUrl(input) {
         try {
             const trimmed = input.trim();
-            // Check for basic URL pattern
             return /^(https?:\/\/)?([\w-]+(\.[\w-]+)+|localhost)(:\d+)?(\/\S*)?$/.test(trimmed);
         } catch (error) {
             return false;
@@ -54,13 +52,11 @@
         
         let url = input.trim().replace(/\s+/g, '');
         
-        // Add https:// if no protocol specified
         if (!/^https?:\/\//i.test(url)) {
             url = `https://${url}`;
         }
         
         try {
-            // Check if URL is valid
             new URL(url);
             return url;
         } catch (error) {
@@ -68,9 +64,6 @@
         }
     }
 
-    /**
-     * Handles input changes and updates store
-     */
     function handleInput(event) {
         const value = event.target.value;
         inputValue = value;
@@ -78,19 +71,13 @@
         errorMessage = '';
     }
 
-    /**
-     * Adds URL to conversion queue
-     */
     async function handleSubmit() {
         try {
             if (!inputValue.trim()) {
                 throw new Error('Please enter a URL');
             }
 
-            // Normalize URL
             const normalizedUrl = normalizeUrl(inputValue);
-
-            // Create file object
             const urlObj = new URL(normalizedUrl);
             const fileObj = {
                 url: normalizedUrl,
@@ -106,10 +93,8 @@
                 }
             };
 
-            // Add to files store
             const result = files.addFile(fileObj);
             
-            // Always clear input on successful submission, even for duplicates
             if (result.success) {
                 inputValue = '';
                 uploadStore.setUrlInput('');
@@ -118,7 +103,6 @@
                     type: currentConfig.type 
                 });
             } else if (!result.success && result.message) {
-                // Only show error messages for actual errors, not duplicates
                 errorMessage = result.message;
             }
 
@@ -128,25 +112,26 @@
         }
     }
 
-    /**
-     * Handles keyboard submission
-     */
     function handleKeyPress(event) {
         if (event.key === 'Enter' && isValidFormat) {
             handleSubmit();
         }
     }
+
+    function handlePaste() {
+        // Add visual feedback class
+        const input = document.querySelector('.url-input');
+        input.classList.add('pasted');
+        setTimeout(() => input.classList.remove('pasted'), 300);
+    }
 </script>
 
 <div class="url-input-section" in:fade={{ duration: 200 }}>
-    <!-- Input Container -->
     <div class="input-container">
-        <!-- Type Icon -->
-        <div class="input-icon" aria-hidden="true">
-            {currentConfig.icon}
+        <div class="protocol-prefix" aria-hidden="true">
+            https://
         </div>
 
-        <!-- URL Input -->
         <input
             type="text"
             class="url-input"
@@ -154,23 +139,29 @@
             bind:value={inputValue}
             on:input={handleInput}
             on:keypress={handleKeyPress}
+            on:paste={handlePaste}
             disabled={loading}
             aria-label={currentConfig.placeholder}
-            aria-describedby="url-error url-description"
+            aria-describedby="url-error"
         />
 
-        <!-- Submit Button -->
         <button 
             class="submit-button"
             on:click={handleSubmit}
             disabled={!isValidFormat || loading}
             aria-label="Add URL to queue"
+            on:mouseenter={() => showTooltip = true}
+            on:mouseleave={() => showTooltip = false}
         >
             <span class="icon">➕</span>
+            {#if showTooltip}
+                <div class="tooltip" transition:fade={{ duration: 150 }}>
+                    Add to queue
+                </div>
+            {/if}
         </button>
     </div>
 
-    <!-- Error Message -->
     {#if errorMessage}
         <div 
             id="url-error" 
@@ -182,7 +173,6 @@
         </div>
     {/if}
 
-    <!-- Format Warning -->
     {#if inputValue && !isValidFormat && !errorMessage}
         <div 
             id="url-format-warning" 
@@ -193,15 +183,6 @@
             The URL format looks incorrect.
         </div>
     {/if}
-
-    <!-- URL Type Description -->
-    <div 
-        id="url-description"
-        class="url-type-indicator" 
-        in:fly={{ y: 10, duration: 200 }}
-    >
-        {currentConfig.description}
-    </div>
 </div>
 
 <style>
@@ -210,18 +191,19 @@
         flex-direction: column;
         gap: var(--spacing-xs);
         width: 100%;
-        max-width: 1000px; /* Match Container width */
+        max-width: 1000px;
         margin: 0 auto;
     }
 
     .input-container {
         display: flex;
         align-items: center;
-        background: transparent;
+        background: rgba(var(--color-prime-rgb), 0.03);
         border-radius: var(--rounded-lg);
-        padding: var(--spacing-xs);
+        padding: var(--spacing-sm);
         transition: all var(--transition-duration-normal) var(--transition-timing-ease);
         position: relative;
+        height: 60px;
     }
 
     .input-container::before {
@@ -242,14 +224,20 @@
         pointer-events: none;
     }
 
+    .input-container:focus-within {
+        background: rgba(var(--color-prime-rgb), 0.05);
+    }
+
     .input-container:focus-within::before {
         background: linear-gradient(135deg, var(--color-second), var(--color-prime));
     }
 
-    .input-icon {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        font-size: var(--font-size-lg);
-        opacity: 0.8;
+    .protocol-prefix {
+        padding: 0 var(--spacing-xs);
+        color: var(--color-text-secondary);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-sm);
+        user-select: none;
         position: relative;
         z-index: 1;
     }
@@ -264,6 +252,7 @@
         min-width: 0;
         position: relative;
         z-index: 1;
+        font-family: var(--font-mono);
     }
 
     .url-input:focus {
@@ -275,43 +264,35 @@
         opacity: 0.7;
     }
 
+    .url-input.pasted {
+        animation: flash 0.3s ease-out;
+    }
+
+    @keyframes flash {
+        0% { background: rgba(var(--color-prime-rgb), 0); }
+        50% { background: rgba(var(--color-prime-rgb), 0.1); }
+        100% { background: rgba(var(--color-prime-rgb), 0); }
+    }
+
     .submit-button {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent;
-        color: var(--color-text);
+        background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+        color: white;
         border: none;
         border-radius: var(--rounded-md);
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         cursor: pointer;
-        transition: all var(--transition-duration-normal) var(--transition-timing-ease);
+        transition: all var(--transition-duration-normal);
         position: relative;
-        overflow: hidden;
-    }
-
-    .submit-button::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border-radius: var(--rounded-md);
-        padding: 2px;
-        background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-        -webkit-mask: 
-            linear-gradient(#fff 0 0) content-box, 
-            linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
+        margin-left: var(--spacing-xs);
     }
 
     .submit-button:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: var(--shadow-sm);
+        box-shadow: var(--shadow-md);
     }
 
     .submit-button:disabled {
@@ -321,59 +302,52 @@
     }
 
     .submit-button .icon {
-        position: relative;
-        z-index: 1;
+        font-size: 1.2em;
+    }
+
+    .tooltip {
+        position: absolute;
+        top: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--color-surface);
+        color: var(--color-text);
+        padding: var(--spacing-2xs) var(--spacing-xs);
+        border-radius: var(--rounded-sm);
+        font-size: var(--font-size-sm);
+        white-space: nowrap;
+        box-shadow: var(--shadow-sm);
+        pointer-events: none;
     }
 
     .error-message {
         color: var(--color-error);
         font-size: var(--font-size-sm);
-        margin-top: var(--spacing-xs);
         padding: var(--spacing-xs) var(--spacing-sm);
         border-radius: var(--rounded-md);
         position: relative;
-        background: transparent;
-    }
-
-    .error-message::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border-radius: var(--rounded-md);
-        padding: 2px;
-        background: linear-gradient(135deg, var(--color-error), var(--color-error-light));
-        -webkit-mask: 
-            linear-gradient(#fff 0 0) content-box, 
-            linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-    }
-
-    .url-type-indicator {
-        font-size: var(--font-size-sm);
-        color: var(--color-text-secondary);
-        padding: var(--spacing-2xs) var(--spacing-md);
-        margin-bottom: var(--spacing-xs);
+        background: rgba(var(--color-error-rgb), 0.1);
     }
 
     /* Mobile Responsiveness */
     @media (max-width: 640px) {
+        .input-container {
+            height: 50px;
+            padding: var(--spacing-xs);
+        }
+
+        .protocol-prefix,
         .url-input {
             font-size: var(--font-size-sm);
         }
 
         .submit-button {
-            width: 32px;
-            height: 32px;
-            font-size: var(--font-size-sm);
+            width: 36px;
+            height: 36px;
         }
 
-        .input-icon {
-            font-size: var(--font-size-base);
+        .submit-button .icon {
+            font-size: 1em;
         }
     }
 
@@ -387,14 +361,20 @@
         .submit-button:hover:not(:disabled) {
             transform: none;
         }
+
+        .url-input.pasted {
+            animation: none;
+        }
     }
 
     /* High Contrast */
     @media (prefers-contrast: high) {
-        .input-container::before,
-        .submit-button::before,
-        .error-message::before {
+        .input-container::before {
             padding: 3px;
+        }
+
+        .submit-button {
+            border: 2px solid currentColor;
         }
     }
 </style>

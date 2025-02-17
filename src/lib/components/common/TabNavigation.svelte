@@ -1,7 +1,7 @@
 <!-- src/lib/components/common/TabNavigation.svelte -->
 <script>
     import { uploadStore } from '../../stores/uploadStore';
-    import { slide } from 'svelte/transition';
+    import { fade } from 'svelte/transition';
     
     const tabs = [
       { id: 'single', icon: '🔗', label: 'Single URL', description: 'Convert a single webpage' },
@@ -22,11 +22,10 @@
         aria-controls="tab-content-{tab.id}"
         title={tab.description}
       >
-        <span class="tab-icon" aria-hidden="true">{tab.icon}</span>
-        <span class="tab-label">{tab.label}</span>
-        {#if $uploadStore.activeTab === tab.id}
-          <div class="active-indicator" transition:slide></div>
-        {/if}
+        <div class="tab-content" in:fade={{ duration: 200 }}>
+          <span class="tab-icon" aria-hidden="true">{tab.icon}</span>
+          <span class="tab-label">{tab.label}</span>
+        </div>
       </button>
     {/each}
     </div>
@@ -57,14 +56,15 @@
       -webkit-mask-composite: xor;
       mask-composite: exclude;
       pointer-events: none;
-      opacity: 0.3;
+      opacity: 0.2;
     }
   
     .tabs-container {
       display: flex;
-      gap: var(--spacing-xs);
+      gap: var(--spacing-sm);
       position: relative;
       z-index: 1;
+      padding: var(--spacing-xs);
     }
   
     .tab-button {
@@ -73,96 +73,111 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: var(--spacing-xs);
-      padding: var(--spacing-sm) var(--spacing-md);
+      padding: var(--spacing-sm);
       background: transparent;
       border: none;
-      border-radius: var(--rounded-md);
+      border-radius: var(--rounded-lg);
       color: var(--color-text-secondary);
-      font-size: var(--font-size-sm);
+      font-size: var(--font-size-base);
       font-weight: var(--font-weight-medium);
       cursor: pointer;
       transition: all var(--transition-duration-normal);
       overflow: hidden;
+      min-height: 60px;
     }
 
     .tab-button::before {
       content: "";
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: var(--rounded-md);
-      padding: 2px;
+      inset: 0;
       background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-      -webkit-mask: 
-          linear-gradient(#fff 0 0) content-box, 
-          linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
       opacity: 0;
       transition: opacity var(--transition-duration-normal);
+      border-radius: var(--rounded-lg);
     }
-  
+
     .tab-button:hover:not(.active)::before {
-      opacity: 0.2;
+      opacity: 0.05;
     }
-  
+
     .tab-button.active::before {
-      opacity: 0.3;
+      opacity: 0.1;
+    }
+
+    .tab-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--spacing-xs);
+      position: relative;
+      z-index: 1;
     }
   
     .tab-icon {
-      font-size: 1.2em;
-      position: relative;
-      z-index: 1;
+      font-size: 1.5em;
+      transition: transform var(--transition-duration-normal);
     }
 
     .tab-label {
-      position: relative;
-      z-index: 1;
+      font-weight: var(--font-weight-medium);
+      transition: color var(--transition-duration-normal);
     }
-  
-    .active-indicator {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: linear-gradient(90deg, var(--color-prime), var(--color-second));
-      border-radius: var(--rounded-full);
+
+    .tab-button:hover .tab-icon,
+    .tab-button.active .tab-icon {
+      transform: scale(1.1);
+    }
+
+    .tab-button.active .tab-label {
+      color: var(--color-text);
     }
   
     @media (max-width: 640px) {
       .tabs-container {
         flex-direction: column;
+        padding: var(--spacing-2xs);
+        gap: var(--spacing-xs);
       }
   
       .tab-button {
+        min-height: unset;
+        padding: var(--spacing-xs) var(--spacing-sm);
+      }
+
+      .tab-content {
+        flex-direction: row;
         justify-content: flex-start;
-        padding: var(--spacing-sm);
+        gap: var(--spacing-sm);
+      }
+
+      .tab-icon {
+        font-size: 1.2em;
       }
     }
   
     /* High Contrast Mode */
     @media (prefers-contrast: high) {
-      .tabs-nav::before,
-      .tab-button::before {
+      .tabs-nav::before {
         padding: 3px;
         opacity: 1;
+      }
+
+      .tab-button.active::before {
+        opacity: 0.3;
       }
     }
   
     /* Reduced Motion */
     @media (prefers-reduced-motion: reduce) {
-      .tab-button {
+      .tab-button,
+      .tab-icon,
+      .tab-label {
         transition: none;
       }
 
-      .tab-button::before {
-        transition: none;
+      .tab-button:hover .tab-icon,
+      .tab-button.active .tab-icon {
+        transform: none;
       }
     }
 </style>
