@@ -68,6 +68,7 @@
     padding: var(--spacing-md);
     border-radius: var(--rounded-lg);
     position: relative;
+    background: rgba(var(--color-prime-rgb), 0.02);
   }
 
   .professor-header::before {
@@ -105,29 +106,10 @@
 
   .scroll-message {
     padding: var(--spacing-md);
-    background: transparent;
+    background: rgba(var(--color-prime-rgb), 0.02);
     border-radius: var(--rounded-lg);
     position: relative;
     color: var(--color-text);
-  }
-
-  .scroll-message::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--rounded-lg);
-    padding: 2px;
-    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    opacity: 0.2;
   }
 
   .video-section {
@@ -135,6 +117,7 @@
     border-radius: var(--rounded-lg);
     position: relative;
     margin: var(--spacing-lg) 0;
+    background: rgba(var(--color-prime-rgb), 0.03);
   }
 
   .video-section::before {
@@ -173,28 +156,10 @@
   .enchanted-scroll {
     margin-top: var(--spacing-lg);
     padding: var(--spacing-lg);
-    background: transparent;
+    background: rgba(var(--color-prime-rgb), 0.02);
     border-radius: var(--rounded-lg);
     position: relative;
-  }
-
-  .enchanted-scroll::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--rounded-lg);
-    padding: 2px;
-    background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    opacity: 0.3;
+    box-shadow: var(--shadow-sm);
   }
 
   .enchanted-scroll h4 {
@@ -231,34 +196,16 @@
     position: relative;
   }
 
-  .crystal-ball::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-radius: var(--rounded-lg);
-    padding: 2px;
-    background: linear-gradient(135deg, var(--color-second), var(--color-prime));
-    -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    pointer-events: none;
-    opacity: 0.2;
-  }
-
   /* High Contrast Mode */
   @media (prefers-contrast: high) {
     .professor-header::before,
-    .scroll-message::before,
-    .video-section::before,
-    .enchanted-scroll::before,
-    .crystal-ball::before {
+    .video-section::before {
       padding: 3px;
       opacity: 1;
+    }
+
+    .enchanted-scroll {
+      border: 2px solid var(--color-prime);
     }
   }
 </style>
