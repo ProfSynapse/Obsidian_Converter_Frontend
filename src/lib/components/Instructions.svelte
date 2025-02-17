@@ -35,10 +35,6 @@
           For example, if you put in "<em>www.example.com/guide</em>", it will convert that page <strong>AND</strong> all the pages it links to.
         </li>
         <li>
-          <strong>YouTube Videos</strong> - Copy and paste any YouTube video link 
-          (it should look like "<em>youtube.com/watch?v=...</em>"). This will create notes from the video content.
-        </li>
-        <li>
           <strong>Files from Your Computer</strong> - Click the upload box or drag files into it. You can add:
           <ul class="sub-list">
             <li>Regular documents (like Word files or PDFs) - up to 50MB per file</li>

@@ -44,22 +44,22 @@ export const CONFIG = {
             video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
             data: ['csv', 'xlsx']
         },
-        TYPES: {
-            // Document types
-            FILE: 'file',
-            DOCUMENT: 'document',
-            
-            // Web types
-            URL: 'url',
-            PARENT_URL: 'parenturl',
-            
-            // Multimedia types
-            AUDIO: 'audio',
-            VIDEO: 'video',
-            
-            // Batch processing
-            BATCH: 'batch'
-        },
+            TYPES: {
+                // Document types
+                FILE: 'file',
+                DOCUMENT: 'document',
+                
+                // Web types
+                URL: 'url',
+                PARENT_URL: 'parenturl',
+                
+                // Multimedia types
+                AUDIO: 'audio',
+                VIDEO: 'video',
+                
+                // Batch processing
+                BATCH: 'batch'
+            },
         API_REQUIRED: [
             'mp3', 'wav', 'm4a',
             'mp4', 'webm', 'avi'

@@ -13,7 +13,6 @@ function generateEndpoints(baseUrl) {
         CONVERT_FILE: '/document/file',
         CONVERT_URL: '/web/url',
         CONVERT_PARENT_URL: '/web/parent-url',
-        CONVERT_YOUTUBE: '/web/youtube',
         CONVERT_BATCH: '/batch',
         CONVERT_AUDIO: '/multimedia/audio',
         CONVERT_VIDEO: '/multimedia/video'
@@ -87,7 +86,6 @@ export function getEndpointUrl(type, id = null) {
         url: ENDPOINTS.CONVERT_URL,
         file: ENDPOINTS.CONVERT_FILE,
         parent: ENDPOINTS.CONVERT_PARENT_URL,
-        youtube: ENDPOINTS.CONVERT_YOUTUBE,
         batch: ENDPOINTS.CONVERT_BATCH,
         audio: ENDPOINTS.CONVERT_AUDIO,
         video: ENDPOINTS.CONVERT_VIDEO

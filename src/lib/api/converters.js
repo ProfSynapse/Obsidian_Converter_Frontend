@@ -142,15 +142,6 @@ export class Converters {
   }
 
   /**
-   * Converts a YouTube video
-   * @public
-   */
-  static async convertYoutube(input, apiKey) {
-    const options = this._prepareRequest(input, 'youtube', apiKey);
-    return this._makeConversionRequest(ENDPOINTS.CONVERT_YOUTUBE, options, 'YouTube');
-  }
-
-  /**
    * Converts a parent URL and its linked pages
    * @public
    */
@@ -237,6 +228,5 @@ export class Converters {
 export const {
   convertUrl,
   convertBatch,
-  convertYoutube,
   convertParentUrl
 } = Converters;
