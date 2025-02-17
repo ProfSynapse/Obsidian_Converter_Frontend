@@ -23,16 +23,6 @@
 </svelte:head>
 
 <div class="app-shell">
-  <!-- Header -->
-  <header class="header animate-slide-in">
-    <div class="flex items-center justify-center text-center w-full">
-      <h1 class="header-title">
-        <span class="icon">📝</span>
-        <span>Markdown Note Converter</span>
-      </h1>
-    </div>
-  </header>
-
   <!-- Main Content -->
   <main class="main animate-fade-in">
     <div class="content-area">
@@ -53,31 +43,6 @@
     box-sizing: border-box;
     align-items: center;
     gap: var(--spacing-md);
-  }
-
-  /* Header Styles */
-  .header {
-    position: relative;
-    background-color: rgba(var(--color-prime), 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding: var(--spacing-md) 0;
-    width: 100%;
-  }
-
-  .header-title {
-    font-size: var(--font-size-4xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-on-dark);
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-sm);
-  }
-
-  .header-title .icon {
-    font-size: 1.5em;
   }
 
   /* Main Content Area */
@@ -119,10 +84,6 @@
     .app-shell {
       padding: var(--spacing-md);
       gap: var(--spacing-sm);
-    }
-
-    .header-title {
-      font-size: var(--font-size-2xl);
     }
 
     .main {
