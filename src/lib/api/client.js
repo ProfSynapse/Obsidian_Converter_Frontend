@@ -7,7 +7,6 @@ import { conversionStatus } from '../stores/conversionStatus.js';
 import { FileStatus } from '../stores/files.js';
 import { ENDPOINTS, getEndpointUrl } from './endpoints.js';
 import { makeRequest } from './requestHandler.js';
-import { sanitizeFilename } from '../utils/fileUtils.js';
 
 /**
  * Manages file conversion operations and tracks their status
@@ -83,6 +82,7 @@ class ConversionClient {
       name: item.name?.trim() || 'Untitled',
       url: normalizedUrl,
       content: normalizedContent,
+      file: item.file,  // Preserve the file object
       options: {
         includeImages: true,
         includeMeta: true,
@@ -124,7 +124,7 @@ class ConversionClient {
    * @private
    */
   async makeRequest(endpoint, options) {
-    const fullEndpoint = `${this.baseUrl}${endpoint}`;
+    const fullEndpoint = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
     return makeRequest(fullEndpoint, options);
   }
 
@@ -188,8 +188,13 @@ class ConversionClient {
                 }
               })
             });
-          } else if (item.file) {
-            // Validate file size
+          } else if (item.file instanceof File) {
+            // Validate file exists and is a File object
+            if (!item.file) {
+              throw new ConversionError('File data is missing');
+            }
+
+            // Additional size validation
             if (item.file.size > this.config.CONVERSION.FILE_SIZE_LIMIT) {
               throw new ConversionError(
                 `File size exceeds limit of ${this.config.CONVERSION.FILE_SIZE_LIMIT / (1024 * 1024)}MB`,
@@ -198,21 +203,11 @@ class ConversionClient {
             }
 
             const formData = new FormData();
-            
-            // Create a new file object with sanitized filename
-            const originalFile = item.file;
-            const sanitizedFilename = sanitizeFilename(originalFile.name);
-            const sanitizedFile = new File(
-              [originalFile], 
-              sanitizedFilename, 
-              { type: originalFile.type }
-            );
-            
-            // Add the sanitized file and include original filename in options
-            formData.append('file', sanitizedFile);
+            formData.append('file', item.file);
             formData.append('options', JSON.stringify({
-              ...(item.options || {}),
-              originalFilename: originalFile.name
+              ...item.options,
+              filename: item.file.name,
+              fileType: item.file.type
             }));
   
             result = await this.makeRequest(endpoint, {
@@ -223,6 +218,17 @@ class ConversionClient {
               },
               body: formData
             });
+
+            // Log FormData content for debugging
+            if (import.meta.env.DEV) {
+              console.log('FormData contents:', {
+                fileName: item.file.name,
+                fileSize: item.file.size,
+                fileType: item.file.type,
+                endpoint: endpoint,
+                options: item.options
+              });
+            }
           } else {
             throw new ConversionError('Invalid item format - must provide either a URL or file');
           }
@@ -251,18 +257,17 @@ class ConversionClient {
   
   getDefaultEndpoint(item) {
     const type = this.getItemType(item);
-    const basePath = '/api/v1';
     
     const endpointMap = {
-      audio: `${basePath}/multimedia/audio`,
-      video: `${basePath}/multimedia/video`,
-      url: `${basePath}/web/url`,
-      parent: `${basePath}/web/parent-url`,
-      youtube: `${basePath}/web/youtube`,
-      file: `${basePath}/document/file`
+      audio: ENDPOINTS.CONVERT_AUDIO,
+      video: ENDPOINTS.CONVERT_VIDEO,
+      url: ENDPOINTS.CONVERT_URL,
+      parent: ENDPOINTS.CONVERT_PARENT_URL,
+      youtube: ENDPOINTS.CONVERT_YOUTUBE,
+      file: ENDPOINTS.CONVERT_FILE
     };
     
-    return endpointMap[type] || `${basePath}/document/file`;
+    return endpointMap[type] || ENDPOINTS.CONVERT_FILE;
   }
 
   getItemType(item) {
@@ -287,11 +292,11 @@ class ConversionClient {
   }
 
   isAudioType(ext) {
-    return this.config.FILES.CATEGORIES.audio.includes(ext);
+    return ext && this.config.FILES.CATEGORIES.audio.includes(ext);
   }
 
   isVideoType(ext) {
-    return this.config.FILES.CATEGORIES.video.includes(ext);
+    return ext && this.config.FILES.CATEGORIES.video.includes(ext);
   }
 
   async _getErrorMessage(response) {

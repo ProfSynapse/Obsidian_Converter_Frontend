@@ -23,9 +23,20 @@ function generateEndpoints(baseUrl) {
     if (baseUrl) {
         // Remove trailing slashes and normalize
         const normalizedBase = baseUrl.replace(/\/+$/, '');
-        const apiBase = normalizedBase.includes('/api/v1') ? 
-            normalizedBase : 
-            `${normalizedBase}/api/v1`;
+        
+        // Extract existing /api/v1 if present
+        const baseWithoutApiV1 = normalizedBase.replace(/\/api\/v1\/?$/, '');
+        const apiBase = `${baseWithoutApiV1}/api/v1`;
+
+        // Log the URL construction in development
+        if (import.meta.env.DEV) {
+            console.log('Endpoint construction:', {
+                original: baseUrl,
+                normalized: normalizedBase,
+                withoutApiV1: baseWithoutApiV1,
+                final: apiBase
+            });
+        }
 
         return Object.fromEntries(
             Object.entries(endpoints).map(([key, path]) => [

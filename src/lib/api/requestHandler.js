@@ -44,14 +44,41 @@ export class RequestHandler {
    * Logs request details for debugging
    * @private 
    */
-  static _logRequest(endpoint, options, body) {
-    const requestInfo = {
-      endpoint,
-      method: options.method,
-      headers: options.headers,
-      body: typeof body === 'string' ? JSON.parse(body) : body
-    };
-    console.log('🚀 Request Details:', requestInfo);
+  static _logRequest(endpoint, options) {
+    try {
+      const requestInfo = {
+        endpoint,
+        method: options.method,
+        headers: options.headers,
+      };
+
+      // Safely log FormData contents
+      if (options.body instanceof FormData) {
+        const formDataEntries = {};
+        for (let pair of options.body.entries()) {
+          if (pair[0] === 'file') {
+            formDataEntries[pair[0]] = {
+              name: pair[1].name,
+              type: pair[1].type,
+              size: pair[1].size
+            };
+          } else {
+            formDataEntries[pair[0]] = pair[1];
+          }
+        }
+        requestInfo.formData = formDataEntries;
+      } else if (typeof options.body === 'string') {
+        try {
+          requestInfo.body = JSON.parse(options.body);
+        } catch {
+          requestInfo.body = options.body;
+        }
+      }
+
+      console.log('🚀 Request Details:', requestInfo);
+    } catch (error) {
+      console.error('Error logging request:', error);
+    }
   }
 
   /**
@@ -59,12 +86,27 @@ export class RequestHandler {
    * @private
    */
   static _logResponse(response, data) {
-    console.log('📥 Response:', {
-      status: response.status,
-      statusText: response.statusText,
-      headers: Object.fromEntries(response.headers.entries()),
-      data
-    });
+    try {
+      const responseInfo = {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        url: response.url
+      };
+
+      if (data instanceof Blob) {
+        responseInfo.data = {
+          type: data.type,
+          size: data.size
+        };
+      } else {
+        responseInfo.data = data;
+      }
+
+      console.log('📥 Response:', responseInfo);
+    } catch (error) {
+      console.error('Error logging response:', error);
+    }
   }
 
   /**
@@ -72,9 +114,10 @@ export class RequestHandler {
    * @private
    */
   static _getResponseType(contentType) {
+    if (!contentType) return ResponseTypes.TEXT;
     if (contentType.includes('application/json')) return ResponseTypes.JSON;
     if (contentType.includes('application/zip') ||
-      contentType.includes('application/octet-stream')) return ResponseTypes.BLOB;
+        contentType.includes('application/octet-stream')) return ResponseTypes.BLOB;
     return ResponseTypes.TEXT;
   }
 
@@ -93,12 +136,23 @@ export class RequestHandler {
         keepalive: true
       };
 
+      // Validate request body exists for POST requests
+      if (requestOptions.method === 'POST' && !requestOptions.body) {
+        throw new ConversionError('Request body is required for POST requests', 'VALIDATION_ERROR');
+      }
+
       // Handle FormData specifically
       if (options.body instanceof FormData) {
-        // Don't set Content-Type for FormData
         delete requestOptions.headers['Content-Type'];
+        
+        // Validate FormData contents for file uploads
+        const fileEntry = Array.from(options.body.entries())
+          .find(entry => entry[0] === 'file' && entry[1] instanceof File);
+        
+        if (!fileEntry) {
+          throw new ConversionError('File data is missing from FormData', 'VALIDATION_ERROR');
+        }
       } else if (!(options.body instanceof Blob)) {
-        // Set Content-Type for JSON requests
         requestOptions.headers['Content-Type'] = 'application/json';
       }
 
@@ -108,12 +162,26 @@ export class RequestHandler {
       const response = await fetch(endpoint, requestOptions);
       console.log('📦 Response received:', {
         status: response.status,
-        contentType: response.headers.get('Content-Type')
+        contentType: response.headers.get('Content-Type'),
+        url: response.url
       });
       
       return await RequestHandler._handleResponse(response);
     } catch (error) {
-      console.error('Request failed:', error);
+      console.error('🔥 Request failed:', {
+        error: error.message,
+        stack: error.stack,
+        endpoint
+      });
+
+      // Convert fetch errors to ConversionError
+      if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+        throw new ConversionError(
+          'Network error - please check your connection',
+          'NETWORK_ERROR'
+        );
+      }
+
       throw error;
     }
   }
@@ -123,7 +191,6 @@ export class RequestHandler {
    * @private
    */
   static async _handleResponse(response) {
-    // Clone the response for error checking
     const responseForError = response.clone();
     const contentType = response.headers.get('Content-Type') || '';
     const responseType = this._getResponseType(contentType);
@@ -133,20 +200,12 @@ export class RequestHandler {
       console.error('❌ Error Response:', {
         status: response.status,
         headers: Object.fromEntries(response.headers.entries()),
-        body: errorText
+        body: errorText,
+        url: response.url
       });
 
       const errorData = this._parseErrorResponse(errorText, response.status);
       
-      // Enhanced error logging with structured data
-      console.error('🚨 API Error:', {
-        status: response.status,
-        statusText: response.statusText,
-        data: errorData,
-        endpoint: response.url
-      });
-
-      // Handle structured API errors
       if (errorData.status === 'error' && errorData.error) {
         throw new ConversionError(
           errorData.error.message || 'Unknown server error',
@@ -155,7 +214,6 @@ export class RequestHandler {
         );
       }
 
-      // Fallback for unstructured errors
       throw new ConversionError(
         errorData.message || `Request failed with status ${response.status}`,
         'API_ERROR',
@@ -166,35 +224,43 @@ export class RequestHandler {
     let data;
     console.log('🔍 Processing response of type:', responseType);
     
-    // Determine if this should be treated as a blob download
     const isDownloadable = response.headers.get('Content-Disposition')?.includes('attachment') ||
                           response.headers.get('Content-Type')?.includes('application/zip') ||
                           responseType === ResponseTypes.BLOB;
 
-    if (isDownloadable) {
-      console.log('📦 Processing as downloadable content');
-      data = await response.blob();
-      console.log('📦 Blob created:', {
-        size: data.size,
-        type: data.type
-      });
-    } else {
-      switch (responseType) {
-        case ResponseTypes.JSON:
-          console.log('📋 Processing JSON response...');
-          data = await response.json();
-          if (!data.success) {
-            throw ConversionError.fromResponse(data);
-          }
-          break;
-        default:
-          console.log('📝 Processing text response...');
-          data = await response.text();
+    try {
+      if (isDownloadable) {
+        console.log('📦 Processing as downloadable content');
+        data = await response.blob();
+        console.log('📦 Blob created:', {
+          size: data.size,
+          type: data.type
+        });
+      } else {
+        switch (responseType) {
+          case ResponseTypes.JSON:
+            console.log('📋 Processing JSON response...');
+            data = await response.json();
+            if (!data.success) {
+              throw ConversionError.fromResponse(data);
+            }
+            break;
+          default:
+            console.log('📝 Processing text response...');
+            data = await response.text();
+        }
       }
-    }
 
-    this._logResponse(response, data);
-    return data;
+      this._logResponse(response, data);
+      return data;
+    } catch (error) {
+      console.error('Error processing response:', error);
+      throw new ConversionError(
+        'Failed to process server response',
+        'RESPONSE_ERROR',
+        { originalError: error.message }
+      );
+    }
   }
 
   /**
@@ -209,45 +275,6 @@ export class RequestHandler {
         message: errorText || `HTTP error ${status}`,
         status
       };
-    }
-  }
-
-  /**
-   * Handles request errors and implements retry logic
-   * @private
-   */
-  static async _handleError(error) {
-    console.error('🔥 Request failed:', error);
-    throw error;
-  }
-
-  /**
-   * Determines if request should be retried
-   * @private
-   */
-  static _shouldRetry(error) {
-    // Don't retry validation or 400 errors
-    if ((error instanceof ConversionError && error.code === 'VALIDATION_ERROR') ||
-      error.status === 400 || (error.response?.status === 400)) {
-      return false;
-    }
-
-    // Retry network and timeout errors
-    return error instanceof ConversionError ?
-      ErrorUtils.isRetryable(error) :
-      ['NetworkError', 'AbortError', 'TimeoutError'].includes(error.name);
-  }
-
-  /**
-   * Creates an error object from response
-   * @private
-   */
-  static async _createErrorFromResponse(response) {
-    try {
-      const errorData = await response.json();
-      return new Error(errorData.message || `Request failed with status ${response.status}`);
-    } catch {
-      return new Error(`Request failed with status ${response.status}`);
     }
   }
 }
