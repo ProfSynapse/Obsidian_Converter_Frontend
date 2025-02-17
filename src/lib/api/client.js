@@ -7,6 +7,7 @@ import { conversionStatus } from '../stores/conversionStatus.js';
 import { FileStatus } from '../stores/files.js';
 import { ENDPOINTS, getEndpointUrl } from './endpoints.js';
 import { makeRequest } from './requestHandler.js';
+import { sanitizeFilename } from '../utils/fileUtils.js';
 
 /**
  * Manages file conversion operations and tracks their status
@@ -197,8 +198,22 @@ class ConversionClient {
             }
 
             const formData = new FormData();
-            formData.append('file', item.file);
-            formData.append('options', JSON.stringify(item.options || {}));
+            
+            // Create a new file object with sanitized filename
+            const originalFile = item.file;
+            const sanitizedFilename = sanitizeFilename(originalFile.name);
+            const sanitizedFile = new File(
+              [originalFile], 
+              sanitizedFilename, 
+              { type: originalFile.type }
+            );
+            
+            // Add the sanitized file and include original filename in options
+            formData.append('file', sanitizedFile);
+            formData.append('options', JSON.stringify({
+              ...(item.options || {}),
+              originalFilename: originalFile.name
+            }));
   
             result = await this.makeRequest(endpoint, {
               method: 'POST',

@@ -100,7 +100,35 @@ export function formatFileSize(bytes) {
     unitIndex++;
   }
   
-  return `${Math.round(size * 100) / 100} ${units[unitIndex]}`;
+    return `${Math.round(size * 100) / 100} ${units[unitIndex]}`;
+}
+
+/**
+ * Sanitizes a filename to ensure it only contains safe characters
+ * @param {string} filename - The original filename to sanitize
+ * @returns {string} - The sanitized filename
+ */
+export function sanitizeFilename(filename) {
+    if (!filename) return 'unnamed-file';
+
+    // Split the filename into name and extension
+    const lastDotIndex = filename.lastIndexOf('.');
+    const name = lastDotIndex === -1 ? filename : filename.slice(0, lastDotIndex);
+    const ext = lastDotIndex === -1 ? '' : filename.slice(lastDotIndex);
+
+    // Sanitize the name part:
+    // 1. Replace non-alphanumeric characters with hyphens
+    // 2. Convert to lowercase
+    // 3. Remove consecutive hyphens
+    // 4. Trim hyphens from start/end
+    const sanitizedName = name
+        .replace(/[^a-zA-Z0-9]/g, '-')  // Replace special chars with hyphens
+        .toLowerCase()
+        .replace(/-+/g, '-')    // Replace multiple hyphens with single hyphen
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+
+    // Combine sanitized name with original extension
+    return sanitizedName + ext.toLowerCase();
 }
 
 /**
