@@ -7,10 +7,6 @@
   
   const dispatch = createEventDispatcher();
 
-  /**
-   * Handles individual file removal
-   * @param {CustomEvent} event - The removal event
-   */
   function handleRemove(event) {
       const { id } = event.detail;
       if (!id) return;
@@ -18,7 +14,6 @@
       const result = files.removeFile(id);
       if (result.success) {
           dispatch('fileRemoved', { id, file: result.file });
-          // Clear store if this was the last file
           if ($files.length === 0) {
               files.clearFiles();
           }
@@ -27,10 +22,6 @@
       }
   }
 
-  /**
-   * Handles file selection
-   * @param {CustomEvent} event - The selection event
-   */
   function handleSelect(event) {
       const { id, selected } = event.detail;
       if (!id) return;
@@ -51,7 +42,6 @@
   function deleteSelected() {
       const selectedIds = $files.filter(f => f.selected).map(f => f.id);
       selectedIds.forEach(id => files.removeFile(id));
-      // Clear store if all files were selected
       if (selectedIds.length === $files.length) {
           files.clearFiles();
       }
@@ -109,30 +99,11 @@
       flex-direction: column;
       gap: var(--spacing-md);
       width: 100%;
-      background: transparent;
+      background: rgba(var(--color-prime-rgb), 0.02);
       border-radius: var(--rounded-lg);
       padding: var(--spacing-md);
       position: relative;
       box-shadow: var(--shadow-sm);
-  }
-
-  /* Gradient border */
-  .file-list-container::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: var(--rounded-lg);
-      padding: 2px;
-      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-      -webkit-mask: 
-          linear-gradient(#fff 0 0) content-box, 
-          linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
   }
 
   .file-list-actions {
@@ -145,36 +116,18 @@
   }
 
   .action-button {
-      padding: var(--spacing-xs) var(--spacing-sm);
+      padding: var(--spacing-xs) var(--spacing-md);
       border-radius: var(--rounded-md);
       position: relative;
-      background: transparent;
-      color: var(--color-text);
+      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
+      color: white;
       font-weight: 500;
       cursor: pointer;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
       gap: var(--spacing-xs);
-      overflow: hidden;
-  }
-
-  .action-button::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: var(--rounded-md);
-      padding: 2px;
-      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-      -webkit-mask: 
-          linear-gradient(#fff 0 0) content-box, 
-          linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
+      border: none;
   }
 
   .action-button:hover {
@@ -183,15 +136,12 @@
   }
 
   .delete-button {
-      color: var(--color-error);
-  }
-
-  .delete-button::before {
       background: linear-gradient(135deg, var(--color-error), var(--color-error-light));
   }
 
   .delete-button:hover {
-      background: rgba(var(--color-error-rgb), 0.1);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
   }
 
   .file-list {
@@ -201,30 +151,12 @@
       max-height: 400px;
       overflow-y: auto;
       padding: var(--spacing-xs);
-      background: transparent;
+      background: rgba(var(--color-prime-rgb), 0.03);
       border-radius: var(--rounded-md);
       scrollbar-width: thin;
       scrollbar-color: var(--color-border) transparent;
       position: relative;
       z-index: 1;
-  }
-
-  .file-list::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: var(--rounded-md);
-      padding: 2px;
-      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-      -webkit-mask: 
-          linear-gradient(#fff 0 0) content-box, 
-          linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
   }
 
   .file-list::-webkit-scrollbar {
@@ -251,26 +183,8 @@
       text-align: center;
       padding: var(--spacing-xl);
       color: var(--color-text-secondary);
-      background: transparent;
+      background: rgba(var(--color-prime-rgb), 0.02);
       border-radius: var(--rounded-lg);
       position: relative;
-  }
-
-  .empty-state::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border-radius: var(--rounded-lg);
-      padding: 2px;
-      background: linear-gradient(135deg, var(--color-prime), var(--color-second));
-      -webkit-mask: 
-          linear-gradient(#fff 0 0) content-box, 
-          linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-      mask-composite: exclude;
-      pointer-events: none;
   }
 </style>
