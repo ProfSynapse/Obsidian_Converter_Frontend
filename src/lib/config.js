@@ -5,8 +5,8 @@ const ENV = {
         'https://backend-production-6e08.up.railway.app/api/v1' : 
         'http://localhost:3000/api/v1',
     MAX_PAYLOAD_SIZE: 500 * 1024 * 1024, // 500MB - matching backend
-    CORS_ORIGIN: import.meta.env.VITE_ORIGIN || 'https://frontend-production-2748.up.railway.app',
-    BACKEND_URL: import.meta.env.VITE_BACKEND_URL || 'https://backend-production-6e08.up.railway.app'
+    CORS_ORIGIN: process.env.VITE_ORIGIN || import.meta.env.VITE_ORIGIN || 'https://frontend-production-2748.up.railway.app',
+    BACKEND_URL: process.env.VITE_BACKEND_URL || import.meta.env.VITE_BACKEND_URL || 'https://backend-production-6e08.up.railway.app'
 };
 
 // Export URLs for other modules
@@ -22,8 +22,7 @@ export const CONFIG = {
         BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Origin': ENV.CORS_ORIGIN
+            'Accept-Encoding': 'gzip, deflate, br'
         },
         ENDPOINTS: {
             FILE: '/document/file',
@@ -43,6 +42,7 @@ export const CONFIG = {
 
     CORS: {
         ORIGIN: ENV.CORS_ORIGIN,
+        BACKEND_URL: ENV.BACKEND_URL,
         CREDENTIALS: true,
         METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         ALLOWED_HEADERS: [
@@ -56,6 +56,7 @@ export const CONFIG = {
         ]
     },
 
+    // ... rest of the configuration remains the same ...
     FILES: {
         CATEGORIES: {
             documents: ['pdf', 'docx', 'pptx'],
@@ -64,19 +65,12 @@ export const CONFIG = {
             data: ['csv', 'xlsx']
         },
         TYPES: {
-            // Document types
             FILE: 'file',
             DOCUMENT: 'document',
-            
-            // Web types
             URL: 'url',
             PARENT_URL: 'parenturl',
-            
-            // Multimedia types
             AUDIO: 'audio',
             VIDEO: 'video',
-            
-            // Batch processing
             BATCH: 'batch'
         },
         API_REQUIRED: [
@@ -101,8 +95,8 @@ export const CONFIG = {
         PREPARING: 10,
         CONVERTING: 20,
         PROCESSING: 40,
-        STREAMING: 60,     // New streaming state
-        DOWNLOADING: 80,   // New downloading state
+        STREAMING: 60,
+        DOWNLOADING: 80,
         FINALIZING: 90,
         COMPLETE: 100
     },
@@ -117,9 +111,9 @@ export const CONFIG = {
         BATCH_SIZE_LIMIT: 30,
         FILE_SIZE_LIMIT: ENV.MAX_PAYLOAD_SIZE,
         COMPRESSION: {
-            LEVEL: 6,           // Matching backend compression level
-            PLATFORM_SPECIFIC: true, // Enable platform-specific settings
-            USE_BATCHING: true  // Enable processing in batches
+            LEVEL: 6,
+            PLATFORM_SPECIFIC: true,
+            USE_BATCHING: true
         }
     },
 
@@ -127,8 +121,8 @@ export const CONFIG = {
         STATUSES: {
             READY: 'ready',
             CONVERTING: 'converting',
-            STREAMING: 'streaming',    // New streaming status
-            DOWNLOADING: 'downloading', // New downloading status
+            STREAMING: 'streaming',
+            DOWNLOADING: 'downloading',
             COMPLETED: 'completed',
             ERROR: 'error'
         },
@@ -152,8 +146,8 @@ export const CONFIG = {
         ERROR: 'error',
         PENDING: 'pending',
         PROCESSING: 'processing',
-        STREAMING: 'streaming',    // New streaming status
-        DOWNLOADING: 'downloading', // New downloading status
+        STREAMING: 'streaming',
+        DOWNLOADING: 'downloading',
         COMPLETED: 'completed',
         CANCELLED: 'cancelled'
     },
@@ -163,7 +157,7 @@ export const CONFIG = {
         NETWORK: 'NETWORK_ERROR',
         CONVERSION: 'CONVERSION_ERROR',
         TIMEOUT: 'TIMEOUT_ERROR',
-        STREAM: 'STREAM_ERROR',    // New streaming error type
+        STREAM: 'STREAM_ERROR',
         UNKNOWN: 'UNKNOWN_ERROR'
     },
 
@@ -172,7 +166,7 @@ export const CONFIG = {
     }
 };
 
-// Add environment checks
+// Log environment configuration in development
 if (import.meta.env.DEV) {
     console.log('Environment Configuration:', {
         env: import.meta.env.MODE,
@@ -193,7 +187,8 @@ export const ERRORS = {
     NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion',
     STREAM_ERROR: 'Error during file streaming',
     DOWNLOAD_ERROR: 'Error during file download',
-    CORS_ERROR: 'Cross-Origin Request Blocked - Please check CORS configuration'
+    CORS_ERROR: 'Cross-Origin Request Blocked - Please check CORS configuration',
+    SSR_ERROR: 'Operation not supported during server-side rendering'
 };
 
 // Export commonly used configurations
@@ -213,6 +208,17 @@ export const requiresApiKey = (file) => {
 // Helper to determine if streaming should be used
 export const shouldUseStreaming = (fileSize) => {
     return fileSize > CONFIG.API.STREAM.LARGE_FILE_THRESHOLD;
+};
+
+// Helper to check if code is running in browser
+export const isBrowser = () => typeof window !== 'undefined';
+
+// Helper to get environment-safe origin
+export const getOrigin = () => {
+    if (isBrowser()) {
+        return window.location.origin;
+    }
+    return CONFIG.CORS.ORIGIN;
 };
 
 // Freeze configurations to prevent modifications

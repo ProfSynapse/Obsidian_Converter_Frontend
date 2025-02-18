@@ -15,6 +15,23 @@ const ResponseTypes = {
 };
 
 /**
+ * Checks if code is running in browser environment
+ * @private
+ */
+const isBrowser = typeof window !== 'undefined';
+
+/**
+ * Gets origin for request headers
+ * @private
+ */
+const getOrigin = () => {
+  if (isBrowser) {
+    return window.location.origin;
+  }
+  return CONFIG.CORS.ORIGIN;
+};
+
+/**
  * Default request configuration with CORS settings
  */
 const DEFAULT_CONFIG = {
@@ -23,7 +40,7 @@ const DEFAULT_CONFIG = {
   headers: {
     'Accept': 'application/json, application/zip, application/octet-stream',
     'Accept-Encoding': 'gzip, deflate, br',
-    'Origin': window.location.origin
+    'Origin': getOrigin()
   }
 };
 
@@ -41,6 +58,20 @@ export class RequestHandler {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort('Request timeout'), timeout);
     return { controller, timeoutId };
+  }
+
+  /**
+   * Gets headers with safe origin handling
+   * @private
+   */
+  static _getHeaders(customHeaders = {}) {
+    const origin = getOrigin();
+    return {
+      ...DEFAULT_CONFIG.headers,
+      ...customHeaders,
+      'Origin': origin,
+      'Referer': origin
+    };
   }
 
   /**
@@ -182,12 +213,7 @@ export class RequestHandler {
         method: options.method || 'POST',
         mode: 'cors',
         credentials: 'include',
-        headers: {
-          ...DEFAULT_CONFIG.headers,
-          ...options.headers,
-          'Origin': window.location.origin,
-          'Referer': window.location.origin
-        },
+        headers: this._getHeaders(options.headers),
         body: options.body,
         signal: controller.signal
       };
@@ -202,6 +228,10 @@ export class RequestHandler {
         delete requestOptions.headers['Content-Type'];
         
         // Validate FormData contents for file uploads
+        if (!isBrowser) {
+          throw new ConversionError('File uploads are only supported in browser environment', 'VALIDATION_ERROR');
+        }
+
         const fileEntry = Array.from(options.body.entries())
           .find(entry => entry[0] === 'file' && entry[1] instanceof File);
         
