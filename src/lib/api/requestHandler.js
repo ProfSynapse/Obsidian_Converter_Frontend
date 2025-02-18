@@ -24,22 +24,10 @@ const DEFAULT_CONFIG = {
   keepalive: true
 };
 
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
-
 /**
  * Handles all API requests with consistent error handling and retries
  */
 export class RequestHandler {
-  /**
-   * Creates timeout controller for requests
-   * @private
-   */
-  static _createTimeoutController(timeout) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort('Request timeout'), timeout);
-    return { controller, timeoutId };
-  }
-
   /**
    * Logs request details for debugging
    * @private 

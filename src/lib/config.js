@@ -14,7 +14,6 @@ export const CONFIG = {
     API: {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
-        TIMEOUT: 120000, // 2 minutes
         BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream'
