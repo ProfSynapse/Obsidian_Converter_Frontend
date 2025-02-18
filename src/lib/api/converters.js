@@ -156,6 +156,8 @@ export class Converters {
     const requestBody = {
       parenturl: normalizedUrl,
       options: {
+        maxDepth: input.options?.depth || input.options?.maxDepth || 3,
+        maxPages: input.options?.maxPages || 100,
         includeImages: input.options?.includeImages ?? true,
         includeMeta: input.options?.includeMeta ?? true,
         convertLinks: input.options?.convertLinks ?? true

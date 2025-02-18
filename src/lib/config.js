@@ -1,24 +1,24 @@
-// Environment variables from Railway via Vite
+// Environment variables with fallbacks
 const ENV = {
-    API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
-    CORS_ORIGIN: import.meta.env.VITE_ORIGIN,
-    BACKEND_URL: import.meta.env.VITE_BACKEND_URL
+    API_BASE_URL: import.meta.env.PROD ? 
+        'https://backend-production-6e08.up.railway.app/api/v1' : 
+        'http://localhost:3000/api/v1',
+    MAX_PAYLOAD_SIZE: 50 * 1024 * 1024, // 50MB
+    CORS_ORIGIN: import.meta.env.VITE_CORS_ORIGIN || '*'
 };
 
-// Export URLs for other modules
-export const API_BASE_URL = ENV.API_BASE_URL;
-export const BACKEND_URL = ENV.BACKEND_URL;
-export const FRONTEND_URL = ENV.CORS_ORIGIN;
+// Use Railway's URL in production
+export const API_BASE_URL = import.meta.env.RAILWAY_API_BASE_URL;
 
-// Rest of the config remains the same...
 export const CONFIG = {
     API: {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
-        TIMEOUT: 600000, // 10 minutes - matching backend
+        TIMEOUT: 120000, // 2 minutes
         BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream'
+            // Don't set Content-Type here - let it be handled per request
         },
         ENDPOINTS: {
             FILE: '/document/file',
@@ -28,20 +28,13 @@ export const CONFIG = {
             AUDIO: '/multimedia/audio',
             VIDEO: '/multimedia/video'
         },
-        MAX_FILE_SIZE: 500 * 1024 * 1024 // 500MB - matching backend
+        MAX_FILE_SIZE: ENV.MAX_PAYLOAD_SIZE
     },
 
     CORS: {
         ORIGIN: ENV.CORS_ORIGIN,
-        BACKEND_URL: ENV.BACKEND_URL,
-        CREDENTIALS: true,
         METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        ALLOWED_HEADERS: [
-            'Content-Type',
-            'Authorization',
-            'Accept',
-            'Origin'
-        ]
+        ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'Accept']
     },
 
     FILES: {
@@ -51,15 +44,22 @@ export const CONFIG = {
             video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
             data: ['csv', 'xlsx']
         },
-        TYPES: {
-            FILE: 'file',
-            DOCUMENT: 'document',
-            URL: 'url',
-            PARENT_URL: 'parenturl',
-            AUDIO: 'audio',
-            VIDEO: 'video',
-            BATCH: 'batch'
-        },
+            TYPES: {
+                // Document types
+                FILE: 'file',
+                DOCUMENT: 'document',
+                
+                // Web types
+                URL: 'url',
+                PARENT_URL: 'parenturl',
+                
+                // Multimedia types
+                AUDIO: 'audio',
+                VIDEO: 'video',
+                
+                // Batch processing
+                BATCH: 'batch'
+            },
         API_REQUIRED: [
             'mp3', 'wav', 'm4a',
             'mp4', 'webm', 'avi'
@@ -78,13 +78,11 @@ export const CONFIG = {
 
     PROGRESS: {
         START: 0,
-        VALIDATING: 5,
-        PREPARING: 10,
-        CONVERTING: 20,
-        PROCESSING: 40,
-        STREAMING: 60,
-        DOWNLOADING: 80,
-        FINALIZING: 90,
+        VALIDATING: 10,
+        PREPARING: 20,
+        CONVERTING: 40,
+        PROCESSING: 60,
+        FINALIZING: 80,
         COMPLETE: 100
     },
 
@@ -93,18 +91,17 @@ export const CONFIG = {
         DEFAULT_OPTIONS: {
             includeImages: true,
             includeMeta: true,
+            maxDepth: 1,
             convertLinks: true
         },
-        BATCH_SIZE_LIMIT: 30,
-        FILE_SIZE_LIMIT: 500 * 1024 * 1024 // 500MB - matching backend
+        BATCH_SIZE_LIMIT: 10,
+        FILE_SIZE_LIMIT: 50 * 1024 * 1024, // 50MB
     },
 
     UI: {
         STATUSES: {
             READY: 'ready',
             CONVERTING: 'converting',
-            STREAMING: 'streaming',
-            DOWNLOADING: 'downloading',
             COMPLETED: 'completed',
             ERROR: 'error'
         },
@@ -128,8 +125,6 @@ export const CONFIG = {
         ERROR: 'error',
         PENDING: 'pending',
         PROCESSING: 'processing',
-        STREAMING: 'streaming',
-        DOWNLOADING: 'downloading',
         COMPLETED: 'completed',
         CANCELLED: 'cancelled'
     },
@@ -139,7 +134,6 @@ export const CONFIG = {
         NETWORK: 'NETWORK_ERROR',
         CONVERSION: 'CONVERSION_ERROR',
         TIMEOUT: 'TIMEOUT_ERROR',
-        STREAM: 'STREAM_ERROR',
         UNKNOWN: 'UNKNOWN_ERROR'
     },
 
@@ -148,16 +142,27 @@ export const CONFIG = {
     }
 };
 
-// Log environment in development only
+// Add CORS configuration check
 if (import.meta.env.DEV) {
-    console.log('Environment Configuration:', {
-        env: import.meta.env.MODE,
+    console.log('API Configuration:', {
         baseUrl: CONFIG.API.BASE_URL,
-        corsOrigin: CONFIG.CORS.ORIGIN,
-        backendUrl: ENV.BACKEND_URL,
-        maxFileSize: CONFIG.API.MAX_FILE_SIZE
+        maxFileSize: CONFIG.API.MAX_FILE_SIZE,
+        corsOrigin: CONFIG.CORS.ORIGIN
     });
 }
+
+// Error messages
+export const ERRORS = {
+    UNSUPPORTED_FILE_TYPE: 'Unsupported file type',
+    API_KEY_REQUIRED: 'API key is required',
+    INVALID_API_KEY: 'Invalid API key format',
+    INVALID_URL: 'Invalid URL format',
+    NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion'
+};
+
+// Export commonly used configurations
+export const { ITEM_TYPES, FILE_CATEGORIES, API_REQUIRED_TYPES } = CONFIG.FILES;
+export const { STATUSES, COLORS, CSS } = CONFIG.UI;
 
 // Helper functions
 export const requiresApiKey = (file) => {
@@ -167,29 +172,6 @@ export const requiresApiKey = (file) => {
         .pop()
         .toLowerCase();
     return CONFIG.FILES.API_REQUIRED.includes(ext);
-};
-
-// Helper to check if code is running in browser
-export const isBrowser = () => typeof window !== 'undefined';
-
-// Helper to get environment-safe origin
-export const getOrigin = () => {
-    if (isBrowser()) {
-        return window.location.origin;
-    }
-    return CONFIG.CORS.ORIGIN;
-};
-
-// Export ERRORS object after all definitions
-export const ERRORS = {
-    UNSUPPORTED_FILE_TYPE: 'Unsupported file type',
-    API_KEY_REQUIRED: 'API key is required',
-    INVALID_API_KEY: 'Invalid API key format',
-    INVALID_URL: 'Invalid URL format',
-    NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion',
-    STREAM_ERROR: 'Error during file streaming',
-    DOWNLOAD_ERROR: 'Error during file download',
-    CORS_ERROR: 'Cross-Origin Request Blocked - Please check CORS configuration'
 };
 
 // Freeze configurations to prevent modifications

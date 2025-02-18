@@ -1,6 +1,6 @@
 // src/lib/api/client.js
 
-import { CONFIG, isBrowser, getOrigin } from '../config';
+import { CONFIG } from '../config';
 import { ConversionError, ErrorUtils } from './errors.js';
 import { Converters } from './converters.js';
 import { conversionStatus } from '../stores/conversionStatus.js';
@@ -26,21 +26,10 @@ class ConversionClient {
    */
   _normalizeUrl(url) {
     try {
-      if (!url) return null;
-      
-      // Use URL constructor in browser, or a basic check in SSR
-      if (isBrowser()) {
-        const urlObj = new URL(url);
-        const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
-        urlObj.pathname = normalizedPath;
-        return urlObj.href.toLowerCase();
-      } else {
-        // Basic URL validation for SSR
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          throw new Error('Invalid URL format');
-        }
-        return url.toLowerCase();
-      }
+      const urlObj = new URL(url);
+      const normalizedPath = urlObj.pathname.replace(/\/+$/, '').toLowerCase();
+      urlObj.pathname = normalizedPath;
+      return urlObj.href.toLowerCase();
     } catch (error) {
       console.error('URL normalization error:', error);
       return url.toLowerCase();
@@ -70,10 +59,6 @@ class ConversionClient {
 
     // File validation for audio/video/document types
     if (item.file instanceof File) {
-      if (!isBrowser()) {
-        throw ConversionError.validation('File uploads are only supported in browser environment');
-      }
-
       const fileType = item.file.name.split('.').pop().toLowerCase();
       const determinedType = this.getItemType(item);
       
@@ -97,11 +82,15 @@ class ConversionClient {
       name: item.name?.trim() || 'Untitled',
       url: normalizedUrl,
       content: normalizedContent,
-      file: item.file,
+      file: item.file,  // Preserve the file object
       options: {
         includeImages: true,
         includeMeta: true,
         convertLinks: true,
+        ...(type === 'parent' && {
+          depth: item.options?.depth || 1,
+          maxPages: item.options?.maxPages || 10
+        }),
         ...item.options
       }
     };
@@ -123,14 +112,11 @@ class ConversionClient {
    * @private
    */
   _generateId() {
-    if (isBrowser()) {
-      try {
-        return crypto.randomUUID();
-      } catch (e) {
-        // Fallback
-      }
+    try {
+      return crypto.randomUUID();
+    } catch (e) {
+      return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     }
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   }
 
   /**
@@ -139,13 +125,7 @@ class ConversionClient {
    */
   async makeRequest(endpoint, options) {
     const fullEndpoint = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
-    return makeRequest(fullEndpoint, {
-      ...options,
-      headers: {
-        ...options.headers,
-        'Origin': getOrigin()
-      }
-    });
+    return makeRequest(fullEndpoint, options);
   }
 
   /**
@@ -155,10 +135,6 @@ class ConversionClient {
   async processItems(items, apiKey, options = {}) {
     if (!items?.length) {
       throw new ConversionError('No items provided for processing');
-    }
-
-    if (!isBrowser()) {
-      throw new ConversionError('File processing is only supported in browser environment', 'SSR_ERROR');
     }
   
     const { useBatch = false, onProgress, onItemComplete } = options;
@@ -174,31 +150,93 @@ class ConversionClient {
       const results = await Promise.all(items.map(async (item) => {
         try {
           const endpoint = this.getDefaultEndpoint(item);
-          const preparedItem = this._validateAndNormalizeItem(item);
+          let result;
   
-          if (preparedItem.type === 'url' || preparedItem.type === 'youtube') {
+          if (item.type === 'url' || item.type === 'youtube') {
             const urlData = {
-              url: preparedItem.url || preparedItem.content,
-              name: preparedItem.name || 'url-conversion',
-              options: preparedItem.options || {},
-              type: preparedItem.type
+              url: item.url || item.content,
+              name: item.name || 'url-conversion',
+              options: item.options || {},
+              type: item.type
             };
             
-            return await this.makeRequest(endpoint, {
+            result = await this.makeRequest(endpoint, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
                 'Accept': 'text/markdown, application/zip, application/octet-stream',
                 ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
-              body: JSON.stringify(urlData),
-              onProgress: (p) => onProgress?.(Math.min(Math.round(p), 100))
+              body: JSON.stringify(urlData)
             });
-          }
-          
-          // Handle rest of the code...
-          // (Rest of processItems implementation remains the same)
+          } else if (item.type === 'parent') {
+            result = await this.makeRequest(endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'text/markdown, application/zip, application/octet-stream',
+                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
+              },
+              body: JSON.stringify({
+                parenturl: item.url || item.content,
+                options: {
+                  includeImages: true,
+                  includeMeta: true,
+                  maxDepth: item.options?.maxDepth || 3,
+                  maxPages: item.options?.maxPages || 100,
+                  ...item.options
+                }
+              })
+            });
+          } else if (item.file instanceof File) {
+            // Validate file exists and is a File object
+            if (!item.file) {
+              throw new ConversionError('File data is missing');
+            }
 
+            // Additional size validation
+            if (item.file.size > this.config.CONVERSION.FILE_SIZE_LIMIT) {
+              throw new ConversionError(
+                `File size exceeds limit of ${this.config.CONVERSION.FILE_SIZE_LIMIT / (1024 * 1024)}MB`,
+                'VALIDATION_ERROR'
+              );
+            }
+
+            const formData = new FormData();
+            formData.append('file', item.file);
+            formData.append('options', JSON.stringify({
+              ...item.options,
+              filename: item.file.name,
+              fileType: item.file.type
+            }));
+  
+            result = await this.makeRequest(endpoint, {
+              method: 'POST',
+              headers: {
+                'Accept': 'text/markdown, application/zip, application/octet-stream',
+                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
+              },
+              body: formData
+            });
+
+            // Log FormData content for debugging
+            if (import.meta.env.DEV) {
+              console.log('FormData contents:', {
+                fileName: item.file.name,
+                fileSize: item.file.size,
+                fileType: item.file.type,
+                endpoint: endpoint,
+                options: item.options
+              });
+            }
+          } else {
+            throw new ConversionError('Invalid item format - must provide either a URL or file');
+          }
+  
+          progress += progressStep;
+          onProgress?.(Math.min(Math.round(progress), 100));
+          onItemComplete?.(item.id, true);
+          return result;
         } catch (error) {
           onItemComplete?.(item.id, false, error);
           throw error;
@@ -217,7 +255,76 @@ class ConversionClient {
     }
   }
   
-  // Rest of the class implementation remains the same...
+  getDefaultEndpoint(item) {
+    const type = this.getItemType(item);
+    
+    const endpointMap = {
+      audio: ENDPOINTS.CONVERT_AUDIO,
+      video: ENDPOINTS.CONVERT_VIDEO,
+      url: ENDPOINTS.CONVERT_URL,
+      parent: ENDPOINTS.CONVERT_PARENT_URL,
+      youtube: ENDPOINTS.CONVERT_YOUTUBE,
+      file: ENDPOINTS.CONVERT_FILE
+    };
+    
+    return endpointMap[type] || ENDPOINTS.CONVERT_FILE;
+  }
+
+  getItemType(item) {
+    if (!item) return 'file';
+    
+    const fileType = item.file?.name.split('.').pop().toLowerCase();
+    if (item.type === 'audio' || this.isAudioType(fileType)) return 'audio';
+    if (item.type === 'video' || this.isVideoType(fileType)) return 'video';
+    if (item.type === 'url') return 'url';
+    if (item.type === 'parent') return 'parent';
+    if (item.type === 'youtube') return 'youtube';
+    
+    // Check if it's a supported document type
+    if (this.config.FILES.CATEGORIES.documents.includes(fileType)) {
+      return 'file';
+    }
+    
+    throw new ConversionError(
+      `Unsupported file type: ${fileType}`,
+      'VALIDATION_ERROR'
+    );
+  }
+
+  isAudioType(ext) {
+    return ext && this.config.FILES.CATEGORIES.audio.includes(ext);
+  }
+
+  isVideoType(ext) {
+    return ext && this.config.FILES.CATEGORIES.video.includes(ext);
+  }
+
+  async _getErrorMessage(response) {
+    try {
+      const data = await response.json();
+      switch (response.status) {
+        case 400:
+          return data.message || 'Invalid file or upload interrupted';
+        case 404:
+          return 'Invalid API endpoint';
+        case 413:
+          return 'File size exceeds maximum limit of 50MB';
+        case 500:
+          return 'Server error during file processing';
+        default:
+          return data.message || 'Unknown error occurred';
+      }
+    } catch {
+      return 'Error processing server response';
+    }
+  }
+
+  cancelRequests() {
+    if (this.controller) {
+      this.controller.abort();
+      this.controller = null;
+    }
+  }
 }
 
 export default new ConversionClient();

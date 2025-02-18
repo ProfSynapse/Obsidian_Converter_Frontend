@@ -177,12 +177,14 @@ function createFilesStore() {
                 }
             }
 
-            // Handle duplicates as silent success without message
+            // Handle duplicates silently
             if (FileUtils.isDuplicate(files, newFile)) {
                 console.log('[filesStore] Duplicate URL detected - ignoring:', newFile.name);
                 return {
                     files,
-                    result: FileUtils.createResult(true)
+                    result: FileUtils.createResult(true, 
+                        'URL processed successfully'
+                    )
                 };
             }
 
@@ -191,7 +193,7 @@ function createFilesStore() {
                 return {
                     files: [...files, newFile],
                     result: FileUtils.createResult(true, 
-                        '', // No success message
+                        `Added "${newFile.name}" successfully`, 
                         newFile
                     )
                 };

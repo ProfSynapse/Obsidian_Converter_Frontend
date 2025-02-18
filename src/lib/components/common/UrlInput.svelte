@@ -79,6 +79,8 @@
                 type: currentConfig.type,
                 options: {
                     ...((currentConfig.type === 'parent') && {
+                        maxDepth: 3,
+                        maxPages: 100,
                         includeImages: true,
                         includeMeta: true
                     })
@@ -87,17 +89,16 @@
 
             const result = files.addFile(fileObj);
             
-            if (!result.success) {
+            if (result.success) {
+                inputValue = '';
+                uploadStore.setUrlInput('');
+                dispatch('submitUrl', { 
+                    url: normalizedUrl, 
+                    type: currentConfig.type 
+                });
+            } else if (!result.success && result.message) {
                 errorMessage = result.message;
-                return;
             }
-            
-            inputValue = '';
-            uploadStore.setUrlInput('');
-            dispatch('submitUrl', { 
-                url: normalizedUrl, 
-                type: currentConfig.type 
-            });
 
         } catch (error) {
             console.error('URL submission error:', error);

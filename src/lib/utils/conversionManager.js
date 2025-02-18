@@ -90,6 +90,7 @@ async function prepareItem(item) {
         content: normalizedUrl,
         options: {
           ...baseItem.options,
+          ...(item.type === 'parent' ? { depth: 1, maxPages: 10 } : {}),
           ...item.options
         }
       };

@@ -10,41 +10,21 @@ import { ConversionError, ErrorUtils } from './errors.js';
 const ResponseTypes = {
   JSON: 'json',
   BLOB: 'blob',
-  TEXT: 'text',
-  STREAM: 'stream'
+  TEXT: 'text'
 };
 
 /**
- * Checks if code is running in browser environment
- * @private
- */
-const isBrowser = typeof window !== 'undefined';
-
-/**
- * Gets origin for request headers
- * @private
- */
-const getOrigin = () => {
-  if (isBrowser) {
-    return window.location.origin;
-  }
-  return CONFIG.CORS.ORIGIN;
-};
-
-/**
- * Default request configuration with CORS settings
+ * Default request configuration
  */
 const DEFAULT_CONFIG = {
   mode: 'cors',
-  credentials: 'include',
   headers: {
-    'Accept': 'application/json, application/zip, application/octet-stream',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Origin': getOrigin()
-  }
+    'Accept': 'application/json, application/zip, application/octet-stream'
+  },
+  keepalive: true
 };
 
-const DEFAULT_TIMEOUT = 600000; // 10 minutes - matching backend timeout
+const DEFAULT_TIMEOUT = 30000; // 30 seconds
 
 /**
  * Handles all API requests with consistent error handling and retries
@@ -54,24 +34,10 @@ export class RequestHandler {
    * Creates timeout controller for requests
    * @private
    */
-  static _createTimeoutController(timeout = DEFAULT_TIMEOUT) {
+  static _createTimeoutController(timeout) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort('Request timeout'), timeout);
     return { controller, timeoutId };
-  }
-
-  /**
-   * Gets headers with safe origin handling
-   * @private
-   */
-  static _getHeaders(customHeaders = {}) {
-    const origin = getOrigin();
-    return {
-      ...DEFAULT_CONFIG.headers,
-      ...customHeaders,
-      'Origin': origin,
-      'Referer': origin
-    };
   }
 
   /**
@@ -144,17 +110,11 @@ export class RequestHandler {
   }
 
   /**
-   * Determines response type based on content headers and size
+   * Determines response type based on content headers
    * @private
    */
-  static _getResponseType(contentType, contentLength) {
+  static _getResponseType(contentType) {
     if (!contentType) return ResponseTypes.TEXT;
-    
-    // Check for streaming conditions first
-    if (contentLength && parseInt(contentLength) > CONFIG.API.STREAM.LARGE_FILE_THRESHOLD) {
-      return ResponseTypes.STREAM;
-    }
-    
     if (contentType.includes('application/json')) return ResponseTypes.JSON;
     if (contentType.includes('application/zip') ||
         contentType.includes('application/octet-stream')) return ResponseTypes.BLOB;
@@ -162,60 +122,18 @@ export class RequestHandler {
   }
 
   /**
-   * Handles streaming response with progress tracking
-   * @private
-   */
-  static async _handleStreamingResponse(response, onProgress) {
-    const reader = response.body.getReader();
-    const contentLength = response.headers.get('content-length');
-    const total = contentLength ? parseInt(contentLength) : 0;
-    const chunks = [];
-    let received = 0;
-
-    console.log('🌊 Starting stream processing');
-
-    while (true) {
-      const { done, value } = await reader.read();
-      
-      if (done) {
-        console.log('🏁 Stream complete');
-        break;
-      }
-
-      chunks.push(value);
-      received += value.length;
-
-      if (total && onProgress) {
-        const progress = (received / total) * 100;
-        console.log(`📊 Stream progress: ${Math.round(progress)}%`);
-        onProgress(progress);
-      }
-    }
-
-    const blob = new Blob(chunks);
-    console.log('📦 Stream processed:', {
-      size: blob.size,
-      type: blob.type || 'application/octet-stream'
-    });
-
-    return blob;
-  }
-
-  /**
    * Makes an API request with retry logic
    * @public
    */
-  static async makeRequest(endpoint, options = {}) {
-    const { controller, timeoutId } = this._createTimeoutController(options.timeout);
-    
+  static async makeRequest(endpoint, options) {
     try {
       const requestOptions = {
         method: options.method || 'POST',
         mode: 'cors',
-        credentials: 'include',
-        headers: this._getHeaders(options.headers),
+        headers: { ...options.headers },
         body: options.body,
-        signal: controller.signal
+        signal: options.signal,
+        keepalive: true
       };
 
       // Validate request body exists for POST requests
@@ -228,10 +146,6 @@ export class RequestHandler {
         delete requestOptions.headers['Content-Type'];
         
         // Validate FormData contents for file uploads
-        if (!isBrowser) {
-          throw new ConversionError('File uploads are only supported in browser environment', 'VALIDATION_ERROR');
-        }
-
         const fileEntry = Array.from(options.body.entries())
           .find(entry => entry[0] === 'file' && entry[1] instanceof File);
         
@@ -252,9 +166,7 @@ export class RequestHandler {
         url: response.url
       });
       
-      return await RequestHandler._handleResponse(response, {
-        onProgress: options.onProgress
-      });
+      return await RequestHandler._handleResponse(response);
     } catch (error) {
       console.error('🔥 Request failed:', {
         error: error.message,
@@ -265,14 +177,12 @@ export class RequestHandler {
       // Convert fetch errors to ConversionError
       if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
         throw new ConversionError(
-          'Network error - please check your connection or CORS settings',
+          'Network error - please check your connection',
           'NETWORK_ERROR'
         );
       }
 
       throw error;
-    } finally {
-      clearTimeout(timeoutId);
     }
   }
 
@@ -280,11 +190,10 @@ export class RequestHandler {
    * Handles different types of API responses
    * @private
    */
-  static async _handleResponse(response, options = {}) {
+  static async _handleResponse(response) {
     const responseForError = response.clone();
     const contentType = response.headers.get('Content-Type') || '';
-    const contentLength = response.headers.get('content-length');
-    const responseType = this._getResponseType(contentType, contentLength);
+    const responseType = this._getResponseType(contentType);
 
     if (!response.ok) {
       const errorText = await responseForError.text();
@@ -320,11 +229,7 @@ export class RequestHandler {
                           responseType === ResponseTypes.BLOB;
 
     try {
-      if (responseType === ResponseTypes.STREAM || 
-          response.headers.get('transfer-encoding') === 'chunked') {
-        console.log('🌊 Processing streaming response');
-        data = await this._handleStreamingResponse(response, options.onProgress);
-      } else if (isDownloadable) {
+      if (isDownloadable) {
         console.log('📦 Processing as downloadable content');
         data = await response.blob();
         console.log('📦 Blob created:', {
