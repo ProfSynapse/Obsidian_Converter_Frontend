@@ -146,16 +146,6 @@
       const normalizedUrl = normalizeUrl(url);
       const newUrl = new URL(normalizedUrl);
       
-      const isDuplicate = $files.some(file => {
-        if (!file.url) return false;
-        return normalizeUrl(file.url) === normalizedUrl;
-      });
-
-      if (isDuplicate) {
-        showFeedback('This URL has already been added', 'error');
-        return;
-      }
-
       const newFile = {
         id: generateId(),
         name: newUrl.hostname,
