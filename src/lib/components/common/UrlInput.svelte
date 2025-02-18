@@ -79,8 +79,6 @@
                 type: currentConfig.type,
                 options: {
                     ...((currentConfig.type === 'parent') && {
-                        maxDepth: 3,
-                        maxPages: 100,
                         includeImages: true,
                         includeMeta: true
                     })

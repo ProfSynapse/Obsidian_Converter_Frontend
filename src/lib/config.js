@@ -14,7 +14,7 @@ export const CONFIG = {
     API: {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
-        TIMEOUT: 120000, // 2 minutes
+        TIMEOUT: 1200000, // 2 minutes
         BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream'
@@ -91,10 +91,9 @@ export const CONFIG = {
         DEFAULT_OPTIONS: {
             includeImages: true,
             includeMeta: true,
-            maxDepth: 1,
             convertLinks: true
         },
-        BATCH_SIZE_LIMIT: 10,
+        BATCH_SIZE_LIMIT: 30,
         FILE_SIZE_LIMIT: 50 * 1024 * 1024, // 50MB
     },
 

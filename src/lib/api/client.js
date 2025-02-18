@@ -87,10 +87,6 @@ class ConversionClient {
         includeImages: true,
         includeMeta: true,
         convertLinks: true,
-        ...(type === 'parent' && {
-          depth: item.options?.depth || 1,
-          maxPages: item.options?.maxPages || 10
-        }),
         ...item.options
       }
     };
@@ -182,8 +178,6 @@ class ConversionClient {
                 options: {
                   includeImages: true,
                   includeMeta: true,
-                  maxDepth: item.options?.maxDepth || 3,
-                  maxPages: item.options?.maxPages || 100,
                   ...item.options
                 }
               })
