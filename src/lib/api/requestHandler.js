@@ -15,14 +15,16 @@ const ResponseTypes = {
 };
 
 /**
- * Default request configuration
+ * Default request configuration with CORS settings
  */
 const DEFAULT_CONFIG = {
   mode: 'cors',
+  credentials: 'include',
   headers: {
-    'Accept': 'application/json, application/zip, application/octet-stream'
-  },
-  keepalive: true
+    'Accept': 'application/json, application/zip, application/octet-stream',
+    'Accept-Encoding': 'gzip, deflate, br',
+    'Origin': window.location.origin
+  }
 };
 
 const DEFAULT_TIMEOUT = 600000; // 10 minutes - matching backend timeout
@@ -118,7 +120,7 @@ export class RequestHandler {
     if (!contentType) return ResponseTypes.TEXT;
     
     // Check for streaming conditions first
-    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
+    if (contentLength && parseInt(contentLength) > CONFIG.API.STREAM.LARGE_FILE_THRESHOLD) {
       return ResponseTypes.STREAM;
     }
     
@@ -174,15 +176,20 @@ export class RequestHandler {
    */
   static async makeRequest(endpoint, options = {}) {
     const { controller, timeoutId } = this._createTimeoutController(options.timeout);
-
+    
     try {
       const requestOptions = {
         method: options.method || 'POST',
         mode: 'cors',
-        headers: { ...options.headers },
+        credentials: 'include',
+        headers: {
+          ...DEFAULT_CONFIG.headers,
+          ...options.headers,
+          'Origin': window.location.origin,
+          'Referer': window.location.origin
+        },
         body: options.body,
-        signal: controller.signal,
-        keepalive: true
+        signal: controller.signal
       };
 
       // Validate request body exists for POST requests
@@ -228,7 +235,7 @@ export class RequestHandler {
       // Convert fetch errors to ConversionError
       if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
         throw new ConversionError(
-          'Network error - please check your connection',
+          'Network error - please check your connection or CORS settings',
           'NETWORK_ERROR'
         );
       }

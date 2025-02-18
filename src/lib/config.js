@@ -1,14 +1,18 @@
 // Environment variables with fallbacks
 const ENV = {
-    API_BASE_URL: import.meta.env.PROD ? 
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 
+        import.meta.env.PROD ? 
         'https://backend-production-6e08.up.railway.app/api/v1' : 
         'http://localhost:3000/api/v1',
     MAX_PAYLOAD_SIZE: 500 * 1024 * 1024, // 500MB - matching backend
-    CORS_ORIGIN: import.meta.env.VITE_CORS_ORIGIN || '*'
+    CORS_ORIGIN: import.meta.env.VITE_ORIGIN || 'https://frontend-production-2748.up.railway.app',
+    BACKEND_URL: import.meta.env.VITE_BACKEND_URL || 'https://backend-production-6e08.up.railway.app'
 };
 
-// Use Railway's URL in production
-export const API_BASE_URL = import.meta.env.RAILWAY_API_BASE_URL;
+// Export URLs for other modules
+export const API_BASE_URL = ENV.API_BASE_URL;
+export const BACKEND_URL = ENV.BACKEND_URL;
+export const FRONTEND_URL = ENV.CORS_ORIGIN;
 
 export const CONFIG = {
     API: {
@@ -18,7 +22,8 @@ export const CONFIG = {
         BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
             'Accept': 'application/json, application/zip, application/octet-stream',
-            'Accept-Encoding': 'gzip, deflate, br'
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Origin': ENV.CORS_ORIGIN
         },
         ENDPOINTS: {
             FILE: '/document/file',
@@ -38,8 +43,17 @@ export const CONFIG = {
 
     CORS: {
         ORIGIN: ENV.CORS_ORIGIN,
+        CREDENTIALS: true,
         METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'Accept', 'Accept-Encoding', 'Content-Disposition']
+        ALLOWED_HEADERS: [
+            'Content-Type', 
+            'Authorization', 
+            'Accept', 
+            'Accept-Encoding', 
+            'Content-Disposition',
+            'Origin',
+            'Referer'
+        ]
     },
 
     FILES: {
@@ -158,13 +172,15 @@ export const CONFIG = {
     }
 };
 
-// Add CORS configuration check
+// Add environment checks
 if (import.meta.env.DEV) {
-    console.log('API Configuration:', {
+    console.log('Environment Configuration:', {
+        env: import.meta.env.MODE,
         baseUrl: CONFIG.API.BASE_URL,
+        corsOrigin: CONFIG.CORS.ORIGIN,
+        backendUrl: ENV.BACKEND_URL,
         maxFileSize: CONFIG.API.MAX_FILE_SIZE,
-        streamConfig: CONFIG.API.STREAM,
-        corsOrigin: CONFIG.CORS.ORIGIN
+        streamConfig: CONFIG.API.STREAM
     });
 }
 
@@ -176,7 +192,8 @@ export const ERRORS = {
     INVALID_URL: 'Invalid URL format',
     NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion',
     STREAM_ERROR: 'Error during file streaming',
-    DOWNLOAD_ERROR: 'Error during file download'
+    DOWNLOAD_ERROR: 'Error during file download',
+    CORS_ERROR: 'Cross-Origin Request Blocked - Please check CORS configuration'
 };
 
 // Export commonly used configurations
