@@ -1,12 +1,8 @@
-// Environment variables with fallbacks
+// Environment variables from Railway via Vite
 const ENV = {
-    API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 
-        import.meta.env.PROD ? 
-        'https://backend-production-6e08.up.railway.app/api/v1' : 
-        'http://localhost:3000/api/v1',
-    MAX_PAYLOAD_SIZE: 500 * 1024 * 1024, // 500MB - matching backend
-    CORS_ORIGIN: process.env.VITE_ORIGIN || import.meta.env.VITE_ORIGIN || 'https://frontend-production-2748.up.railway.app',
-    BACKEND_URL: process.env.VITE_BACKEND_URL || import.meta.env.VITE_BACKEND_URL || 'https://backend-production-6e08.up.railway.app'
+    API_BASE_URL: import.meta.env.VITE_API_BASE_URL,
+    CORS_ORIGIN: import.meta.env.VITE_ORIGIN,
+    BACKEND_URL: import.meta.env.VITE_BACKEND_URL
 };
 
 // Export URLs for other modules
@@ -14,6 +10,7 @@ export const API_BASE_URL = ENV.API_BASE_URL;
 export const BACKEND_URL = ENV.BACKEND_URL;
 export const FRONTEND_URL = ENV.CORS_ORIGIN;
 
+// Rest of the config remains the same...
 export const CONFIG = {
     API: {
         MAX_RETRIES: 3,
@@ -31,7 +28,7 @@ export const CONFIG = {
             AUDIO: '/multimedia/audio',
             VIDEO: '/multimedia/video'
         },
-        MAX_FILE_SIZE: ENV.MAX_PAYLOAD_SIZE
+        MAX_FILE_SIZE: 500 * 1024 * 1024 // 500MB - matching backend
     },
 
     CORS: {
@@ -99,7 +96,7 @@ export const CONFIG = {
             convertLinks: true
         },
         BATCH_SIZE_LIMIT: 30,
-        FILE_SIZE_LIMIT: ENV.MAX_PAYLOAD_SIZE
+        FILE_SIZE_LIMIT: 500 * 1024 * 1024 // 500MB - matching backend
     },
 
     UI: {
@@ -151,7 +148,7 @@ export const CONFIG = {
     }
 };
 
-// Log environment configuration in development
+// Log environment in development only
 if (import.meta.env.DEV) {
     console.log('Environment Configuration:', {
         env: import.meta.env.MODE,
@@ -161,23 +158,6 @@ if (import.meta.env.DEV) {
         maxFileSize: CONFIG.API.MAX_FILE_SIZE
     });
 }
-
-// Error messages
-export const ERRORS = {
-    UNSUPPORTED_FILE_TYPE: 'Unsupported file type',
-    API_KEY_REQUIRED: 'API key is required',
-    INVALID_API_KEY: 'Invalid API key format',
-    INVALID_URL: 'Invalid URL format',
-    NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion',
-    STREAM_ERROR: 'Error during file streaming',
-    DOWNLOAD_ERROR: 'Error during file download',
-    CORS_ERROR: 'Cross-Origin Request Blocked - Please check CORS configuration',
-    SSR_ERROR: 'Operation not supported during server-side rendering'
-};
-
-// Export commonly used configurations
-export const { ITEM_TYPES, FILE_CATEGORIES, API_REQUIRED_TYPES } = CONFIG.FILES;
-export const { STATUSES, COLORS, CSS } = CONFIG.UI;
 
 // Helper functions
 export const requiresApiKey = (file) => {
@@ -198,6 +178,18 @@ export const getOrigin = () => {
         return window.location.origin;
     }
     return CONFIG.CORS.ORIGIN;
+};
+
+// Export ERRORS object after all definitions
+export const ERRORS = {
+    UNSUPPORTED_FILE_TYPE: 'Unsupported file type',
+    API_KEY_REQUIRED: 'API key is required',
+    INVALID_API_KEY: 'Invalid API key format',
+    INVALID_URL: 'Invalid URL format',
+    NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion',
+    STREAM_ERROR: 'Error during file streaming',
+    DOWNLOAD_ERROR: 'Error during file download',
+    CORS_ERROR: 'Cross-Origin Request Blocked - Please check CORS configuration'
 };
 
 // Freeze configurations to prevent modifications
