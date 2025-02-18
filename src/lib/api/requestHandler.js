@@ -10,7 +10,8 @@ import { ConversionError, ErrorUtils } from './errors.js';
 const ResponseTypes = {
   JSON: 'json',
   BLOB: 'blob',
-  TEXT: 'text'
+  TEXT: 'text',
+  STREAM: 'stream'
 };
 
 /**
@@ -24,7 +25,7 @@ const DEFAULT_CONFIG = {
   keepalive: true
 };
 
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 600000; // 10 minutes - matching backend timeout
 
 /**
  * Handles all API requests with consistent error handling and retries
@@ -34,7 +35,7 @@ export class RequestHandler {
    * Creates timeout controller for requests
    * @private
    */
-  static _createTimeoutController(timeout) {
+  static _createTimeoutController(timeout = DEFAULT_TIMEOUT) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort('Request timeout'), timeout);
     return { controller, timeoutId };
@@ -110,11 +111,17 @@ export class RequestHandler {
   }
 
   /**
-   * Determines response type based on content headers
+   * Determines response type based on content headers and size
    * @private
    */
-  static _getResponseType(contentType) {
+  static _getResponseType(contentType, contentLength) {
     if (!contentType) return ResponseTypes.TEXT;
+    
+    // Check for streaming conditions first
+    if (contentLength && parseInt(contentLength) > 50 * 1024 * 1024) {
+      return ResponseTypes.STREAM;
+    }
+    
     if (contentType.includes('application/json')) return ResponseTypes.JSON;
     if (contentType.includes('application/zip') ||
         contentType.includes('application/octet-stream')) return ResponseTypes.BLOB;
@@ -122,17 +129,59 @@ export class RequestHandler {
   }
 
   /**
+   * Handles streaming response with progress tracking
+   * @private
+   */
+  static async _handleStreamingResponse(response, onProgress) {
+    const reader = response.body.getReader();
+    const contentLength = response.headers.get('content-length');
+    const total = contentLength ? parseInt(contentLength) : 0;
+    const chunks = [];
+    let received = 0;
+
+    console.log('🌊 Starting stream processing');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        console.log('🏁 Stream complete');
+        break;
+      }
+
+      chunks.push(value);
+      received += value.length;
+
+      if (total && onProgress) {
+        const progress = (received / total) * 100;
+        console.log(`📊 Stream progress: ${Math.round(progress)}%`);
+        onProgress(progress);
+      }
+    }
+
+    const blob = new Blob(chunks);
+    console.log('📦 Stream processed:', {
+      size: blob.size,
+      type: blob.type || 'application/octet-stream'
+    });
+
+    return blob;
+  }
+
+  /**
    * Makes an API request with retry logic
    * @public
    */
-  static async makeRequest(endpoint, options) {
+  static async makeRequest(endpoint, options = {}) {
+    const { controller, timeoutId } = this._createTimeoutController(options.timeout);
+
     try {
       const requestOptions = {
         method: options.method || 'POST',
         mode: 'cors',
         headers: { ...options.headers },
         body: options.body,
-        signal: options.signal,
+        signal: controller.signal,
         keepalive: true
       };
 
@@ -166,7 +215,9 @@ export class RequestHandler {
         url: response.url
       });
       
-      return await RequestHandler._handleResponse(response);
+      return await RequestHandler._handleResponse(response, {
+        onProgress: options.onProgress
+      });
     } catch (error) {
       console.error('🔥 Request failed:', {
         error: error.message,
@@ -183,6 +234,8 @@ export class RequestHandler {
       }
 
       throw error;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
@@ -190,10 +243,11 @@ export class RequestHandler {
    * Handles different types of API responses
    * @private
    */
-  static async _handleResponse(response) {
+  static async _handleResponse(response, options = {}) {
     const responseForError = response.clone();
     const contentType = response.headers.get('Content-Type') || '';
-    const responseType = this._getResponseType(contentType);
+    const contentLength = response.headers.get('content-length');
+    const responseType = this._getResponseType(contentType, contentLength);
 
     if (!response.ok) {
       const errorText = await responseForError.text();
@@ -229,7 +283,11 @@ export class RequestHandler {
                           responseType === ResponseTypes.BLOB;
 
     try {
-      if (isDownloadable) {
+      if (responseType === ResponseTypes.STREAM || 
+          response.headers.get('transfer-encoding') === 'chunked') {
+        console.log('🌊 Processing streaming response');
+        data = await this._handleStreamingResponse(response, options.onProgress);
+      } else if (isDownloadable) {
         console.log('📦 Processing as downloadable content');
         data = await response.blob();
         console.log('📦 Blob created:', {

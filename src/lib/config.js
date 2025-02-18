@@ -3,7 +3,7 @@ const ENV = {
     API_BASE_URL: import.meta.env.PROD ? 
         'https://backend-production-6e08.up.railway.app/api/v1' : 
         'http://localhost:3000/api/v1',
-    MAX_PAYLOAD_SIZE: 50 * 1024 * 1024, // 50MB
+    MAX_PAYLOAD_SIZE: 500 * 1024 * 1024, // 500MB - matching backend
     CORS_ORIGIN: import.meta.env.VITE_CORS_ORIGIN || '*'
 };
 
@@ -14,11 +14,11 @@ export const CONFIG = {
     API: {
         MAX_RETRIES: 3,
         RETRY_DELAY: 1000,
-        TIMEOUT: 1200000, // 2 minutes
+        TIMEOUT: 600000, // 10 minutes - matching backend
         BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
-            'Accept': 'application/json, application/zip, application/octet-stream'
-            // Don't set Content-Type here - let it be handled per request
+            'Accept': 'application/json, application/zip, application/octet-stream',
+            'Accept-Encoding': 'gzip, deflate, br'
         },
         ENDPOINTS: {
             FILE: '/document/file',
@@ -28,13 +28,18 @@ export const CONFIG = {
             AUDIO: '/multimedia/audio',
             VIDEO: '/multimedia/video'
         },
-        MAX_FILE_SIZE: ENV.MAX_PAYLOAD_SIZE
+        MAX_FILE_SIZE: ENV.MAX_PAYLOAD_SIZE,
+        STREAM: {
+            CHUNK_SIZE: 1024 * 1024, // 1MB chunks
+            LARGE_FILE_THRESHOLD: 50 * 1024 * 1024, // 50MB
+            BATCH_SIZE: 50 * 1024 * 1024 // 50MB chunks for batching
+        }
     },
 
     CORS: {
         ORIGIN: ENV.CORS_ORIGIN,
         METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'Accept']
+        ALLOWED_HEADERS: ['Content-Type', 'Authorization', 'Accept', 'Accept-Encoding', 'Content-Disposition']
     },
 
     FILES: {
@@ -44,22 +49,22 @@ export const CONFIG = {
             video: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
             data: ['csv', 'xlsx']
         },
-            TYPES: {
-                // Document types
-                FILE: 'file',
-                DOCUMENT: 'document',
-                
-                // Web types
-                URL: 'url',
-                PARENT_URL: 'parenturl',
-                
-                // Multimedia types
-                AUDIO: 'audio',
-                VIDEO: 'video',
-                
-                // Batch processing
-                BATCH: 'batch'
-            },
+        TYPES: {
+            // Document types
+            FILE: 'file',
+            DOCUMENT: 'document',
+            
+            // Web types
+            URL: 'url',
+            PARENT_URL: 'parenturl',
+            
+            // Multimedia types
+            AUDIO: 'audio',
+            VIDEO: 'video',
+            
+            // Batch processing
+            BATCH: 'batch'
+        },
         API_REQUIRED: [
             'mp3', 'wav', 'm4a',
             'mp4', 'webm', 'avi'
@@ -78,11 +83,13 @@ export const CONFIG = {
 
     PROGRESS: {
         START: 0,
-        VALIDATING: 10,
-        PREPARING: 20,
-        CONVERTING: 40,
-        PROCESSING: 60,
-        FINALIZING: 80,
+        VALIDATING: 5,
+        PREPARING: 10,
+        CONVERTING: 20,
+        PROCESSING: 40,
+        STREAMING: 60,     // New streaming state
+        DOWNLOADING: 80,   // New downloading state
+        FINALIZING: 90,
         COMPLETE: 100
     },
 
@@ -94,13 +101,20 @@ export const CONFIG = {
             convertLinks: true
         },
         BATCH_SIZE_LIMIT: 30,
-        FILE_SIZE_LIMIT: 50 * 1024 * 1024, // 50MB
+        FILE_SIZE_LIMIT: ENV.MAX_PAYLOAD_SIZE,
+        COMPRESSION: {
+            LEVEL: 6,           // Matching backend compression level
+            PLATFORM_SPECIFIC: true, // Enable platform-specific settings
+            USE_BATCHING: true  // Enable processing in batches
+        }
     },
 
     UI: {
         STATUSES: {
             READY: 'ready',
             CONVERTING: 'converting',
+            STREAMING: 'streaming',    // New streaming status
+            DOWNLOADING: 'downloading', // New downloading status
             COMPLETED: 'completed',
             ERROR: 'error'
         },
@@ -124,6 +138,8 @@ export const CONFIG = {
         ERROR: 'error',
         PENDING: 'pending',
         PROCESSING: 'processing',
+        STREAMING: 'streaming',    // New streaming status
+        DOWNLOADING: 'downloading', // New downloading status
         COMPLETED: 'completed',
         CANCELLED: 'cancelled'
     },
@@ -133,6 +149,7 @@ export const CONFIG = {
         NETWORK: 'NETWORK_ERROR',
         CONVERSION: 'CONVERSION_ERROR',
         TIMEOUT: 'TIMEOUT_ERROR',
+        STREAM: 'STREAM_ERROR',    // New streaming error type
         UNKNOWN: 'UNKNOWN_ERROR'
     },
 
@@ -146,6 +163,7 @@ if (import.meta.env.DEV) {
     console.log('API Configuration:', {
         baseUrl: CONFIG.API.BASE_URL,
         maxFileSize: CONFIG.API.MAX_FILE_SIZE,
+        streamConfig: CONFIG.API.STREAM,
         corsOrigin: CONFIG.CORS.ORIGIN
     });
 }
@@ -156,7 +174,9 @@ export const ERRORS = {
     API_KEY_REQUIRED: 'API key is required',
     INVALID_API_KEY: 'Invalid API key format',
     INVALID_URL: 'Invalid URL format',
-    NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion'
+    NO_FILES_FOR_CONVERSION: 'At least one file is required for conversion',
+    STREAM_ERROR: 'Error during file streaming',
+    DOWNLOAD_ERROR: 'Error during file download'
 };
 
 // Export commonly used configurations
@@ -171,6 +191,11 @@ export const requiresApiKey = (file) => {
         .pop()
         .toLowerCase();
     return CONFIG.FILES.API_REQUIRED.includes(ext);
+};
+
+// Helper to determine if streaming should be used
+export const shouldUseStreaming = (fileSize) => {
+    return fileSize > CONFIG.API.STREAM.LARGE_FILE_THRESHOLD;
 };
 
 // Freeze configurations to prevent modifications

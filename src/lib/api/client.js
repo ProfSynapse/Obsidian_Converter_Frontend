@@ -116,12 +116,40 @@ class ConversionClient {
   }
 
   /**
-   * Makes a request to the API
+   * Makes a request to the API with streaming support
    * @private
    */
   async makeRequest(endpoint, options) {
     const fullEndpoint = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${endpoint}`;
-    return makeRequest(fullEndpoint, options);
+    
+    // Add streaming-specific headers
+    const headers = {
+      ...options.headers,
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Connection': 'keep-alive'
+    };
+
+    // Configure timeout to match backend (10 minutes)
+    const timeout = 600000;
+
+    return makeRequest(fullEndpoint, {
+      ...options,
+      headers,
+      timeout,
+      onProgress: this._handleProgress.bind(this)
+    });
+  }
+
+  /**
+   * Handles progress updates for streaming responses
+   * @private
+   */
+  _handleProgress(progress) {
+    console.log(`📊 Download progress: ${Math.round(progress)}%`);
+    conversionStatus.update(state => ({
+      ...state,
+      progress: Math.round(progress)
+    }));
   }
 
   /**
@@ -163,14 +191,15 @@ class ConversionClient {
                 'Accept': 'text/markdown, application/zip, application/octet-stream',
                 ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
-              body: JSON.stringify(urlData)
+              body: JSON.stringify(urlData),
+              onProgress: (p) => onProgress?.(Math.min(Math.round(p), 100))
             });
           } else if (item.type === 'parent') {
             result = await this.makeRequest(endpoint, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'text/markdown, application/zip, application/octet-stream',
+                'Accept': 'application/zip, application/octet-stream',
                 ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
               body: JSON.stringify({
@@ -180,7 +209,8 @@ class ConversionClient {
                   includeMeta: true,
                   ...item.options
                 }
-              })
+              }),
+              onProgress: (p) => onProgress?.(Math.min(Math.round(p), 100))
             });
           } else if (item.file instanceof File) {
             // Validate file exists and is a File object
@@ -210,7 +240,8 @@ class ConversionClient {
                 'Accept': 'text/markdown, application/zip, application/octet-stream',
                 ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
               },
-              body: formData
+              body: formData,
+              onProgress: (p) => onProgress?.(Math.min(Math.round(p), 100))
             });
 
             // Log FormData content for debugging
@@ -302,7 +333,7 @@ class ConversionClient {
         case 404:
           return 'Invalid API endpoint';
         case 413:
-          return 'File size exceeds maximum limit of 50MB';
+          return 'File size exceeds maximum limit';
         case 500:
           return 'Server error during file processing';
         default:

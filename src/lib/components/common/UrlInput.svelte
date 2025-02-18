@@ -87,16 +87,17 @@
 
             const result = files.addFile(fileObj);
             
-            if (result.success) {
-                inputValue = '';
-                uploadStore.setUrlInput('');
-                dispatch('submitUrl', { 
-                    url: normalizedUrl, 
-                    type: currentConfig.type 
-                });
-            } else if (!result.success && result.message) {
+            if (!result.success) {
                 errorMessage = result.message;
+                return;
             }
+            
+            inputValue = '';
+            uploadStore.setUrlInput('');
+            dispatch('submitUrl', { 
+                url: normalizedUrl, 
+                type: currentConfig.type 
+            });
 
         } catch (error) {
             console.error('URL submission error:', error);
