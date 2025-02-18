@@ -136,65 +136,51 @@ class ConversionClient {
     if (!items?.length) {
       throw new ConversionError('No items provided for processing');
     }
-  
+
     const { useBatch = false, onProgress, onItemComplete } = options;
-  
+
     try {
+      // Import socket service
+      const socketService = (await import('../services/socket.js')).default;
+      
+      // Ensure socket is connected
+      if (!socketService.connected) {
+        socketService.connect();
+      }
+
       if (useBatch) {
         return this.processBatch(items, apiKey, { onProgress, onItemComplete });
       }
-  
-      let progress = 0;
-      const progressStep = 100 / items.length;
-  
+
       const results = await Promise.all(items.map(async (item) => {
         try {
           const endpoint = this.getDefaultEndpoint(item);
-          let result;
-  
+          let requestData;
+
+          // Prepare request data based on item type
           if (item.type === 'url' || item.type === 'youtube') {
-            const urlData = {
+            requestData = {
               url: item.url || item.content,
               name: item.name || 'url-conversion',
               options: item.options || {},
               type: item.type
             };
-            
-            result = await this.makeRequest(endpoint, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'text/markdown, application/zip, application/octet-stream',
-                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
-              },
-              body: JSON.stringify(urlData)
-            });
           } else if (item.type === 'parent') {
-            result = await this.makeRequest(endpoint, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'text/markdown, application/zip, application/octet-stream',
-                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
-              },
-              body: JSON.stringify({
-                parenturl: item.url || item.content,
-                options: {
-                  includeImages: true,
-                  includeMeta: true,
-                  maxDepth: item.options?.maxDepth || 3,
-                  maxPages: item.options?.maxPages || 100,
-                  ...item.options
-                }
-              })
-            });
+            requestData = {
+              parenturl: item.url || item.content,
+              options: {
+                includeImages: true,
+                includeMeta: true,
+                maxDepth: item.options?.maxDepth || 3,
+                maxPages: item.options?.maxPages || 100,
+                ...item.options
+              }
+            };
           } else if (item.file instanceof File) {
-            // Validate file exists and is a File object
             if (!item.file) {
               throw new ConversionError('File data is missing');
             }
 
-            // Additional size validation
             if (item.file.size > this.config.CONVERSION.FILE_SIZE_LIMIT) {
               throw new ConversionError(
                 `File size exceeds limit of ${this.config.CONVERSION.FILE_SIZE_LIMIT / (1024 * 1024)}MB`,
@@ -209,45 +195,57 @@ class ConversionClient {
               filename: item.file.name,
               fileType: item.file.type
             }));
-  
-            result = await this.makeRequest(endpoint, {
-              method: 'POST',
-              headers: {
-                'Accept': 'text/markdown, application/zip, application/octet-stream',
-                ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
-              },
-              body: formData
-            });
-
-            // Log FormData content for debugging
-            if (import.meta.env.DEV) {
-              console.log('FormData contents:', {
-                fileName: item.file.name,
-                fileSize: item.file.size,
-                fileType: item.file.type,
-                endpoint: endpoint,
-                options: item.options
-              });
-            }
+            requestData = formData;
           } else {
             throw new ConversionError('Invalid item format - must provide either a URL or file');
           }
-  
-          progress += progressStep;
-          onProgress?.(Math.min(Math.round(progress), 100));
-          onItemComplete?.(item.id, true);
-          return result;
+
+          // Make initial request to get job ID
+          const response = await this.makeRequest(endpoint, {
+            method: 'POST',
+            headers: {
+              ...(!(requestData instanceof FormData) && { 'Content-Type': 'application/json' }),
+              'Accept': 'application/json',
+              ...(apiKey && { 'Authorization': `Bearer ${apiKey}` })
+            },
+            body: requestData instanceof FormData ? requestData : JSON.stringify(requestData)
+          });
+
+          // Extract job ID from response
+          const jobId = response.jobId;
+          if (!jobId) {
+            throw new ConversionError('No job ID received from server');
+          }
+
+          // Update item with job ID
+          item.jobId = jobId;
+
+          // Subscribe to job updates
+          socketService.subscribeToJob(jobId, {
+            onStatus: (data) => {
+              console.log(`🔄 Job ${jobId} status:`, data);
+            },
+            onProgress: (data) => {
+              console.log(`📈 Job ${jobId} progress:`, data);
+              onProgress?.(data.progress);
+            },
+            onComplete: (data) => {
+              console.log(`✅ Job ${jobId} complete:`, data);
+              onItemComplete?.(item.id, true);
+            },
+            onError: (error) => {
+              console.error(`❌ Job ${jobId} error:`, error);
+              onItemComplete?.(item.id, false, error);
+            }
+          });
+
+          return { jobId, item };
         } catch (error) {
           onItemComplete?.(item.id, false, error);
           throw error;
         }
       }));
-  
-      const blobResult = results.find(result => result instanceof Blob);
-      if (blobResult) {
-        return blobResult;
-      }
-      
+
       return results;
     } catch (error) {
       console.error('Upload failed:', error);

@@ -6,6 +6,7 @@ import { apiKey } from '$lib/stores/apiKey.js';
 import { conversionStatus } from '$lib/stores/conversionStatus.js';
 import { paymentStore } from '$lib/stores/payment.js';
 import client, { ConversionError } from '$lib/api/client.js';
+import socketService from '$lib/services/socket.js';
 import FileSaver from 'file-saver';
 import { CONFIG } from '$lib/config'; 
 import { conversionResult } from '$lib/stores/conversionResult.js';
@@ -156,6 +157,11 @@ export async function startConversion() {
   conversionStatus.setStatus('converting');
 
   try {
+    // Ensure socket connection
+    if (!socketService.connected) {
+      socketService.connect();
+    }
+
     // Prepare items for conversion
     const items = await prepareBatchItems(currentFiles);
     const itemCount = items.length;
@@ -169,43 +175,90 @@ export async function startConversion() {
       return '/document/file';
     };
 
-    // Process items with progress tracking
-    const response = await client.processItems(items, currentApiKey, {
-        useBatch: itemCount > 1 && !items.every(item => item.type === 'document'),  // Don't use batch for single type documents
-        getEndpoint,
-        onProgress: (progress) => {
-            conversionStatus.setProgress(progress);
-        },
-        onItemComplete: (itemId, success, error) => {
-            files.updateFile(itemId, {
-                status: success ? 'completed' : 'error',
-                error: error?.message || null
-            });
-        }
+    // Process items with socket-based progress tracking
+    const results = await client.processItems(items, currentApiKey, {
+      useBatch: itemCount > 1 && !items.every(item => item.type === 'document'),
+      getEndpoint,
+      onProgress: (progress) => {
+        conversionStatus.setProgress(progress);
+      },
+      onItemComplete: (itemId, success, error) => {
+        files.updateFile(itemId, {
+          status: success ? 'completed' : 'error',
+          error: error?.message || null
+        });
+      }
     });
 
-        // Store the conversion response for later download
-    if (response instanceof Blob) {
-        conversionResult.setResult({
-            blob: response,
-            contentType: response.type,
-            items: items // Store items for filename generation
-        });
-    }
+    // Store job IDs and subscribe to socket updates
+    results.forEach(({ jobId, item }) => {
+      socketService.subscribeToJob(jobId, {
+        onStatus: (data) => {
+          conversionStatus.update(status => ({
+            ...status,
+            [item.id]: {
+              ...status[item.id],
+              status: data.status,
+              message: data.message
+            }
+          }));
+        },
+        onProgress: (data) => {
+          conversionStatus.update(status => ({
+            ...status,
+            [item.id]: {
+              ...status[item.id],
+              progress: data.progress
+            }
+          }));
+        },
+        onComplete: (data) => {
+          // Download the file when it's ready
+          if (data.downloadUrl) {
+            fetch(data.downloadUrl)
+              .then(response => response.blob())
+              .then(blob => {
+                conversionResult.setResult({
+                  blob,
+                  contentType: blob.type,
+                  items: [item]
+                });
+                files.updateFile(item.id, {
+                  status: 'completed',
+                  downloadUrl: data.downloadUrl
+                });
+              })
+              .catch(error => {
+                console.error('Error downloading file:', error);
+                files.updateFile(item.id, {
+                  status: 'error',
+                  error: 'Failed to download converted file'
+                });
+              });
+          }
+        },
+        onError: (error) => {
+          files.updateFile(item.id, {
+            status: 'error',
+            error: error.message
+          });
+        }
+      });
+    });
 
     // Update status with payment acknowledgment
-    conversionStatus.setStatus('completed');
+    conversionStatus.setStatus('processing');
     const paymentMsg = paymentStatus.status === 'completed' 
-      ? `✨ Conversion completed successfully! Thank you for your magical contribution of $${paymentStatus.amount}!`
-      : '✨ Conversion completed successfully!';
+      ? `✨ Processing started! Thank you for your magical contribution of $${paymentStatus.amount}!`
+      : '✨ Processing started! You will be notified when the conversion is complete.';
     showFeedback(paymentMsg, 'success');
 
   } catch (error) {
     console.error('Conversion error:', error);
 
     const errorMessage = error instanceof ConversionError ? 
-        error.message : 
-        error.message || 'An unexpected error occurred during conversion';
+      error.message : 
+      error.message || 'An unexpected error occurred during conversion';
 
     conversionStatus.setError(errorMessage);
     conversionStatus.setStatus('error');
@@ -217,33 +270,33 @@ export async function startConversion() {
  * Triggers the download of the converted files
  */
 export function triggerDownload() {
-    const result = get(conversionResult);
-    if (!result) {
-        console.error('No conversion result available');
-        return;
-    }
+  const result = get(conversionResult);
+  if (!result) {
+    console.error('No conversion result available');
+    return;
+  }
 
-    const { blob, contentType, items } = result;
-    let filename;
+  const { blob, contentType, items } = result;
+  let filename;
 
-    // For single markdown files, use original filename with .md extension
-    if (contentType === 'text/markdown') {
-        const originalName = items[0]?.name;
-        filename = originalName ? 
-            originalName.replace(/\.[^/.]+$/, '.md') : 
-            `document_${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
-    } else {
-        // For zip files (multiple files or complex conversions)
-        filename = `conversion_${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
-    }
-    
-    FileSaver.saveAs(blob, filename);
-    
-    // Only clear files store after successful download
-    const clearResult = files.clearFiles();
-    if (!clearResult.success) {
-        console.warn('Failed to clear files store:', clearResult.message);
-    }
+  // For single markdown files, use original filename with .md extension
+  if (contentType === 'text/markdown') {
+    const originalName = items[0]?.name;
+    filename = originalName ? 
+      originalName.replace(/\.[^/.]+$/, '.md') : 
+      `document_${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
+  } else {
+    // For zip files (multiple files or complex conversions)
+    filename = `conversion_${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
+  }
+  
+  FileSaver.saveAs(blob, filename);
+  
+  // Only clear files store after successful download
+  const clearResult = files.clearFiles();
+  if (!clearResult.success) {
+    console.warn('Failed to clear files store:', clearResult.message);
+  }
 }
 
 /**
@@ -251,7 +304,16 @@ export function triggerDownload() {
  */
 export function cancelConversion() {
   conversionStatus.setStatus('cancelled');
-  client.cancelRequests(); // Assuming client has a method to cancel pending requests
+  client.cancelRequests();
+  
+  // Unsubscribe from all socket updates
+  const currentFiles = get(files);
+  currentFiles.forEach(file => {
+    if (file.jobId) {
+      socketService.unsubscribeFromJob(file.jobId);
+    }
+  });
+
   files.update(items => 
     items.map(item => 
       item.status === 'converting' 

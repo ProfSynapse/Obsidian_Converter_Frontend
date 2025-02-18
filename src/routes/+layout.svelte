@@ -1,10 +1,19 @@
 <!-- src/routes/+layout.svelte -->
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import socketService from '$lib/services/socket.js';
   import '$lib/styles/global.css';
   
+  // Initialize socket connection when app starts
+  socketService.connect();
+
   onMount(() => {
     document.documentElement.style.scrollBehavior = 'smooth';
+  });
+
+  // Clean up socket connection when app unmounts
+  onDestroy(() => {
+    socketService.disconnect();
   });
 </script>
 
