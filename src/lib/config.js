@@ -21,8 +21,7 @@ export const CONFIG = {
         TIMEOUT: 600000, // 10 minutes - matching backend
         BASE_URL: ENV.API_BASE_URL,
         HEADERS: {
-            'Accept': 'application/json, application/zip, application/octet-stream',
-            'Accept-Encoding': 'gzip, deflate, br'
+            'Accept': 'application/json, application/zip, application/octet-stream'
         },
         ENDPOINTS: {
             FILE: '/document/file',
@@ -32,12 +31,7 @@ export const CONFIG = {
             AUDIO: '/multimedia/audio',
             VIDEO: '/multimedia/video'
         },
-        MAX_FILE_SIZE: ENV.MAX_PAYLOAD_SIZE,
-        STREAM: {
-            CHUNK_SIZE: 1024 * 1024, // 1MB chunks
-            LARGE_FILE_THRESHOLD: 50 * 1024 * 1024, // 50MB
-            BATCH_SIZE: 50 * 1024 * 1024 // 50MB chunks for batching
-        }
+        MAX_FILE_SIZE: ENV.MAX_PAYLOAD_SIZE
     },
 
     CORS: {
@@ -46,17 +40,13 @@ export const CONFIG = {
         CREDENTIALS: true,
         METHODS: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         ALLOWED_HEADERS: [
-            'Content-Type', 
-            'Authorization', 
-            'Accept', 
-            'Accept-Encoding', 
-            'Content-Disposition',
-            'Origin',
-            'Referer'
+            'Content-Type',
+            'Authorization',
+            'Accept',
+            'Origin'
         ]
     },
 
-    // ... rest of the configuration remains the same ...
     FILES: {
         CATEGORIES: {
             documents: ['pdf', 'docx', 'pptx'],
@@ -109,12 +99,7 @@ export const CONFIG = {
             convertLinks: true
         },
         BATCH_SIZE_LIMIT: 30,
-        FILE_SIZE_LIMIT: ENV.MAX_PAYLOAD_SIZE,
-        COMPRESSION: {
-            LEVEL: 6,
-            PLATFORM_SPECIFIC: true,
-            USE_BATCHING: true
-        }
+        FILE_SIZE_LIMIT: ENV.MAX_PAYLOAD_SIZE
     },
 
     UI: {
@@ -173,8 +158,7 @@ if (import.meta.env.DEV) {
         baseUrl: CONFIG.API.BASE_URL,
         corsOrigin: CONFIG.CORS.ORIGIN,
         backendUrl: ENV.BACKEND_URL,
-        maxFileSize: CONFIG.API.MAX_FILE_SIZE,
-        streamConfig: CONFIG.API.STREAM
+        maxFileSize: CONFIG.API.MAX_FILE_SIZE
     });
 }
 
@@ -203,11 +187,6 @@ export const requiresApiKey = (file) => {
         .pop()
         .toLowerCase();
     return CONFIG.FILES.API_REQUIRED.includes(ext);
-};
-
-// Helper to determine if streaming should be used
-export const shouldUseStreaming = (fileSize) => {
-    return fileSize > CONFIG.API.STREAM.LARGE_FILE_THRESHOLD;
 };
 
 // Helper to check if code is running in browser

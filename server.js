@@ -7,40 +7,25 @@ const port = process.env.PORT || 3000; // Railway will provide PORT
 
 // Add CORS headers for all routes
 app.use((req, res, next) => {
-  const allowedOrigins = [CONFIG.CORS.ORIGIN];
   const origin = req.headers.origin;
-
-  if (allowedOrigins.includes(origin)) {
+  
+  // Allow from same origin, or frontend domain in production
+  if (origin === CONFIG.CORS.ORIGIN || req.headers.host === CONFIG.CORS.ORIGIN) {
     res.setHeader('Access-Control-Allow-Origin', origin);
-  }
-
-  res.setHeader('Access-Control-Allow-Methods', CONFIG.CORS.METHODS.join(', '));
-  res.setHeader('Access-Control-Allow-Headers', CONFIG.CORS.ALLOWED_HEADERS.join(', '));
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
   }
 
   next();
 });
 
-// Configure streaming response headers
-app.use((req, res, next) => {
-  if (req.url.includes('/api/')) {
-    res.setHeader('Transfer-Encoding', 'chunked');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-  }
-  next();
-});
-
-// Add compression middleware
-import compression from 'express-compression';
-app.use(compression());
-
-// Increase request size limit
+// Increase request size limit for file uploads
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ limit: '500mb', extended: true }));
 
