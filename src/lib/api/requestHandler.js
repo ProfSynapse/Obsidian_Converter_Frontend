@@ -233,15 +233,18 @@ export class RequestHandler {
             // Log the actual response structure for debugging
             console.log('📦 Response data structure:', JSON.stringify(data, null, 2));
             
-            // Consider a response successful if it has downloadUrl or explicitly has success=true
+            // Consider a response successful if it has downloadUrl, jobId, or explicitly has success=true
             const hasSuccessIndicators = data.success === true || 
                                         data.downloadUrl || 
+                                        data.jobId ||
                                         (data.status === 'success') ||
                                         (data.status === 'completed');
             
             if (!hasSuccessIndicators && !this._isImplicitlySuccessful(data)) {
               console.log('❌ Response lacks success indicators:', data);
               throw ConversionError.fromResponse(data);
+            } else {
+              console.log('✅ Response considered successful:', data);
             }
             break;
           default:
@@ -269,6 +272,9 @@ export class RequestHandler {
   static _isImplicitlySuccessful(data) {
     // Check for common success indicators in the response
     if (!data || typeof data !== 'object') return false;
+    
+    // Check for job ID as a success indicator
+    if (data.jobId) return true;
     
     // Check for job completion indicators
     if (data.jobId && (data.downloadUrl || data.result)) return true;

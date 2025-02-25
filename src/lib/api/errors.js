@@ -27,6 +27,16 @@ export class ConversionError extends Error {
         console.log('🔍 Creating error from response:', JSON.stringify(response, null, 2));
         
         try {
+            // Special case: If response contains jobId, it's actually a success
+            if (response && response.jobId) {
+                console.log('⚠️ Warning: Response with jobId was incorrectly treated as an error');
+                return new ConversionError(
+                    'Response with jobId was incorrectly treated as an error',
+                    'RESPONSE_MISCLASSIFIED',
+                    { jobId: response.jobId }
+                );
+            }
+            
             // Handle structured error responses
             if (response && response.error) {
                 return new ConversionError(

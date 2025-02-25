@@ -65,6 +65,8 @@
 - Implemented cancellation support
 - Enhanced error handling
 - Added file type validation
+- Fixed API response handling for jobId-only responses
+- Improved error detection and logging
 
 ## Testing Status
 - ✅ Core file upload functionality
