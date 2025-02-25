@@ -217,9 +217,14 @@ export async function startConversion() {
           
           // Download the file when it's ready
           if (data.downloadUrl) {
-            console.log('📥 Fetching from download URL:', data.downloadUrl);
+            // Ensure the download URL is absolute
+            const downloadUrl = data.downloadUrl.startsWith('http') 
+              ? data.downloadUrl 
+              : `${CONFIG.API.BASE_URL}${data.downloadUrl.startsWith('/') ? '' : '/'}${data.downloadUrl}`;
             
-            fetch(data.downloadUrl)
+            console.log('📥 Fetching from download URL:', downloadUrl);
+            
+            fetch(downloadUrl)
               .then(response => {
                 console.log('📦 Download response received:', {
                   status: response.status,
@@ -260,9 +265,14 @@ export async function startConversion() {
             const possibleUrl = data.url || data.result?.downloadUrl || data.result?.url;
             
             if (possibleUrl) {
-              console.log('🔍 Found alternative download URL:', possibleUrl);
+              // Ensure the alternative URL is absolute
+              const alternativeUrl = possibleUrl.startsWith('http') 
+                ? possibleUrl 
+                : `${CONFIG.API.BASE_URL}${possibleUrl.startsWith('/') ? '' : '/'}${possibleUrl}`;
               
-              fetch(possibleUrl)
+              console.log('🔍 Found alternative download URL:', alternativeUrl);
+              
+              fetch(alternativeUrl)
                 .then(response => response.blob())
                 .then(blob => {
                   conversionResult.setResult({

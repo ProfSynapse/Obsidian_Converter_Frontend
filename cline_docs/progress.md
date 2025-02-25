@@ -67,6 +67,8 @@
 - Added file type validation
 - Fixed API response handling for jobId-only responses
 - Improved error detection and logging
+- Fixed socket update errors in job status handling
+- Added proper URL resolution for download links
 
 ## Testing Status
 - ✅ Core file upload functionality

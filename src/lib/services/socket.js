@@ -71,48 +71,91 @@ class SocketService {
             console.log(`📊 Job status update for ${jobId}:`, data);
             callbacks.onStatus?.(data);
             
-            // Update conversion status store
-            conversionStatus.update(status => ({
-                ...status,
-                [jobId]: {
-                    ...status[jobId],
-                    status: data.status,
-                    message: data.message
-                }
-            }));
+            try {
+                // Update conversion status store
+                conversionStatus.update(status => {
+                    // Make sure status[jobId] exists or initialize it
+                    const currentJobStatus = status[jobId] || {};
+                    return {
+                        ...status,
+                        [jobId]: {
+                            ...currentJobStatus,
+                            status: data.status,
+                            message: data.message
+                        }
+                    };
+                });
+            } catch (error) {
+                console.error('Error updating status in socket handler:', error);
+            }
         });
 
         this.socket.on(`${SOCKET_EVENTS.JOB_PROGRESS}:${jobId}`, (data) => {
             console.log(`📈 Job progress for ${jobId}:`, data);
             callbacks.onProgress?.(data);
             
-            // Update conversion status store
-            conversionStatus.update(status => ({
-                ...status,
-                [jobId]: {
-                    ...status[jobId],
-                    progress: data.progress
-                }
-            }));
+            try {
+                // Update conversion status store
+                conversionStatus.update(status => {
+                    // Make sure status[jobId] exists or initialize it
+                    const currentJobStatus = status[jobId] || {};
+                    return {
+                        ...status,
+                        [jobId]: {
+                            ...currentJobStatus,
+                            progress: data.progress
+                        }
+                    };
+                });
+            } catch (error) {
+                console.error('Error updating progress in socket handler:', error);
+            }
         });
 
         this.socket.on(`${SOCKET_EVENTS.JOB_COMPLETE}:${jobId}`, (data) => {
             console.log(`✅ Job complete for ${jobId}:`, data);
             callbacks.onComplete?.(data);
             
-            // Update file status
-            files.update(fileList => {
-                return fileList.map(file => {
-                    if (file.jobId === jobId) {
-                        return {
-                            ...file,
-                            status: 'completed',
-                            downloadUrl: data.downloadUrl
-                        };
-                    }
-                    return file;
+            try {
+                // Update file status
+                files.update(fileList => {
+                    return fileList.map(file => {
+                        if (file.jobId === jobId) {
+                            return {
+                                ...file,
+                                status: 'completed',
+                                downloadUrl: data.downloadUrl
+                            };
+                        }
+                        return file;
+                    });
                 });
-            });
+                
+                // Update conversion status
+                try {
+                    conversionStatus.update(status => {
+                        // Find the file ID associated with this jobId
+                        const fileId = get(files).find(f => f.jobId === jobId)?.id;
+                        
+                        if (!fileId) return status;
+                        
+                        // Make sure status[fileId] exists or initialize it
+                        const currentJobStatus = status[fileId] || {};
+                        return {
+                            ...status,
+                            [fileId]: {
+                                ...currentJobStatus,
+                                status: 'completed',
+                                progress: 100
+                            }
+                        };
+                    });
+                } catch (err) {
+                    console.error('Error updating conversion status on completion:', err);
+                }
+            } catch (error) {
+                console.error('Error updating file status on completion:', error);
+            }
 
             // Cleanup subscription
             this._cleanupJobSubscription(jobId);
@@ -122,19 +165,46 @@ class SocketService {
             console.error(`❌ Job error for ${jobId}:`, error);
             callbacks.onError?.(error);
             
-            // Update file status
-            files.update(fileList => {
-                return fileList.map(file => {
-                    if (file.jobId === jobId) {
-                        return {
-                            ...file,
-                            status: 'error',
-                            error: error.message
-                        };
-                    }
-                    return file;
+            try {
+                // Update file status
+                files.update(fileList => {
+                    return fileList.map(file => {
+                        if (file.jobId === jobId) {
+                            return {
+                                ...file,
+                                status: 'error',
+                                error: error.message
+                            };
+                        }
+                        return file;
+                    });
                 });
-            });
+                
+                // Update conversion status
+                try {
+                    conversionStatus.update(status => {
+                        // Find the file ID associated with this jobId
+                        const fileId = get(files).find(f => f.jobId === jobId)?.id;
+                        
+                        if (!fileId) return status;
+                        
+                        // Make sure status[fileId] exists or initialize it
+                        const currentJobStatus = status[fileId] || {};
+                        return {
+                            ...status,
+                            [fileId]: {
+                                ...currentJobStatus,
+                                status: 'error',
+                                error: error.message
+                            }
+                        };
+                    });
+                } catch (err) {
+                    console.error('Error updating conversion status on error:', err);
+                }
+            } catch (error) {
+                console.error('Error updating file status on error:', error);
+            }
 
             // Cleanup subscription
             this._cleanupJobSubscription(jobId);
