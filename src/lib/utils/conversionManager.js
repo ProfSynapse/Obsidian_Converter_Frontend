@@ -213,28 +213,83 @@ export async function startConversion() {
           }));
         },
         onComplete: (data) => {
+          console.log('✅ Job complete callback received:', data);
+          
           // Download the file when it's ready
           if (data.downloadUrl) {
+            console.log('📥 Fetching from download URL:', data.downloadUrl);
+            
             fetch(data.downloadUrl)
-              .then(response => response.blob())
+              .then(response => {
+                console.log('📦 Download response received:', {
+                  status: response.status,
+                  contentType: response.headers.get('Content-Type')
+                });
+                return response.blob();
+              })
               .then(blob => {
+                console.log('📦 Blob created:', {
+                  size: blob.size,
+                  type: blob.type
+                });
+                
                 conversionResult.setResult({
                   blob,
                   contentType: blob.type,
                   items: [item]
                 });
+                
                 files.updateFile(item.id, {
                   status: 'completed',
                   downloadUrl: data.downloadUrl
                 });
+                
+                console.log('✅ File status updated to completed');
               })
               .catch(error => {
-                console.error('Error downloading file:', error);
+                console.error('❌ Error downloading file:', error);
                 files.updateFile(item.id, {
                   status: 'error',
-                  error: 'Failed to download converted file'
+                  error: 'Failed to download converted file: ' + error.message
                 });
               });
+          } else {
+            console.warn('⚠️ No download URL in completion data:', data);
+            
+            // Try to extract download URL from other properties if available
+            const possibleUrl = data.url || data.result?.downloadUrl || data.result?.url;
+            
+            if (possibleUrl) {
+              console.log('🔍 Found alternative download URL:', possibleUrl);
+              
+              fetch(possibleUrl)
+                .then(response => response.blob())
+                .then(blob => {
+                  conversionResult.setResult({
+                    blob,
+                    contentType: blob.type,
+                    items: [item]
+                  });
+                  
+                  files.updateFile(item.id, {
+                    status: 'completed',
+                    downloadUrl: possibleUrl
+                  });
+                })
+                .catch(error => {
+                  console.error('❌ Error downloading from alternative URL:', error);
+                  files.updateFile(item.id, {
+                    status: 'error',
+                    error: 'Failed to download from alternative URL: ' + error.message
+                  });
+                });
+            } else {
+              console.error('❌ No download URL found in completion data');
+              files.updateFile(item.id, {
+                status: 'error',
+                error: 'No download URL provided in completion data'
+              });
+            }
           }
         },
         onError: (error) => {

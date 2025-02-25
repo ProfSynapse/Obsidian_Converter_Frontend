@@ -211,11 +211,17 @@ class ConversionClient {
             body: requestData instanceof FormData ? requestData : JSON.stringify(requestData)
           });
 
+          // Log the full response for debugging
+          console.log('📦 Server response:', JSON.stringify(response, null, 2));
+          
           // Extract job ID from response
-          const jobId = response.jobId;
+          const jobId = response.jobId || response.id || response.job?.id;
           if (!jobId) {
-            throw new ConversionError('No job ID received from server');
+            console.error('❌ No job ID found in response:', response);
+            throw new ConversionError('No job ID received from server', 'MISSING_JOB_ID', { response });
           }
+          
+          console.log('✅ Job ID extracted:', jobId);
 
           // Update item with job ID
           item.jobId = jobId;

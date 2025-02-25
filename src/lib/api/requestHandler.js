@@ -229,7 +229,18 @@ export class RequestHandler {
           case ResponseTypes.JSON:
             console.log('📋 Processing JSON response...');
             data = await response.json();
-            if (!data.success) {
+            
+            // Log the actual response structure for debugging
+            console.log('📦 Response data structure:', JSON.stringify(data, null, 2));
+            
+            // Consider a response successful if it has downloadUrl or explicitly has success=true
+            const hasSuccessIndicators = data.success === true || 
+                                        data.downloadUrl || 
+                                        (data.status === 'success') ||
+                                        (data.status === 'completed');
+            
+            if (!hasSuccessIndicators && !this._isImplicitlySuccessful(data)) {
+              console.log('❌ Response lacks success indicators:', data);
               throw ConversionError.fromResponse(data);
             }
             break;
@@ -249,6 +260,25 @@ export class RequestHandler {
         { originalError: error.message }
       );
     }
+  }
+
+  /**
+   * Checks if a response is implicitly successful based on its content
+   * @private
+   */
+  static _isImplicitlySuccessful(data) {
+    // Check for common success indicators in the response
+    if (!data || typeof data !== 'object') return false;
+    
+    // Check for job completion indicators
+    if (data.jobId && (data.downloadUrl || data.result)) return true;
+    
+    // Check for conversion completion
+    if (data.downloadUrl) return true;
+    
+    // Check for other positive indicators
+    const positiveKeys = ['result', 'data', 'content', 'files', 'converted'];
+    return positiveKeys.some(key => data[key] !== undefined);
   }
 
   /**

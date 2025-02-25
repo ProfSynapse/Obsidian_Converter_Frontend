@@ -23,21 +23,52 @@ export class ConversionError extends Error {
      * Creates an error instance from API response
      */
     static fromResponse(response) {
-        // Handle structured error responses
-        if (response.error) {
+        // Log the response for debugging
+        console.log('🔍 Creating error from response:', JSON.stringify(response, null, 2));
+        
+        try {
+            // Handle structured error responses
+            if (response && response.error) {
+                return new ConversionError(
+                    response.error.message || 'Unknown server error',
+                    response.error.code || 'API_ERROR',
+                    response.error.details
+                );
+            }
+            
+            // Handle error status responses
+            if (response && response.status === 'error') {
+                return new ConversionError(
+                    response.message || 'Server reported an error',
+                    response.code || 'API_ERROR',
+                    response.details || null
+                );
+            }
+            
+            // Handle plain error messages
+            if (response && typeof response.message === 'string') {
+                return new ConversionError(
+                    response.message,
+                    response.code || 'API_ERROR',
+                    response.details || null
+                );
+            }
+            
+            // Fallback for unexpected response formats
             return new ConversionError(
-                response.error.message || 'Unknown error',
-                response.error.code || 'API_ERROR',
-                response.error.details
+                'Unexpected server response format',
+                'RESPONSE_FORMAT_ERROR',
+                { originalResponse: response }
+            );
+        } catch (err) {
+            // Ultimate fallback if error creation itself fails
+            console.error('Error while creating ConversionError:', err);
+            return new ConversionError(
+                'Failed to process error response',
+                'ERROR_PROCESSING_ERROR',
+                { originalError: err.message }
             );
         }
-        
-        // Handle plain error messages
-        return new ConversionError(
-            response.message || 'Unknown error',
-            response.code || 'API_ERROR',
-            response.details || null
-        );
     }
 }
 
