@@ -69,6 +69,8 @@
 - Improved error detection and logging
 - Fixed socket update errors in job status handling
 - Added proper URL resolution for download links
+- Fixed URL path duplication in download requests
+- Simplified socket event handlers to prevent errors
 
 ## Testing Status
 - ✅ Core file upload functionality

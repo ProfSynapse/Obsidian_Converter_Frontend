@@ -217,10 +217,13 @@ export async function startConversion() {
           
           // Download the file when it's ready
           if (data.downloadUrl) {
-            // Ensure the download URL is absolute
+            // Extract the base domain without the /api/v1 path
+            const baseUrl = CONFIG.API.BASE_URL.replace(/\/api\/v1\/?$/, '');
+            
+            // Ensure the download URL is absolute without duplicating /api/v1
             const downloadUrl = data.downloadUrl.startsWith('http') 
               ? data.downloadUrl 
-              : `${CONFIG.API.BASE_URL}${data.downloadUrl.startsWith('/') ? '' : '/'}${data.downloadUrl}`;
+              : `${baseUrl}${data.downloadUrl}`;
             
             console.log('📥 Fetching from download URL:', downloadUrl);
             
@@ -265,10 +268,13 @@ export async function startConversion() {
             const possibleUrl = data.url || data.result?.downloadUrl || data.result?.url;
             
             if (possibleUrl) {
-              // Ensure the alternative URL is absolute
+              // Extract the base domain without the /api/v1 path
+              const baseUrl = CONFIG.API.BASE_URL.replace(/\/api\/v1\/?$/, '');
+              
+              // Ensure the alternative URL is absolute without duplicating /api/v1
               const alternativeUrl = possibleUrl.startsWith('http') 
                 ? possibleUrl 
-                : `${CONFIG.API.BASE_URL}${possibleUrl.startsWith('/') ? '' : '/'}${possibleUrl}`;
+                : `${baseUrl}${possibleUrl}`;
               
               console.log('🔍 Found alternative download URL:', alternativeUrl);
               

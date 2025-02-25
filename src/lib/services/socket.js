@@ -114,98 +114,32 @@ class SocketService {
 
         this.socket.on(`${SOCKET_EVENTS.JOB_COMPLETE}:${jobId}`, (data) => {
             console.log(`✅ Job complete for ${jobId}:`, data);
-            callbacks.onComplete?.(data);
             
+            // Call the callback first, which will handle the download
             try {
-                // Update file status
-                files.update(fileList => {
-                    return fileList.map(file => {
-                        if (file.jobId === jobId) {
-                            return {
-                                ...file,
-                                status: 'completed',
-                                downloadUrl: data.downloadUrl
-                            };
-                        }
-                        return file;
-                    });
-                });
-                
-                // Update conversion status
-                try {
-                    conversionStatus.update(status => {
-                        // Find the file ID associated with this jobId
-                        const fileId = get(files).find(f => f.jobId === jobId)?.id;
-                        
-                        if (!fileId) return status;
-                        
-                        // Make sure status[fileId] exists or initialize it
-                        const currentJobStatus = status[fileId] || {};
-                        return {
-                            ...status,
-                            [fileId]: {
-                                ...currentJobStatus,
-                                status: 'completed',
-                                progress: 100
-                            }
-                        };
-                    });
-                } catch (err) {
-                    console.error('Error updating conversion status on completion:', err);
+                if (callbacks.onComplete) {
+                    callbacks.onComplete(data);
                 }
             } catch (error) {
-                console.error('Error updating file status on completion:', error);
+                console.error('Error in onComplete callback:', error);
             }
-
+            
             // Cleanup subscription
             this._cleanupJobSubscription(jobId);
         });
 
         this.socket.on(`${SOCKET_EVENTS.JOB_ERROR}:${jobId}`, (error) => {
             console.error(`❌ Job error for ${jobId}:`, error);
-            callbacks.onError?.(error);
             
+            // Call the callback first, which will handle the error
             try {
-                // Update file status
-                files.update(fileList => {
-                    return fileList.map(file => {
-                        if (file.jobId === jobId) {
-                            return {
-                                ...file,
-                                status: 'error',
-                                error: error.message
-                            };
-                        }
-                        return file;
-                    });
-                });
-                
-                // Update conversion status
-                try {
-                    conversionStatus.update(status => {
-                        // Find the file ID associated with this jobId
-                        const fileId = get(files).find(f => f.jobId === jobId)?.id;
-                        
-                        if (!fileId) return status;
-                        
-                        // Make sure status[fileId] exists or initialize it
-                        const currentJobStatus = status[fileId] || {};
-                        return {
-                            ...status,
-                            [fileId]: {
-                                ...currentJobStatus,
-                                status: 'error',
-                                error: error.message
-                            }
-                        };
-                    });
-                } catch (err) {
-                    console.error('Error updating conversion status on error:', err);
+                if (callbacks.onError) {
+                    callbacks.onError(error);
                 }
-            } catch (error) {
-                console.error('Error updating file status on error:', error);
+            } catch (err) {
+                console.error('Error in onError callback:', err);
             }
-
+            
             // Cleanup subscription
             this._cleanupJobSubscription(jobId);
         });
